@@ -1,0 +1,9 @@
+donor_id,name,blood_group,phone,distance_km,availability,compatibility_score,donations_count,last_donation_date
+DNR-101,Dr. Rajesh Sharma,O-,+91-9845012341,1.2,True,100.0,14,2026-05-10
+DNR-102,Siddharth Rao,O-,+91-9845012349,3.4,True,95.0,8,2026-05-02
+DNR-103,Priya Venkat,O+,+91-9845012342,2.1,True,88.0,6,2026-06-15
+DNR-104,Mohammed Ali,B+,+91-9845012343,3.5,True,82.0,11,2026-04-20
+DNR-105,Kavitha Nair,A+,+91-9845012344,4.0,True,85.0,9,2026-07-01
+DNR-106,Ananya Hegde,AB+,+91-9845012345,5.2,True,78.0,4,2026-03-12
+DNR-107,Suresh Kumar,A-,+91-9845012346,1.8,True,92.0,15,2026-05-28
+DNR-108,Deepak Verma,B-,+91-9845012347,6.1,True,75.0,7,2026-06-05

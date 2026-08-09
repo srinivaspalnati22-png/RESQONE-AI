@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESQONE AI+ — Offline Mode</title>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 400px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .badge {
+      background-color: #ef4444;
+      color: white;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    h1 { font-size: 1.5rem; margin: 0.5rem 0; color: #f8fafc; }
+    p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; }
+    .btn {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background-color: #ef4444;
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">OFFLINE EMERGENCY MODE</div>
+    <h1>Network Disconnected</h1>
+    <p>RESQONE AI+ is operating in local offline resilience mode. Emergency requests created now will be queued locally and automatically dispatched when connectivity returns.</p>
+    <a href="/" class="btn" onclick="window.location.reload(); return false;">Retry Connection</a>
+  </div>
+</body>
+</html>
