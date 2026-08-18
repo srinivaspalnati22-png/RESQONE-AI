@@ -6,6 +6,7 @@ import { DemoToggle } from '../components/DemoToggle';
 import LiveLocationMap from '../components/LiveLocationMap';
 import { CommandCore } from '../components/CommandCore';
 import { AmbulanceMissionMap } from '../components/AmbulanceMissionMap';
+import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import { speakEmergencyInstruction } from '../services/audio_service';
 import { 
   Bot, Mic, MicOff, Send, ShieldAlert, AlertTriangle, 
@@ -266,6 +267,15 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
                 Close 3D Mission View
               </button>
             </div>
+
+            {/* Live Hospital Response & Stream matching Video Scenarios */}
+            <LiveHospitalResponse
+              emergencyType={aiResult?.type || 'ACCIDENT_RESCUE'}
+              hospitalName={aiResult?.hospital_name || "Government General Hospital (GGH Vijayawada)"}
+              hospitalPhone={aiResult?.hospital_phone || "+91-866-2472777"}
+              etaMinutes={aiResult ? 4 : 6}
+              onClose={handleResetEmergency}
+            />
 
             {/* 3D CommandCore Neural Orchestrator */}
             <CommandCore 

@@ -9,6 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
 import snakeSpeciesData from '../data/snake_species.json';
+import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 
 export const SnakebitePage = () => {
   const { t } = useLanguage();
@@ -240,7 +241,15 @@ export const SnakebitePage = () => {
 
       {/* Main Assessment Result & Antivenom Routing Card */}
       {assessment && assessment.species && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Live Hospital Antivenom Response & Farmer Rescue Video Stream */}
+          <LiveHospitalResponse
+            emergencyType="SNAKEBITE"
+            hospitalName={assessment.nearestAvsFacility?.name || "Government General Hospital (GGH Vijayawada)"}
+            hospitalPhone={assessment.nearestAvsFacility?.contact_number || "+91-866-2472777"}
+            etaMinutes={3}
+            distanceKm={assessment.nearestAvsFacility?.distanceKm || 1.2}
+          />
           <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-cyan-500/40 space-y-4 shadow-2xl">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">

@@ -8,6 +8,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
+import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 
 export const BloodDonorPage = () => {
   const { t } = useLanguage();
@@ -197,6 +198,17 @@ export const BloodDonorPage = () => {
             </span>.
           </p>
         </div>
+      )}
+
+      {/* Live Hospital Response & Donor Delivery Video Stream */}
+      {matchResults && (
+        <LiveHospitalResponse
+          emergencyType="BLOOD_CRISIS"
+          hospitalName={hospitalName}
+          hospitalPhone="+91-866-2472777"
+          etaMinutes={4}
+          distanceKm={matchResults?.results?.[0]?.distanceKm || 2.4}
+        />
       )}
 
       {/* Ranked Blood Banks & Regional Stock (from National Health Portal Dataset) */}
