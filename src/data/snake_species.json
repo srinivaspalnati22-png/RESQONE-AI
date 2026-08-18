@@ -1,0 +1,108 @@
+[
+  {
+    "id": "snake-001",
+    "common_name": "Spectacled Cobra",
+    "scientific_name": "Naja naja",
+    "venomous": true,
+    "venom_type": "HIGHLY NEUROTOXIC",
+    "urgency": "CRITICAL",
+    "region": "Pan-India, Urban & Agricultural Edges",
+    "image_source": "https://images.unsplash.com/photo-1629814249584-bd4d53cf0ee3?auto=format&fit=crop&w=600&q=80",
+    "identifying_markers": ["Distinct spectacle mark on dorsal hood", "Broad spreading hood when alarmed", "Round pupils", "Smooth scales"],
+    "symptoms": ["Ptosis (drooping eyelids)", "Difficulty swallowing & speaking", "Respiratory paralysis", "Rapid local swelling"],
+    "first_aid": [
+      "Immobilize the bitten limb immediately below heart level.",
+      "Apply broad pressure bandage over the bite area (do not block arterial pulse).",
+      "Do NOT cut, suck, incise, or apply electric shock.",
+      "Keep patient calm to slow systemic lymphatic absorption.",
+      "Rush immediately to the nearest hospital equipped with Polyvalent Anti-Venom Serum (AVS)."
+    ],
+    "antivenom_required": true,
+    "polyvalent_avs_responsive": true,
+    "notes": "Responsible for highest number of neurotoxic envenomations in India. Part of the 'Big Four'."
+  },
+  {
+    "id": "snake-002",
+    "common_name": "Russell's Viper",
+    "scientific_name": "Daboia russelii",
+    "venomous": true,
+    "venom_type": "HIGHLY HEMOTOXIC & CYTOTOXIC",
+    "urgency": "CRITICAL",
+    "region": "Grasslands, scrublands, agricultural fields",
+    "image_source": "https://images.unsplash.com/photo-1605092676920-8cb9623c7975?auto=format&fit=crop&w=600&q=80",
+    "identifying_markers": ["Flat triangular head distinct from neck", "Deep brown chain-like circular spots in 3 longitudinal rows", "Rough keeled scales", "Extremely loud hissing when threatened"],
+    "symptoms": ["Severe immediate pain & massive swelling", "Spontaneous bleeding from gums, bite wounds", "Hypotension & shock", "Acute kidney injury (dark urine)"],
+    "first_aid": [
+      "Keep the affected limb completely still and splinted.",
+      "Do NOT apply a tight arterial tourniquet (causes localized gangrene).",
+      "Remove tight jewelry, rings, or tight clothing immediately.",
+      "Administer whole blood clotting test (20WBCT) on hospital arrival.",
+      "Immediate transport to emergency trauma center with AVS and dialysis standby."
+    ],
+    "antivenom_required": true,
+    "polyvalent_avs_responsive": true,
+    "notes": "Causes profound coagulopathy and acute renal failure. Part of the 'Big Four'."
+  },
+  {
+    "id": "snake-003",
+    "common_name": "Common Krait",
+    "scientific_name": "Bungarus caeruleus",
+    "venomous": true,
+    "venom_type": "POTENT POST-SYNAPTIC NEUROTOXIC",
+    "urgency": "EXTREME CRITICAL",
+    "region": "Rural habitations, fields, sleeping mats (nocturnal)",
+    "image_source": "https://images.unsplash.com/photo-1604608684575-0497c3a5270c?auto=format&fit=crop&w=600&q=80",
+    "identifying_markers": ["Glossy steel-black or dark bluish-brown body", "Distinct narrow paired white cross-bands along spine", "Enlarged hexagonal vertebral scales down middle of back", "No hood"],
+    "symptoms": ["Painless nocturnal bite (often mistaken for insect bite)", "Severe abdominal colic cramps", "Morning paralysis / locked jaw", "Complete respiratory failure"],
+    "first_aid": [
+      "Immediate emergency medical dispatch even if bite mark is painless or invisible.",
+      "Prepare for emergency assisted mechanical ventilation.",
+      "Do NOT delay hospital transit for non-symptom observation.",
+      "Polyvalent AVS administration is urgently required."
+    ],
+    "antivenom_required": true,
+    "polyvalent_avs_responsive": true,
+    "notes": "15x more toxic than Cobra venom. Envenomation often occurs while victims sleep on the floor."
+  },
+  {
+    "id": "snake-004",
+    "common_name": "Saw-scaled Viper",
+    "scientific_name": "Echis carinatus",
+    "venomous": true,
+    "venom_type": "HEMOTOXIC & VASCULOTOXIC",
+    "urgency": "HIGH",
+    "region": "Dry semi-arid regions, rocks, red soil, scrub forests",
+    "image_source": "https://images.unsplash.com/photo-1531386151447-fd76ad50012f?auto=format&fit=crop&w=600&q=80",
+    "identifying_markers": ["Small size (< 60 cm)", "White cruciform or bird-foot mark on crown of head", "Serrated flank scales that produce raspy sawing noise", "Side-winding locomotion"],
+    "symptoms": ["Localized blistering and severe hemorrhage", "Continuous oozing from puncture site", "Subconjunctival hemorrhage"],
+    "first_aid": [
+      "Immobilize limb.",
+      "Avoid NSAIDs / Aspirin (worsens hemorrhage).",
+      "Expedited evacuation to hospital with AVS."
+    ],
+    "antivenom_required": true,
+    "polyvalent_avs_responsive": true,
+    "notes": "Smallest of the Big Four venomous snakes, but responsible for high morbidity in arid zones."
+  },
+  {
+    "id": "snake-005",
+    "common_name": "Indian Rat Snake (Dhaman)",
+    "scientific_name": "Ptyas mucosa",
+    "venomous": false,
+    "venom_type": "NON-VENOMOUS",
+    "urgency": "LOW - FIRST AID ONLY",
+    "region": "Agricultural fields, urban gardens, godowns",
+    "image_source": "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
+    "identifying_markers": ["Large yellowish-brown body with prominent black net-like markings on tail", "Black vertical lip stripes", "Large round eyes", "Very fast moving"],
+    "symptoms": ["Superficial scratch/teeth marks", "Mild localized bleeding", "No systemic neurotoxic or hemotoxic symptoms"],
+    "first_aid": [
+      "Wash wound thoroughly with clean water and antiseptic soap.",
+      "Apply mild antiseptic and clean dry dressing.",
+      "Check Tetanus Toxoid (TT) vaccination status.",
+      "Reassure victim against panic."
+    ],
+    "antivenom_required": false,
+    "polyvalent_avs_responsive": false,
+    "notes": "Often confused with Spectacled Cobra due to size and coloration, but completely harmless and beneficial rodent predator."
+  }
+]

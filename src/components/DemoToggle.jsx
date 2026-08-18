@@ -13,11 +13,11 @@ export const DemoToggle = ({ onSelectScenario }) => {
             <Zap className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400">
-              Judges Demo Mode Enabled
+            <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">
+              Rapid Emergency Scenarios
             </h4>
             <p className="text-[11px] text-slate-400">
-              One-tap preset emergency scenarios for instantaneous AI evaluation
+              One-tap preset emergency scenarios for instantaneous AI evaluation & 3D dispatch
             </p>
           </div>
         </div>

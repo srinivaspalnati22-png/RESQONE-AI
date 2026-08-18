@@ -1,0 +1,94 @@
+[
+  {
+    "id": "bb-nhp-001",
+    "name": "Red Cross Blood Bank Vijayawada",
+    "state": "Andhra Pradesh",
+    "city": "Vijayawada",
+    "address": "Opp. GGH, Hanumanpet, Vijayawada",
+    "pin_code": "520003",
+    "contact_number": "+91-866-2571234",
+    "latitude": 16.5175,
+    "longitude": 80.6488,
+    "blood_stock": {
+      "O-": 8,
+      "O+": 34,
+      "A-": 12,
+      "A+": 28,
+      "B-": 6,
+      "B+": 32,
+      "AB-": 4,
+      "AB+": 16
+    },
+    "component_facility": true,
+    "operates_24x7": true
+  },
+  {
+    "id": "bb-nhp-002",
+    "name": "Rotary TTK Voluntary Blood Bank Bangalore",
+    "state": "Karnataka",
+    "city": "Bengaluru",
+    "address": "New Thippasandra Main Road, HAL 3rd Stage, Bangalore",
+    "pin_code": "560075",
+    "contact_number": "+91-80-25287903",
+    "latitude": 12.9698,
+    "longitude": 77.6534,
+    "blood_stock": {
+      "O-": 15,
+      "O+": 62,
+      "A-": 18,
+      "A+": 45,
+      "B-": 11,
+      "B+": 50,
+      "AB-": 7,
+      "AB+": 24
+    },
+    "component_facility": true,
+    "operates_24x7": true
+  },
+  {
+    "id": "bb-nhp-003",
+    "name": "Victoria Hospital Blood Bank & Component Center",
+    "state": "Karnataka",
+    "city": "Bengaluru",
+    "address": "Victoria Hospital Campus, Fort, Bengaluru",
+    "pin_code": "560002",
+    "contact_number": "+91-80-26701150",
+    "latitude": 16.5167,
+    "longitude": 80.6500,
+    "blood_stock": {
+      "O-": 10,
+      "O+": 48,
+      "A-": 14,
+      "A+": 36,
+      "B-": 9,
+      "B+": 41,
+      "AB-": 5,
+      "AB+": 19
+    },
+    "component_facility": true,
+    "operates_24x7": true
+  },
+  {
+    "id": "bb-nhp-004",
+    "name": "Visakhapatnam Voluntary Blood Bank",
+    "state": "Andhra Pradesh",
+    "city": "Visakhapatnam",
+    "address": "Maharanipeta, Near KGH, Visakhapatnam",
+    "pin_code": "530002",
+    "contact_number": "+91-891-2561919",
+    "latitude": 17.7085,
+    "longitude": 83.3030,
+    "blood_stock": {
+      "O-": 6,
+      "O+": 29,
+      "A-": 8,
+      "A+": 22,
+      "B-": 5,
+      "B+": 27,
+      "AB-": 3,
+      "AB+": 14
+    },
+    "component_facility": true,
+    "operates_24x7": true
+  }
+]

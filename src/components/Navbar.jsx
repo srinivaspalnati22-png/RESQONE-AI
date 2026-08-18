@@ -6,8 +6,7 @@ import { FlashBeacon } from './FlashBeacon';
 import { VoiceControlWidget } from './VoiceControlWidget';
 import { SOSModal } from './SOSModal';
 import { EmergencyContactsModal } from './EmergencyContactsModal';
-import { JudgeDemoModal } from './JudgeDemoModal';
-import { Shield, Radio, Globe, ShieldAlert, Users, LogOut, Zap, AlertOctagon, User, Award } from 'lucide-react';
+import { Shield, Radio, Globe, ShieldAlert, Users, LogOut, Zap, AlertOctagon, User } from 'lucide-react';
 
 export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
   const { user, logout } = useAuth();
@@ -16,7 +15,6 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
 
   const [isSOSOpen, setIsSOSOpen] = useState(false);
   const [isContactsOpen, setIsContactsOpen] = useState(false);
-  const [isJudgeDemoOpen, setIsJudgeDemoOpen] = useState(false);
   const [isHoldingSOS, setIsHoldingSOS] = useState(false);
   const holdTimerRef = useRef(null);
 
@@ -117,16 +115,6 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
           {/* Right Action Bar */}
           <div className="flex items-center space-x-2">
 
-            {/* Judge Demo Presentation Mode Button */}
-            <button
-              onClick={() => setIsJudgeDemoOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 border border-amber-500/50 text-amber-300 text-xs font-black transition-all min-h-[44px] shadow-sm animate-pulse"
-              title="Open Prototype Judge Presentation Suite"
-            >
-              <Award className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">Judge Demo Hub</span>
-            </button>
-            
             {/* Crash Detection Simulator Badge */}
             {onSimulateCrash && (
               <button
@@ -208,14 +196,6 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
           </div>
         </div>
       </header>
-
-      {/* Judge Presentation Hub Modal */}
-      <JudgeDemoModal
-        isOpen={isJudgeDemoOpen}
-        onClose={() => setIsJudgeDemoOpen(false)}
-        setActiveTab={setActiveTab}
-        onSimulateCrash={onSimulateCrash}
-      />
 
       {/* SOS Countdown & Alert Modal */}
       <SOSModal isOpen={isSOSOpen} onClose={() => setIsSOSOpen(false)} />
