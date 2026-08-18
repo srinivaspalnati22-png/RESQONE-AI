@@ -20,7 +20,7 @@ export function BackgroundVideo({ activeTab = 'home' }) {
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // 1. Hardware concurrency & reduced motion detection
+  // 1. Hardware concurrency check & prefers-reduced-motion
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const lowConcurrency = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
@@ -45,47 +45,53 @@ export function BackgroundVideo({ activeTab = 'home' }) {
 
   const videoSrc = SECTION_VIDEO_MAP[activeTab] || ambulanceVideo;
 
-  // Ensure video plays continuously on tab change
+  // On tab / video change, reset video to paused state at frame 0
   useEffect(() => {
     if (videoRef.current) {
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => setIsVideoReady(true)).catch(() => {});
-      }
+      videoRef.current.pause();
+      try {
+        videoRef.current.currentTime = 0;
+      } catch (e) {}
     }
   }, [videoSrc]);
 
-  // 3. Smooth scroll progress handler for video scrubbing without stutter
+  // 3. Smooth Damped Scroll Progress (0 at top, 1 at bottom)
   const { scrollYProgress } = useScroll();
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 80,
-    damping: 30,
-    restDelta: 0.005
+    stiffness: 90,
+    damping: 35,
+    restDelta: 0.001
   });
 
-  const lastSeekTime = useRef(0);
+  const rafId = useRef(null);
 
+  // 4. Move video strictly based on page scroll position
   useMotionValueEvent(smoothProgress, "change", (latest) => {
     const video = videoRef.current;
     if (!video || isLowSpec || isReducedMotion || !video.duration || isNaN(video.duration)) return;
 
     const clampedProgress = Math.max(0, Math.min(1, latest));
     const targetTime = clampedProgress * video.duration;
-    const now = Date.now();
 
-    // Throttle seeks to 150ms to prevent browser video hardware decoding stalls & buffering flicker
-    if (now - lastSeekTime.current > 150 && Math.abs(video.currentTime - targetTime) > 0.25) {
-      lastSeekTime.current = now;
-      try {
-        video.currentTime = targetTime;
-      } catch (e) {}
-    }
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      if (videoRef.current) {
+        try {
+          if (Math.abs(videoRef.current.currentTime - targetTime) > 0.03) {
+            videoRef.current.currentTime = targetTime;
+          }
+        } catch (e) {}
+      }
+    });
   });
 
-  const handleCanPlay = () => {
+  const handleLoadedMetadata = () => {
     setIsVideoReady(true);
     if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
+      videoRef.current.pause();
+      try {
+        videoRef.current.currentTime = 0;
+      } catch (e) {}
     }
   };
 
@@ -94,14 +100,14 @@ export function BackgroundVideo({ activeTab = 'home' }) {
       aria-hidden="true"
       className="fixed inset-0 w-screen h-[100dvh] overflow-hidden pointer-events-none z-0 bg-slate-950 flex items-center justify-center"
     >
-      {/* 1. Ambient Glowing Background Orbs (Always rendering to prevent blank screen) */}
+      {/* 1. Ambient Glowing Background Orbs */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{
-            scale: [1, 1.25, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: [0, 30, 0],
-            y: [0, -20, 0]
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.35, 0.2],
+            x: [0, 20, 0],
+            y: [0, -15, 0]
           }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute -top-40 -left-40 w-[36rem] h-[36rem] bg-red-600/30 rounded-full blur-[140px]"
@@ -109,9 +115,9 @@ export function BackgroundVideo({ activeTab = 'home' }) {
         <motion.div
           animate={{
             scale: [1.2, 1, 1.2],
-            opacity: [0.15, 0.35, 0.15],
-            x: [0, -40, 0],
-            y: [0, 30, 0]
+            opacity: [0.15, 0.3, 0.15],
+            x: [0, -30, 0],
+            y: [0, 20, 0]
           }}
           transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute -top-20 -right-20 w-[38rem] h-[38rem] bg-amber-600/20 rounded-full blur-[160px]"
@@ -119,26 +125,24 @@ export function BackgroundVideo({ activeTab = 'home' }) {
         <div className="absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
       </div>
 
-      {/* 2. Full-bleed Autopolaying Looped Background Video */}
+      {/* 2. Scroll-Scrubbed Background Video (Stays paused, only moves when scrolling) */}
       {!isLowSpec && (
         <video
           ref={videoRef}
           key={videoSrc}
           src={videoSrc}
-          autoPlay
-          loop
           muted
           playsInline
           preload="auto"
-          onCanPlay={handleCanPlay}
-          onLoadedData={handleCanPlay}
+          onLoadedMetadata={handleLoadedMetadata}
+          onCanPlay={handleLoadedMetadata}
           className={`w-full h-[100dvh] object-cover transition-opacity duration-700 z-10 ${
             isVideoReady ? 'opacity-70' : 'opacity-30'
           }`}
         />
       )}
 
-      {/* 3. Dark Contrast Overlay & Vignette (Ensures text readability & smooth background depth) */}
+      {/* 3. Dark Contrast Overlay & Vignette Shading */}
       <div className="absolute inset-0 bg-slate-950/40 pointer-events-none z-20" />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60 pointer-events-none z-20" />
     </div>
