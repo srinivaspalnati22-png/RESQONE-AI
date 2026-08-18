@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, Bot, Droplet, Activity, Hospital, Radio, Zap, HeartPulse, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldAlert, Bot, Droplet, Activity, Hospital, Radio, Zap, HeartPulse, CheckCircle2, ArrowRight, Award } from 'lucide-react';
 
-export const LandingPage = ({ setActiveTab }) => {
+export const LandingPage = ({ setActiveTab, onSimulateCrash }) => {
   return (
     <div className="w-full pb-28 pt-8 px-4 max-w-4xl mx-auto space-y-8">
       
@@ -11,9 +11,16 @@ export const LandingPage = ({ setActiveTab }) => {
         <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
 
         <div className="relative z-10 space-y-5">
-          <div className="inline-flex items-center space-x-2 bg-red-950/80 text-red-300 border border-red-500/50 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping"></span>
-            <span>AI Emergency Intelligence Ecosystem</span>
+          <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+            <div className="inline-flex items-center space-x-2 bg-red-950/80 text-red-300 border border-red-500/50 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider shadow-lg">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-ping"></span>
+              <span>AI Emergency Intelligence Ecosystem</span>
+            </div>
+            
+            <div className="inline-flex items-center space-x-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full text-xs font-bold">
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span>JUDGE DEMO READY</span>
+            </div>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight drop-shadow-md">
@@ -28,7 +35,7 @@ export const LandingPage = ({ setActiveTab }) => {
           </p>
 
           {/* Primary Call to Action Buttons */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3">
             <button
               onClick={() => setActiveTab('copilot')}
               className="w-full sm:w-auto bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl shadow-xl shadow-red-950/80 hover:shadow-red-900/90 transition-all flex items-center justify-center space-x-3 text-base border border-amber-300/60 cursor-pointer group min-h-[52px]"
