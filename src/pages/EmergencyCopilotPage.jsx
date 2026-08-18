@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useDemo } from '../context/DemoContext';
 import { useAuth } from '../context/AuthContext';
 import { DemoToggle } from '../components/DemoToggle';
@@ -10,7 +10,7 @@ import { speakEmergencyInstruction } from '../services/audio_service';
 import { 
   Bot, Mic, MicOff, Send, ShieldAlert, AlertTriangle, 
   CheckCircle2, Sparkles, Phone, Hospital as HospIcon, 
-  Info, RefreshCw, Volume2, Radio 
+  Info, RefreshCw, Volume2, Radio, XCircle 
 } from 'lucide-react';
 
 export const EmergencyCopilotPage = ({ setActiveTab }) => {
@@ -24,7 +24,6 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
 
   const [aiResult, setAiResult] = useState(null);
   const [reportSuccess, setReportSuccess] = useState(null);
-  const [currentCoords, setCurrentCoords] = useState({ lat: 16.5167, lng: 80.6500 });
   const [ambulanceState, setAmbulanceState] = useState('EN_ROUTE');
 
   const handleToggleVoice = () => {
@@ -97,6 +96,19 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
     setLoading(false);
   };
 
+  const handleResetEmergency = () => {
+    setAiResult(null);
+    setReportSuccess(null);
+    setActiveDispatch({
+      active: false,
+      ambulanceState: 'AVAILABLE',
+      hospitalCoords: { lat: 16.5167, lng: 80.6500 },
+      userCoords: { lat: 16.5180, lng: 80.6520 }
+    });
+  };
+
+  const hasActiveEmergency = !!aiResult || activeDispatch?.active;
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
@@ -116,7 +128,7 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
             <h2 className="text-xl font-extrabold text-white flex items-center space-x-2">
               <span>AI Emergency Copilot & 3D Command</span>
               <span className="text-[10px] font-black bg-red-600/30 text-red-400 border border-red-500/40 px-2 py-0.5 rounded-full uppercase">
-                Decision Support
+                {hasActiveEmergency ? 'EMERGENCY ACTIVE' : 'STANDBY READY'}
               </span>
             </h2>
             <p className="text-xs text-slate-300">Natural language incident triage & 5-orbit neural dispatch</p>
@@ -127,24 +139,6 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
       {/* Preset Demo Scenarios */}
       <DemoToggle onSelectScenario={handleSelectScenario} />
 
-      {/* 3D CommandCore Neural Orchestrator */}
-      <CommandCore 
-        activeEmergency={aiResult}
-        ambulanceState={ambulanceState}
-      />
-
-      {/* State-Driven Ambulance Mission Route */}
-      <AmbulanceMissionMap
-        state={ambulanceState}
-        onStateChange={setAmbulanceState}
-        hospitalName={aiResult?.hospital_name || "Government General Hospital (GGH Vijayawada)"}
-        hospitalPhone={aiResult?.hospital_phone || "+91-866-2472777"}
-        etaMinutes={aiResult ? 4 : 6}
-      />
-
-      {/* Live Map Telemetry Grid */}
-      <LiveLocationMap />
-
       {/* Input Panel with Dark Glassmorphism */}
       <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-red-500/30 shadow-2xl space-y-4">
         
@@ -153,6 +147,16 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
             <Sparkles className="w-3.5 h-3.5 text-red-400" />
             <span>Describe Incident (Voice or Text)</span>
           </label>
+
+          {hasActiveEmergency && (
+            <button
+              onClick={handleResetEmergency}
+              className="text-[11px] text-red-400 hover:text-red-300 font-bold px-3 py-1 bg-red-950/60 rounded-xl border border-red-800/60 cursor-pointer transition-all flex items-center space-x-1"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              <span>Reset Emergency Standby</span>
+            </button>
+          )}
         </div>
 
         <div className="relative">
@@ -166,7 +170,7 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
           {inputText && (
             <button
               onClick={() => setInputText('')}
-              className="absolute right-3 top-3 text-slate-400 hover:text-slate-200 text-xs bg-slate-900 px-2 py-1 rounded-md min-h-[36px]"
+              className="absolute right-3 top-3 text-slate-400 hover:text-slate-200 text-xs bg-slate-900 px-2.5 py-1 rounded-md min-h-[34px] cursor-pointer"
             >
               Clear
             </button>
@@ -230,6 +234,59 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
           </div>
         )}
       </div>
+
+      {/* 3D CommandCore & 3D ALS Rescue Mission — RENDERED ONLY WHEN EMERGENCY IS ACTIVE */}
+      <AnimatePresence>
+        {hasActiveEmergency && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: 20 }}
+            transition={{ duration: 0.35 }}
+            className="space-y-6"
+          >
+            {/* Active Emergency Callout Banner */}
+            <div className="p-4 bg-gradient-to-r from-red-950/90 via-slate-900 to-amber-950/90 border border-red-500/60 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-2xl">
+              <div className="flex items-center space-x-3">
+                <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-wider">
+                    ⚠️ Active Emergency Mission Triggered: {aiResult?.type?.replace('_', ' ') || 'RESCUE DISPATCH'}
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Target Facility: <span className="font-bold text-white">{aiResult?.hospital_name || 'Government General Hospital (GGH)'}</span> • 3D Telemetry Orchestrating Live
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleResetEmergency}
+                className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
+              >
+                Close 3D Mission View
+              </button>
+            </div>
+
+            {/* 3D CommandCore Neural Orchestrator */}
+            <CommandCore 
+              activeEmergency={aiResult}
+              ambulanceState={ambulanceState}
+            />
+
+            {/* State-Driven Ambulance Mission Route */}
+            <AmbulanceMissionMap
+              state={ambulanceState}
+              onStateChange={setAmbulanceState}
+              hospitalName={aiResult?.hospital_name || "Government General Hospital (GGH Vijayawada)"}
+              hospitalPhone={aiResult?.hospital_phone || "+91-866-2472777"}
+              etaMinutes={aiResult ? 4 : 6}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Live Map Telemetry Grid */}
+      <LiveLocationMap />
 
     </motion.div>
   );
