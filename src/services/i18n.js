@@ -18,6 +18,32 @@ export const TRANSLATIONS = {
     quick_snake_id: "Identify Snake Species",
     live_map_title: "Active Regional Emergency Radar",
     
+    // 3D Vehicle Simulation
+    sim_title: "3D Multi-Sensor Crash Simulation & Telemetry",
+    sim_subtitle: "Live sensor fusion analyzing Accelerometer G-Force, 3D Gyroscope, and GPS Speed in real-time.",
+    sim_start_drive: "Cruising Highway (Normal)",
+    sim_trigger_crash: "Simulate Collision / Crash Impact",
+    sim_reset: "Reset Highway Simulation",
+    sim_accel_label: "Accelerometer G-Force",
+    sim_gyro_label: "3D Gyroscope Tilt",
+    sim_speed_label: "GPS Telemetry Speed",
+    sim_countdown_title: "CRASH IMPACT DETECTED! ARE YOU OKAY?",
+    sim_countdown_desc: "Sensor fusion triggered high G-force spike & rapid speed drop. Auto-alerting emergency dispatch in:",
+    sim_safe_btn: "I AM SAFE (CANCEL)",
+    sim_help_btn: "I NEED HELP NOW",
+    sim_dispatched_title: "Autonomous Emergency Rescue Dispatched",
+    sim_hospital_alerted: "Trauma ICU Bed Reserved at Nearest Hospital",
+    sim_ambulance_enroute: "ALS Ambulance Dispatched (ETA < 4 Mins)",
+    sim_volunteers_notified: "Nearest First-Responder Mesh Volunteers Alerted",
+    
+    // Non-Emergency Prevention Hub
+    hub_title: "Preventive Safety & Emergency Readiness Hub",
+    hub_subtitle: "Proactive guidelines for road safety, blood donation benefits, CPR first-aid, and snake encounter precautions.",
+    tab_road_safety: "Road Safety & Braking",
+    tab_blood_health: "Blood Donation Health",
+    tab_snake_safety: "Snake Bite Prevention",
+    tab_cpr_guide: "CPR & First-Aid Guide",
+    
     // Copilot Page
     copilot_title: "AI Emergency Dispatch Copilot",
     copilot_subtitle: "Voice & Text NLP Triage Engine with Haversine GPS Ranking",
@@ -38,6 +64,7 @@ export const TRANSLATIONS = {
     compatibility_score: "Match Score",
     last_donated: "Last Donated",
     request_blood_btn: "Request Emergency Courier",
+    voice_blood_prompt: "Speak blood request (e.g., 'Need O-negative blood in Vijayawada')",
     
     // Snakebite Page
     snake_title: "Snakebite Emergency & Antivenom Intelligence",
@@ -48,6 +75,7 @@ export const TRANSLATIONS = {
     avs_required: "Polyvalent AVS Protocol",
     first_aid_title: "WHO Clinical First-Aid Protocol",
     matched_avs_hospitals: "Hospitals with Active Antivenom Stock",
+    voice_snake_prompt: "Speak snake symptoms (e.g., 'Bitten on foot, drooping eyelids, severe swelling')",
 
     // SOS & Contacts
     sos_countdown_title: "EMERGENCY SOS ACTIVATED",
@@ -90,6 +118,32 @@ export const TRANSLATIONS = {
     quick_snake_id: "పాము జాతి గుర్తింపు",
     live_map_title: "ప్రస్తుత అత్యవసర సమాచార మ్యాప్",
 
+    // 3D Vehicle Simulation
+    sim_title: "3D మల్టీ-సెన్సార్ ప్రమాద గుర్తింపు మరియు విశ్లేషణ",
+    sim_subtitle: "యాక్సిలరోమీటర్, గైరోస్కోప్ మరియు GPS స్పీడ్ సెన్సార్లతో ప్రమాదాన్ని గుర్తించే విధానం.",
+    sim_start_drive: "సాధారణ ప్రయాణం (నార్మల్)",
+    sim_trigger_crash: "ప్రమాదాన్ని అనుకరించండి (క్రాష్ సిమ్యులేషన్)",
+    sim_reset: "రీసెట్ చేయండి",
+    sim_accel_label: "యాక్సిలరోమీటర్ G-ఫోర్స్",
+    sim_gyro_label: "3D గైరోస్కోప్ టిల్ట్",
+    sim_speed_label: "GPS వేగం (కి.మీ/గం)",
+    sim_countdown_title: "ప్రమాదం గుర్తించబడింది! మీరు సురక్షితంగా ఉన్నారా?",
+    sim_countdown_desc: "సెన్సార్లలో తీవ్రమైన మార్పు గుర్తించబడింది. సహాయక బృందాలకు సమాచారం పంపేందుకు సమయం:",
+    sim_safe_btn: "నేను క్షేమంగా ఉన్నాను (రద్దు చేయండి)",
+    sim_help_btn: "నాకు వెంటనే సహాయం కావాలి",
+    sim_dispatched_title: "అత్యవసర రెస్క్యూ స్వయంచాలకంగా పంపబడింది",
+    sim_hospital_alerted: "సమీప ఆసుపత్రిలో ICU బెడ్ రిజర్వ్ చేయబడింది",
+    sim_ambulance_enroute: "ALS ఆంబులెన్స్ బయలుదేరింది (చేరే సమయం < 4 నిమిషాలు)",
+    sim_volunteers_notified: "సమీప స్వచ్ఛంద సేవకులకు సమాచారం చేరింది",
+
+    // Non-Emergency Prevention Hub
+    hub_title: "ముందస్తు భద్రత & అత్యవసర ఆరోగ్య సూచనలు",
+    hub_subtitle: "రోడ్డు భద్రత, రక్తదానం ఉపయోగాలు, CPR ప్రథమ చికిత్స మరియు పాముకాటు నివారణ మార్గదర్శకాలు.",
+    tab_road_safety: "రోడ్డు భద్రత & బ్రేకింగ్",
+    tab_blood_health: "రక్తదానం ప్రయోజనాలు",
+    tab_snake_safety: "పాము కాటు నివారణ",
+    tab_cpr_guide: "CPR & ప్రథమ చికిత్స",
+
     // Copilot Page
     copilot_title: "AI అత్యవసర సహాయక వేదిక",
     copilot_subtitle: "వాయిస్ మరియు టెక్స్ట్ ద్వారా అత్యవసర వైద్య విశ్లేషణ",
@@ -110,6 +164,7 @@ export const TRANSLATIONS = {
     compatibility_score: "సరిపోలిక స్కోరు",
     last_donated: "చివరిగా ఇచ్చిన తేదీ",
     request_blood_btn: "రక్తం అభ్యర్థించండి",
+    voice_blood_prompt: "రక్తం అవసరాన్ని మాట్లాడండి (ఉదా: 'విజయవాడలో O నెగటివ్ రక్తం కావాలి')",
 
     // Snakebite Page
     snake_title: "పాము కాటు అత్యవసర వైద్య సహాయం",
@@ -120,6 +175,7 @@ export const TRANSLATIONS = {
     avs_required: "యాంటీవెనమ్ ఇంజెక్షన్లు",
     first_aid_title: "WHO ప్రథమ చికిత్స మార్గదర్శకాలు",
     matched_avs_hospitals: "యాంటీవెనమ్ ఉన్న ఆసుపత్రులు",
+    voice_snake_prompt: "లక్షణాలను మాట్లాడండి (ఉదా: 'కాలిన గాయం, కనురెప్పలు వాలుతున్నాయి')",
 
     // SOS & Contacts
     sos_countdown_title: "అత్యవసర SOS ప్రారంభమైంది",
@@ -162,6 +218,32 @@ export const TRANSLATIONS = {
     quick_snake_id: "सांप की प्रजाति पहचानें",
     live_map_title: "क्षेत्रीय आपातकालीन मानचित्र",
 
+    // 3D Vehicle Simulation
+    sim_title: "3D मल्टी-सेंसर दुर्घटना सिमुलेशन और टेलीमेट्री",
+    sim_subtitle: "एक्सेलेरोमीटर जी-फोर्स, जायरोस्कोप और जीपीएस स्पीड द्वारा लाइव क्रैश डिटेक्शन।",
+    sim_start_drive: "सामान्य ड्राइविंग (क्रूज़)",
+    sim_trigger_crash: "दुर्घटना सिमुलेट करें (क्रैश)",
+    sim_reset: "रीसेट सिमुलेशन",
+    sim_accel_label: "एक्सेलेरोमीटर G-फोर्स",
+    sim_gyro_label: "3D जायरोस्कोप झुकाव",
+    sim_speed_label: "GPS गति (किमी/घंटा)",
+    sim_countdown_title: "दुर्घटना का पता चला! क्या आप ठीक हैं?",
+    sim_countdown_desc: "सेंसर में तेज झटका और गति में कमी दर्ज की गई। आपातकालीन संदेश भेजा जा रहा है:",
+    sim_safe_btn: "मैं सुरक्षित हूँ (रद्द करें)",
+    sim_help_btn: "मुझे तुरंत मदद चाहिए",
+    sim_dispatched_title: "आपातकालीन बचाव दल रवाना किया गया",
+    sim_hospital_alerted: "निकटतम अस्पताल में आईसीयू बेड आरक्षित",
+    sim_ambulance_enroute: "एएलएस एम्बुलेंस रवाना (पहुंचने का समय < 4 मिनट)",
+    sim_volunteers_notified: "निकटतम स्वयंसेवकों को सतर्क किया गया",
+
+    // Non-Emergency Prevention Hub
+    hub_title: "सुरक्षा एवं आपातकालीन तैयारी केंद्र",
+    hub_subtitle: "सड़क सुरक्षा, रक्तदान के स्वास्थ्य लाभ, सीपीआर प्राथमिक चिकित्सा और सर्पदंश सावधानियां।",
+    tab_road_safety: "सड़क सुरक्षा एवं ब्रेकिंग",
+    tab_blood_health: "रक्तदान स्वास्थ्य",
+    tab_snake_safety: "सर्पदंश रोकथाम",
+    tab_cpr_guide: "सीपीआर एवं प्राथमिक उपचार",
+
     // Copilot Page
     copilot_title: "एआई आपातकालीन सहायता मंच",
     copilot_subtitle: "वॉयस और टेक्स्ट द्वारा त्वरित चिकित्सा विश्लेषण",
@@ -182,6 +264,7 @@ export const TRANSLATIONS = {
     compatibility_score: "मैच स्कोर",
     last_donated: "अंतिम दान तिथि",
     request_blood_btn: "रक्त का अनुरोध करें",
+    voice_blood_prompt: "रक्त की आवश्यकता बोलें (उदा: 'विजयवाड़ा में O- रक्त चाहिए')",
 
     // Snakebite Page
     snake_title: "सर्पदंश आपातकालीन सहायता",
@@ -192,6 +275,7 @@ export const TRANSLATIONS = {
     avs_required: "एंटीवेनम शीशियां",
     first_aid_title: "डब्ल्यूएचओ प्राथमिक उपचार गाइड",
     matched_avs_hospitals: "एंटीवेनम युक्त अस्पताल",
+    voice_snake_prompt: "लक्षण बोलें (उदा: 'पैर पर काटा है, पलकें गिर रही हैं')",
 
     // SOS & Contacts
     sos_countdown_title: "आपातकालीन SOS सक्रिय",
@@ -213,5 +297,87 @@ export const TRANSLATIONS = {
     distance: "दूरी",
     status_updated: "2 मिनट पहले अपडेट किया गया",
     offline_notice: "आप ऑफ़लाइन हैं। डायरेक्ट एसएमएस सक्रिय है।"
+  },
+
+  ta: {
+    app_name: "ரெஸ்க்யூ ஒன் AI+",
+    app_tagline: "AI அவசரக்கால மருத்துவ நுண்ணறிவு கட்டமைப்பு",
+    nav_home: "முகப்பு",
+    nav_copilot: "AI வழிகாட்டி",
+    nav_blood: "இரத்த தானம்",
+    nav_snakebite: "பாம்புக்கடி உதவி",
+    nav_dashboard: "கட்டுப்பாட்டு மையம்",
+    nav_sos: "SOS எச்சரிக்கை",
+    nav_profile: "அவசர எண்கள்",
+    sim_title: "3D சென்சார் விபத்து கண்டறிதல் உருவகப்படுத்துதல்",
+    sim_subtitle: "முடுக்கமானி, சுழல்மானி மற்றும் ஜிபிஎஸ் வேகத்தை நிகழ்நேரத்தில் கண்காணிக்கும் முறை.",
+    sim_start_drive: "இயல்பான பயணம்",
+    sim_trigger_crash: "விபத்தை உருவகப்படுத்துங்கள்",
+    sim_reset: "மீட்டமை",
+    sim_accel_label: "முடுக்கமானி G-விசை",
+    sim_gyro_label: "3D சுழல் கோணம்",
+    sim_speed_label: "ஜிபிஎஸ் வேகம் (கிமீ/மணி)",
+    sim_countdown_title: "விபத்து கண்டறியப்பட்டது! நீங்கள் நலமாக உள்ளீர்களா?",
+    sim_countdown_desc: "சென்சாரில் அதிக அதிர்வு பதிவானது. அவசர உதவி அனுப்பப்படும் நேரம்:",
+    sim_safe_btn: "நான் நலமாக உள்ளேன் (ரத்து)",
+    sim_help_btn: "எனக்கு உடனடியாக உதவி தேவை",
+    sim_dispatched_title: "அவசர மீட்புக்குழு அனுப்பப்பட்டது",
+    sim_hospital_alerted: "அருகிலுள்ள மருத்துவமனையில் தீவிர சிகிச்சை படுக்கை முன்பதிவு",
+    sim_ambulance_enroute: "ஆம்புலன்ஸ் விரைந்து வருகிறது (நேரம் < 4 நிமிடம்)",
+    sim_volunteers_notified: "அருகிலுள்ள தன்னார்வலர்களுக்கு தகவல் தெரிவிக்கப்பட்டது",
+    hub_title: "தடுப்பு பாதுகாப்பு & அவசர தயார்நிலை மையம்",
+    hub_subtitle: "சாலை பாதுகாப்பு, இரத்த தான பலன்கள், சிபிஆர் முதலுதவி மற்றும் பாம்புக்கடி வழிகாட்டுதல்கள்.",
+    tab_road_safety: "சாலை பாதுகாப்பு",
+    tab_blood_health: "இரத்த தான நன்மைகள்",
+    tab_snake_safety: "பாம்புக்கடி தடுப்பு",
+    tab_cpr_guide: "சிபிஆர் முதலுதவி",
+    blood_title: "ஸ்மார்ட் இரத்த தான பொருத்தம்",
+    blood_subtitle: "ABO/Rh இரத்த பொருந்தும் தொழில்நுட்பம்",
+    snake_title: "பாம்புக்கடி முதலுதவி & எதிர்ப்பு மருந்து",
+    snake_subtitle: "WHO வழிகாட்டுதல் முதலுதவி மற்றும் மருத்துவமனை தகவல்",
+    distance: "தொலைவு",
+    status_updated: "சமீபத்தில் புதுப்பிக்கப்பட்டது",
+    offline_notice: "நீங்கள் ஆஃப்லைனில் உள்ளீர்கள். SMS மூலம் அனுப்பப்படும்."
+  },
+
+  kn: {
+    app_name: "ರೆಸ್ಕ್ಯೂ ಒನ್ AI+",
+    app_tagline: "AI ಚಾಲಿತ ತುರ್ತು ವೈದ್ಯಕೀಯ ವ್ಯವಸ್ಥೆ",
+    nav_home: "ಮುಖಪುಟ",
+    nav_copilot: "AI ಸಹಾಯಕ",
+    nav_blood: "ರಕ್ತ ದಾನಿಗಳು",
+    nav_snakebite: "ಹಾವು ಕಡಿತ ನೆರವು",
+    nav_dashboard: "ಮಿಷನ್ ಕಂಟ್ರೋಲ್",
+    nav_sos: "SOS ಎಚ್ಚರಿಕೆ",
+    nav_profile: "ತುರ್ತು ಸಂಪರ್ಕಗಳು",
+    sim_title: "3D ಮಲ್ಟಿ-ಸೆನ್ಸರ್ ಅಪಘಾತ ಪತ್ತೆ ಮತ್ತು ಸಿಮ್ಯುಲೇಶನ್",
+    sim_subtitle: "ಆಕ್ಸಿಲರೊಮೀಟರ್, ಗೈರೊಸ್ಕೋಪ್ ಮತ್ತು ಜಿಪಿಎಸ್ ವೇಗ ಸಂವೇದಕಗಳ ನೈಜ ಸಮಯದ ವಿಶ್ಲೇಷಣೆ.",
+    sim_start_drive: "ಸಾಮಾನ್ಯ ಚಾಲನೆ",
+    sim_trigger_crash: "ಅಪಘಾತ ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಿ",
+    sim_reset: "ಮರುಹೊಂದಿಸಿ",
+    sim_accel_label: "ಆಕ್ಸಿಲರೊಮೀಟರ್ G-ಫೋರ್ಸ್",
+    sim_gyro_label: "3D ಗೈರೊಸ್ಕೋಪ್ ಓರೆ",
+    sim_speed_label: "GPS ವೇಗ (ಕಿಮೀ/ಗಂ)",
+    sim_countdown_title: "ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ! ನೀವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೀರಾ?",
+    sim_countdown_desc: "ತೀವ್ರ ಆಘಾತ ದಾಖಲಾಗಿದೆ. ತುರ್ತು ತಂಡಕ್ಕೆ ಮಾಹಿತಿ ಕಳುಹಿಸುವ ಸಮಯ:",
+    sim_safe_btn: "ನಾನು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇನೆ (ರದ್ದುಮಾಡಿ)",
+    sim_help_btn: "ನನಗೆ ತಕ್ಷಣ ಸಹಾಯ ಬೇಕು",
+    sim_dispatched_title: "ತುರ್ತು ರಕ್ಷಣಾ ತಂಡವನ್ನು ರವಾನಿಸಲಾಗಿದೆ",
+    sim_hospital_alerted: "ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಯಲ್ಲಿ ಐಸಿಯು ಬೆಡ್ ಮೀಸಲಿಡಲಾಗಿದೆ",
+    sim_ambulance_enroute: "ಆಂಬ್ಯುಲೆನ್ಸ್ ಹೊರಟಿದೆ (ತಲುಪುವ ಸಮಯ < 4 ನಿಮಿಷ)",
+    sim_volunteers_notified: "ಹತ್ತಿರದ ಸ್ವಯಂಸೇವಕರಿಗೆ ಮಾಹಿತಿ ನೀಡಲಾಗಿದೆ",
+    hub_title: "ಸುರಕ್ಷತೆ ಮತ್ತು ತುರ್ತು ಸನ್ನದ್ಧತೆ ಕೇಂದ್ರ",
+    hub_subtitle: "ರಸ್ತೆ ಸುರಕ್ಷತೆ, ರಕ್ತದಾನದ ಪ್ರಯೋಜನಗಳು, ಸಿಪಿಆರ್ ಪ್ರಥಮ ಚಿಕಿತ್ಸೆ ಮತ್ತು ಹಾವು ಕಡಿತ ಮುನ್ನೆಚ್ಚರಿಕೆಗಳು.",
+    tab_road_safety: "ರಸ್ತೆ ಸುರಕ್ಷತೆ",
+    tab_blood_health: "ರಕ್ತದಾನ ಆರೋಗ್ಯ",
+    tab_snake_safety: "ಹಾವು ಕಡಿತ ತಡೆಗಟ್ಟುವಿಕೆ",
+    tab_cpr_guide: "ಸಿಪಿಆರ್ ಮತ್ತು ಪ್ರಥಮ ಚಿಕಿತ್ಸೆ",
+    blood_title: "ಸ್ಮಾರ್ಟ್ ರಕ್ತ ದಾನಿಗಳ ಹೊಂದಾಣಿಕೆ",
+    blood_subtitle: "ABO/Rh ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಹತ್ತಿರದ ರಕ್ತ ಬ್ಯಾಂಕ್ ವಿವರ",
+    snake_title: "ಹಾವು ಕಡಿತ ಚಿಕಿತ್ಸೆ ಮತ್ತು ಆಂಟಿವೆನಮ್",
+    snake_subtitle: "WHO ಪ್ರಥಮ ಚಿಕಿತ್ಸಾ ನಿಯಮಗಳು ಮತ್ತು ಆಸ್ಪತ್ರೆ ಮಾರ್ಗ",
+    distance: "ದೂರ",
+    status_updated: "ನವೀಕರಿಸಲಾಗಿದೆ",
+    offline_notice: "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ. ನೇರ SMS ಸಕ್ರಿಯವಾಗಿದೆ."
   }
 };

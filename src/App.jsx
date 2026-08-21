@@ -9,6 +9,7 @@ import { BackgroundVideo } from './components/BackgroundVideo';
 import { AccidentAlertModal } from './components/AccidentAlertModal';
 import { accidentDetector } from './services/AccidentDetectionService';
 import { LandingPage } from './pages/LandingPage';
+import { AccidentPage } from './pages/AccidentPage';
 import { AuthPage } from './pages/AuthPage';
 import { EmergencyCopilotPage } from './pages/EmergencyCopilotPage';
 import { BloodDonorPage } from './pages/BloodDonorPage';
@@ -34,14 +35,13 @@ function AppContent() {
   }, []);
 
   const handleSimulateCrash = () => {
-    accidentDetector.simulateAccident((details) => {
-      setAccidentDetails(details);
-      setIsAccidentModalOpen(true);
-    });
+    setActiveTab('accident');
   };
 
   const renderTab = () => {
     switch (activeTab) {
+      case 'accident':
+        return <AccidentPage />;
       case 'copilot':
         return <EmergencyCopilotPage setActiveTab={setActiveTab} />;
       case 'blood':
@@ -59,9 +59,9 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-[100dvh] text-slate-100 flex flex-col font-sans relative selection:bg-red-600 selection:text-white bg-slate-950">
+    <div className="min-h-[100dvh] text-slate-100 flex flex-col font-sans relative selection:bg-red-600 selection:text-white bg-[#050A14]">
       
-      {/* 100dvh Fixed Damped Scroll-Scrubbed Background Video */}
+      {/* Fixed Ambient Glow Background (Zero Video Overhead) */}
       <BackgroundVideo activeTab={activeTab} />
 
       {/* Top Header Navbar with Language Switcher & SOS Trigger */}

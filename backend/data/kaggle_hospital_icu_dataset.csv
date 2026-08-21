@@ -1,31 +1,9 @@
-hospital_id,name,address,phone,lat,lng,icu_available,icu_capacity,antivenom_stock,oxygen_status,trauma_rating
-hosp-ap-001,King George Hospital (KGH Govt Regional Trauma & Venom Center),"Maharanipeta, Visakhapatnam, Andhra Pradesh 530002",+91-891-2564891,17.7089,83.3032,14,45,180,HIGH,5.0
-hosp-ap-002,Government General Hospital (GGH Vijayawada),"NH-16, Gunadala, Vijayawada, Andhra Pradesh 520004",+91-866-2472777,16.5167,80.6500,12,40,150,HIGH,4.9
-hosp-ap-003,SVRR Government General Hospital (Ruia Hospital Tirupati),"Alipiri Road, Tirupati, Andhra Pradesh 517507",+91-877-2287777,13.6369,79.4140,16,50,200,HIGH,5.0
-hosp-ap-004,Government General Hospital (GGH Guntur),"Collectorate Road, Guntur, Andhra Pradesh 522001",+91-863-2234000,16.3067,80.4365,10,35,120,HIGH,4.8
-hosp-ap-005,Government General Hospital (GGH Kurnool),"Budhawarpet, Kurnool, Andhra Pradesh 518002",+91-8518-255300,15.8281,78.0373,9,30,110,HIGH,4.7
-hosp-ap-006,Government General Hospital (GGH Kakinada),"Main Road, Kakinada, Andhra Pradesh 533001",+91-884-2376100,16.9891,82.2475,8,25,95,HIGH,4.7
-hosp-ap-007,Government General Hospital (GGH Nellore / ACSR Medical College),"Dargamitta, Nellore, Andhra Pradesh 524004",+91-861-2327000,14.4426,79.9865,7,22,80,HIGH,4.6
-hosp-ap-008,Government General Hospital (GGH Anantapur),"Rahamat Nagar, Anantapur, Andhra Pradesh 515001",+91-8554-274000,14.6819,77.6006,6,20,70,MEDIUM,4.5
-hosp-ap-009,Rajahmundry Government District Headquarters Hospital,"Danavaipeta, Rajamahendravaram, Andhra Pradesh 533103",+91-883-2478500,17.0005,81.7800,5,18,65,HIGH,4.6
-hosp-ap-010,Eluru Government District Hospital,"Sanivarapupeta, Eluru, Andhra Pradesh 534006",+91-8812-230400,16.7107,81.0952,4,15,50,HIGH,4.5
-hosp-ap-011,AIIMS Mangalagiri (All India Institute of Medical Sciences),"Mangalagiri, Guntur District, Andhra Pradesh 522503",+91-863-2346000,16.4385,80.5562,18,60,160,HIGH,5.0
-hosp-ap-012,Apollo Hospitals Health City Arilova,"Health City, Arilova, Visakhapatnam, Andhra Pradesh 530040",+91-891-2867777,17.7667,83.3333,11,35,45,HIGH,4.8
-hosp-ap-013,Ramesh Hospitals Vijayawada,"Ring Road, Vijayawada, Andhra Pradesh 520008",+91-866-2488888,16.5083,80.6417,15,42,35,HIGH,4.8
-hosp-ap-014,Sri Venkateswara Institute of Medical Sciences (SVIMS Tirupati),"Alipiri Road, Tirupati, Andhra Pradesh 517507",+91-877-2287777,13.6350,79.4120,20,70,210,HIGH,5.0
-hosp-ap-015,Manipal Hospital Vijayawada,"Katuru Road, Tadepalli, Guntur/Vijayawada, Andhra Pradesh 522501",+91-866-2224444,16.4833,80.6000,9,28,40,HIGH,4.7
-hosp-ap-016,Government General Hospital (GGH Kadapa / RIMS),"RIMS Road, Kadapa, Andhra Pradesh 516002",+91-8562-220000,14.4673,78.8242,10,32,105,HIGH,4.7
-hosp-ap-017,Government General Hospital (GGH Vizianagaram),"Cantt Road, Vizianagaram, Andhra Pradesh 535003",+91-8922-276000,18.1124,83.3956,7,24,85,HIGH,4.6
-hosp-ap-018,Government General Hospital (GGH Srikakulam / RIMS),"RIMS Road, Srikakulam, Andhra Pradesh 532001",+91-8942-222400,18.2969,83.8968,6,20,75,HIGH,4.5
-hosp-ap-019,Government General Hospital (GGH Ongole / RIMS),"RIMS Road, Ongole, Prakasam District, Andhra Pradesh 523001",+91-8592-233000,15.5057,80.0499,8,26,90,HIGH,4.6
-hosp-ap-020,Government District Hospital Machilipatnam,"Parasupeta, Machilipatnam, Krishna District, Andhra Pradesh 521001",+91-8672-222100,16.1875,81.1389,5,18,60,HIGH,4.4
-hosp-ap-021,Government District Hospital Chittoor,"Collectorate Area, Chittoor, Andhra Pradesh 517001",+91-8572-232500,13.2172,79.1003,6,20,70,HIGH,4.5
-hosp-ap-022,Nandyal Government District Hospital,"Tekke, Nandyal, Kurnool District, Andhra Pradesh 518501",+91-8514-242200,15.4783,78.4836,5,16,55,HIGH,4.4
-hosp-ap-023,Tenali Government District Hospital,"Guntur Road, Tenali, Andhra Pradesh 522201",+91-8644-223300,16.2431,80.6483,4,14,45,HIGH,4.3
-hosp-ap-024,Bhimavaram Area Hospital,"PP Road, Bhimavaram, West Godavari, Andhra Pradesh 534201",+91-8816-224400,16.5449,81.5212,4,15,50,HIGH,4.4
-hosp-ap-025,Hindupur Government District Hospital,"Penukonda Road, Hindupur, Anantapur District, Andhra Pradesh 515201",+91-8556-220300,13.8299,77.4930,4,12,40,MEDIUM,4.2
-hosp-ap-026,SevenHills Hospital Visakhapatnam,"Ram Nagar, Visakhapatnam, Andhra Pradesh 530002",+91-891-6677777,17.7167,83.3083,12,38,40,HIGH,4.8
-hosp-ap-027,Ayush Hospitals Vijayawada,"Opp PWD Grounds, Vijayawada, Andhra Pradesh 520002",+91-866-2575555,16.5100,80.6300,10,30,30,HIGH,4.7
-hosp-ap-028,KIMS Hospital Rajahmundry,"NH-16 Bypass, Rajahmundry, Andhra Pradesh 533105",+91-883-2499999,17.0100,81.7900,8,25,35,HIGH,4.6
-hosp-ap-029,Medicover Hospitals Kakinada,"Bhanugudi Junction, Kakinada, Andhra Pradesh 533003",+91-884-6667777,16.9800,82.2400,7,22,25,HIGH,4.6
-hosp-ap-030,Amara Hospital Tirupati,"Karakambadi Road, Tirupati, Andhra Pradesh 517507",+91-877-2266666,13.6400,79.4300,11,35,50,HIGH,4.8
+hospital_id,name,category,district,state,latitude,longitude,contact_number,icu_beds_available,icu_total_capacity,antivenom_vials_stock,oxygen_supply_level,trauma_center_level,verified_pmjay
+hosp-nhp-001,King George Hospital (KGH Visakhapatnam),Govt Medical College,Visakhapatnam,Andhra Pradesh,17.7089,83.3032,+91-891-2564891,18,40,185,HIGH,Level-1 Trauma,True
+hosp-nhp-002,Government General Hospital (GGH Vijayawada),Govt District Headquarters,Krishna,Andhra Pradesh,16.5167,80.6500,+91-866-2472777,14,30,150,HIGH,Level-2 Trauma,True
+hosp-nhp-003,AIIMS Mangalagiri Apex Trauma Center,Institute of National Importance,Guntur,Andhra Pradesh,16.4389,80.5606,+91-8645-293001,26,60,240,MAXIMUM,Level-1 Apex,True
+hosp-nhp-004,Government General Hospital (GGH Guntur),Govt Teaching Hospital,Guntur,Andhra Pradesh,16.3067,80.4365,+91-863-2224567,15,35,165,HIGH,Level-2 Trauma,True
+hosp-nhp-005,Victoria Hospital (Bangalore Medical College),Govt Autonomous Teaching Hospital,Bengaluru Urban,Karnataka,12.9620,77.5850,+91-80-26701150,22,55,210,HIGH,Level-1 Trauma,True
+hosp-nhp-006,Osmania General Hospital (OGH Hyderabad),Govt Apex Teaching Hospital,Hyderabad,Telangana,17.3753,78.4744,+91-40-24600121,24,50,195,HIGH,Level-1 Apex,True
+hosp-nhp-007,Ramesh Hospitals Vijayawada,Private Super Specialty,Krishna,Andhra Pradesh,16.5083,80.6417,+91-866-2488888,16,35,45,HIGH,Level-2 Trauma,True
+hosp-nhp-008,Manipal Hospital Old Airport Road Bengaluru,Private Quaternary Care,Bengaluru Urban,Karnataka,12.9592,77.6567,+91-80-25024444,20,48,70,HIGH,Level-1 Trauma,True

@@ -1,68 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, ShieldAlert, CheckCircle2, Phone, MapPin, 
   Hospital as HospIcon, Info, RefreshCw, AlertOctagon, 
-  Eye, Zap, Stethoscope, AlertTriangle
+  Eye, Zap, Stethoscope, AlertTriangle, Mic, MicOff, Volume2, 
+  XCircle, Sparkles, HelpCircle, ArrowRight, Check, Table, Search, Filter, Send
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
+import { speakEmergencyInstruction } from '../services/audio_service';
 import snakeSpeciesData from '../data/snake_species.json';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 
 export const SnakebitePage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { queueOfflineReport } = useDemo();
 
+  // Search & Triage State
+  const [hasTriaged, setHasTriaged] = useState(false);
+  const [showVisualPicker, setShowVisualPicker] = useState(false);
   const [description, setDescription] = useState('');
-  const [selectedSymptoms, setSelectedSymptoms] = useState(['Rapid Swelling & Severe Pain']);
+  const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [assessment, setAssessment] = useState(() => {
-    // Synchronous default state to prevent any blank screen / race condition
-    const defaultSpec = snakeSpeciesData[0];
-    return {
-      species: defaultSpec,
-      riskTier: defaultSpec.urgency || 'CRITICAL',
-      isNeurotoxic: true,
-      isHemotoxic: false,
-      antivenomRequired: true,
-      nearestAvsFacility: {
-        id: 'hosp-nhp-002',
-        name: 'Government General Hospital (GGH Vijayawada)',
-        district: 'Krishna',
-        state: 'Andhra Pradesh',
-        contact_number: '+91-866-2472777',
-        distanceKm: 1.2,
-        antivenom_stock: 150,
-        icu_available: 14
-      },
-      allAvsFacilities: [
-        {
-          id: 'hosp-nhp-002',
-          name: 'Government General Hospital (GGH Vijayawada)',
-          district: 'Krishna',
-          state: 'Andhra Pradesh',
-          contact_number: '+91-866-2472777',
-          distanceKm: 1.2,
-          antivenom_stock: 150,
-          icu_available: 14
-        },
-        {
-          id: 'hosp-nhp-001',
-          name: 'King George Hospital (KGH)',
-          district: 'Visakhapatnam',
-          state: 'Andhra Pradesh',
-          contact_number: '+91-891-2564891',
-          distanceKm: 340.0,
-          antivenom_stock: 185,
-          icu_available: 18
-        }
-      ],
-      disclaimer: "DECISION SUPPORT ONLY — Not a clinical diagnosis. Immediately transport patient to the nearest antivenom-equipped emergency hospital."
-    };
-  });
+  const [isListening, setIsListening] = useState(false);
   const [alertSent, setAlertSent] = useState(null);
+  const [assessment, setAssessment] = useState(null);
+
+  // Table filter state
+  const [tableSearch, setTableSearch] = useState('');
+  const [toxinFilter, setToxinFilter] = useState('ALL');
 
   const symptomChecklist = [
     'Fang Puncture Marks',
@@ -80,16 +45,30 @@ export const SnakebitePage = () => {
       ? selectedSymptoms.filter(s => s !== sym) 
       : [...selectedSymptoms, sym];
     setSelectedSymptoms(updated);
-    handleRunAssessment(description, updated);
   };
 
+  // Run Triage Analysis
   const handleRunAssessment = async (queryText = description, symptomsToUse = selectedSymptoms) => {
+    const text = (queryText || '').toLowerCase();
+    
+    // Check if user says "I don't know which snake" or "unknown"
+    if (text.includes("don't know") || text.includes("dont know") || text.includes("unknown") || text.includes("not sure") || text.includes("just bitten")) {
+      setHasTriaged(true);
+      setShowVisualPicker(true);
+      speakEmergencyInstruction("Unknown snake bite reported. Please select which snake resembles the one you encountered from the visual gallery.");
+      return;
+    }
+
     setLoading(true);
+    setHasTriaged(true);
+    setShowVisualPicker(false);
+
     try {
       const combinedText = `${queryText || ''} ${(symptomsToUse || []).join(' ')}`;
       const result = await DataService.assessSnakebite(combinedText, symptomsToUse, 16.5167, 80.6500);
       if (result && result.species) {
         setAssessment(result);
+        speakEmergencyInstruction(`Identified ${result.species.common_name}. Polyvalent antivenom hospital and ICU bed located.`);
       }
     } catch (err) {
       console.error("Error assessing snakebite:", err);
@@ -98,9 +77,51 @@ export const SnakebitePage = () => {
     }
   };
 
-  useEffect(() => {
-    handleRunAssessment("Spectacled Cobra", selectedSymptoms);
-  }, []);
+  // User selects a specific snake from the visual gallery or table
+  const handleSelectSnakeFromGallery = (spec) => {
+    setShowVisualPicker(false);
+    setDescription(spec.common_name);
+    handleRunAssessment(spec.common_name, selectedSymptoms);
+  };
+
+  // Voice Assistant Handler (Web Speech API)
+  const handleStartVoice = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      // Fallback demo simulation
+      setIsListening(true);
+      setTimeout(() => {
+        const sampleVoices = [
+          "I am bitten by a snake, I don't know which snake",
+          "Spectacled Cobra bite on right foot with swelling and dizziness",
+          "Bitten by Russell's Viper in agricultural field, severe bleeding"
+        ];
+        const randomVoice = sampleVoices[Math.floor(Math.random() * sampleVoices.length)];
+        setDescription(randomVoice);
+        setIsListening(false);
+        handleRunAssessment(randomVoice, selectedSymptoms);
+      }, 1500);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    setIsListening(true);
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setDescription(transcript);
+      setIsListening(false);
+      handleRunAssessment(transcript, selectedSymptoms);
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+  };
 
   const handleDispatchAntivenomRequest = (hospital) => {
     if (!hospital) return;
@@ -115,8 +136,33 @@ export const SnakebitePage = () => {
 
     queueOfflineReport(payload);
     setAlertSent(`Emergency Antivenom (AVS) reservation dispatched to ${hospital.name}! ER trauma team notified.`);
+    speakEmergencyInstruction(`Antivenom vials reserved at ${hospital.name}. Trauma bay alerted.`);
     setTimeout(() => setAlertSent(null), 5000);
   };
+
+  const handleReset = () => {
+    setHasTriaged(false);
+    setShowVisualPicker(false);
+    setDescription('');
+    setSelectedSymptoms([]);
+    setAssessment(null);
+    setAlertSent(null);
+  };
+
+  const filteredSpecies = (snakeSpeciesData || []).filter((s) => {
+    const matchesSearch = 
+      s.common_name.toLowerCase().includes(tableSearch.toLowerCase()) ||
+      s.scientific_name.toLowerCase().includes(tableSearch.toLowerCase()) ||
+      (s.region && s.region.toLowerCase().includes(tableSearch.toLowerCase()));
+    
+    const matchesToxin = 
+      toxinFilter === 'ALL' ||
+      (toxinFilter === 'NEURO' && s.venom_type?.includes('NEUROTOXIC')) ||
+      (toxinFilter === 'HEMO' && s.venom_type?.includes('HEMOTOXIC')) ||
+      (toxinFilter === 'NON_VENOMOUS' && !s.venomous);
+
+    return matchesSearch && matchesToxin;
+  });
 
   return (
     <motion.div 
@@ -124,53 +170,148 @@ export const SnakebitePage = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.25 }}
-      className="w-full pb-28 pt-4 px-4 max-w-4xl mx-auto space-y-6"
+      className="w-full pb-28 pt-4 px-3 sm:px-4 max-w-5xl mx-auto space-y-6"
     >
       
       {/* Header Banner */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-950/50">
-            <Activity className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-500/40 text-slate-950 flex items-center justify-center shadow-lg shadow-cyan-950/50">
+            <Activity className="w-6 h-6 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white">{t('snake_title') || 'Snakebite Clinical Triage & AVS Locator'}</h2>
-            <p className="text-xs text-slate-300">Rule-based toxin triage & nearest antivenom hospital routing</p>
+            <h2 className="text-xl font-extrabold text-white">
+              {t('snake_title') || 'Snakebite Clinical Triage & Antivenom Locator'}
+            </h2>
+            <p className="text-xs text-slate-300">
+              Voice-assisted toxin triage, Big Four visual identification, and live hospital AVS vial reservation
+            </p>
           </div>
         </div>
 
-        <span className="hidden sm:inline-block px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded-full text-xs font-mono font-bold">
-          DECISION SUPPORT
-        </span>
+        {hasTriaged && (
+          <button
+            onClick={handleReset}
+            className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors flex items-center space-x-1.5 self-start sm:self-auto cursor-pointer"
+          >
+            <XCircle className="w-4 h-4 text-cyan-400" />
+            <span>New Snakebite Triage</span>
+          </button>
+        )}
       </div>
 
-      {/* Symptom & Observation Input Card */}
-      <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 rounded-3xl border border-cyan-500/30 space-y-4 shadow-2xl">
-        <label className="text-xs font-extrabold text-slate-200 uppercase tracking-wider block">
-          1. Describe Physical Features, Snake Pattern, or Incident
-        </label>
-        
-        <div className="flex gap-2">
+      {/* 1. Voice & Text Incident Input Card */}
+      <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-cyan-500/30 space-y-4 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-extrabold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span>1. Describe Snakebite Incident (Voice or Text)</span>
+          </label>
+          <span className="text-[10px] font-mono text-cyan-400 font-bold">
+            POLYVALENT AVS NETWORK
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2.5">
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. 'broad hood with spectacle mark', 'triangular head brown spots', 'black with double white bands'"
-            className="flex-1 bg-[#050A14] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-cyan-500 min-h-[46px]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && description.trim()) {
+                handleRunAssessment(description, selectedSymptoms);
+              }
+            }}
+            placeholder="Speak or type (e.g. 'I am bitten by a snake, I don't know which snake' or 'Spectacled Cobra on foot')"
+            className="flex-1 bg-[#050A14] border border-slate-800 rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 min-h-[46px]"
           />
+
           <button
-            onClick={() => handleRunAssessment(description, selectedSymptoms)}
-            disabled={loading}
-            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs transition-all shadow-lg shadow-cyan-950/80 shrink-0 min-h-[46px] cursor-pointer"
+            onClick={handleStartVoice}
+            className={`px-4 py-3 rounded-2xl text-xs font-black flex items-center space-x-2 transition-all cursor-pointer shadow-lg justify-center min-h-[46px] shrink-0 ${
+              isListening 
+                ? 'bg-red-600 text-white animate-pulse shadow-red-950' 
+                : 'bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/40'
+            }`}
+            title="Speak symptoms or snake description"
           >
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'TRIAGE INCIDENT'}
+            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            <span>{isListening ? 'Listening...' : 'Voice Input'}</span>
+          </button>
+
+          <button
+            onClick={() => handleRunAssessment(description || "unknown snake", selectedSymptoms)}
+            disabled={loading}
+            className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs transition-all shadow-xl shadow-cyan-950/80 shrink-0 min-h-[46px] cursor-pointer flex items-center justify-center space-x-1.5"
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin stroke-[2.5]" /> : <Activity className="w-4 h-4 stroke-[2.5]" />}
+            <span>TRIAGE EMERGENCY</span>
           </button>
         </div>
 
-        {/* Clinical Symptom Selector Checklist */}
-        <div className="space-y-2 pt-1">
+        {/* Quick Trigger Buttons */}
+        <div className="space-y-2 pt-2 border-t border-slate-800">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-            2. Observed Symptoms & Physiological Indicators:
+            Quick Incident Presets:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                setDescription("I am bitten by a snake, I don't know which snake");
+                handleRunAssessment("I am bitten by a snake, I don't know which snake", selectedSymptoms);
+              }}
+              className="bg-red-950/80 hover:bg-red-900 border border-red-500/60 text-red-300 text-xs px-3.5 py-2 rounded-xl font-bold transition-all shadow-md cursor-pointer flex items-center space-x-1.5"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+              <span>I DON'T KNOW WHICH SNAKE (OPEN VISUAL PICKER)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setDescription("Spectacled Cobra (Naja naja) hood mark");
+                handleRunAssessment("Spectacled Cobra (Naja naja) hood mark", selectedSymptoms);
+              }}
+              className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-2 rounded-xl font-semibold cursor-pointer"
+            >
+              🐍 Spectacled Cobra
+            </button>
+
+            <button
+              onClick={() => {
+                setDescription("Russell's Viper (Daboia russelii) chain spots triangular head");
+                handleRunAssessment("Russell's Viper (Daboia russelii) chain spots triangular head", selectedSymptoms);
+              }}
+              className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-2 rounded-xl font-semibold cursor-pointer"
+            >
+              🐍 Russell's Viper
+            </button>
+
+            <button
+              onClick={() => {
+                setDescription("Common Krait (Bungarus caeruleus) nocturnal white bands");
+                handleRunAssessment("Common Krait (Bungarus caeruleus) nocturnal white bands", selectedSymptoms);
+              }}
+              className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-2 rounded-xl font-semibold cursor-pointer"
+            >
+              🐍 Common Krait
+            </button>
+
+            <button
+              onClick={() => {
+                setDescription("Saw-scaled Viper (Echis carinatus) serrated scales");
+                handleRunAssessment("Saw-scaled Viper (Echis carinatus) serrated scales", selectedSymptoms);
+              }}
+              className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-2 rounded-xl font-semibold cursor-pointer"
+            >
+              🐍 Saw-scaled Viper
+            </button>
+          </div>
+        </div>
+
+        {/* Observed Symptoms Checklist */}
+        <div className="space-y-2 pt-1 border-t border-slate-800">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+            Optional: Observed Physiological Symptoms:
           </span>
           <div className="flex flex-wrap gap-2">
             {symptomChecklist.map((sym) => {
@@ -180,10 +321,10 @@ export const SnakebitePage = () => {
                   key={sym}
                   type="button"
                   onClick={() => handleToggleSymptom(sym)}
-                  className={`text-xs py-2 px-3 rounded-xl font-semibold transition-all border cursor-pointer flex items-center space-x-1.5 ${
+                  className={`text-xs py-1.5 px-3 rounded-xl font-semibold transition-all border cursor-pointer flex items-center space-x-1.5 ${
                     isSelected
                       ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-md'
-                      : 'bg-[#050A14] text-slate-300 border-slate-800 hover:border-slate-700'
+                      : 'bg-[#050A14] text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-cyan-400' : 'bg-slate-600'}`} />
@@ -193,41 +334,41 @@ export const SnakebitePage = () => {
             })}
           </div>
         </div>
-
-        {/* Quick Specimen Buttons */}
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800">
-          <span className="text-[10px] font-bold text-slate-400 uppercase self-center mr-1">Quick Match:</span>
-          <button
-            onClick={() => {
-              setDescription("Spectacled Cobra (Naja naja) hood mark");
-              handleRunAssessment("Spectacled Cobra (Naja naja) hood mark", selectedSymptoms);
-            }}
-            className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-3 py-1.5 rounded-xl font-semibold cursor-pointer"
-          >
-            🐍 Spectacled Cobra
-          </button>
-          <button
-            onClick={() => {
-              setDescription("Russell's Viper (Daboia russelii) chain spots triangular head");
-              handleRunAssessment("Russell's Viper (Daboia russelii) chain spots triangular head", selectedSymptoms);
-            }}
-            className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-3 py-1.5 rounded-xl font-semibold cursor-pointer"
-          >
-            🐍 Russell's Viper
-          </button>
-          <button
-            onClick={() => {
-              setDescription("Common Krait (Bungarus caeruleus) nocturnal white bands");
-              handleRunAssessment("Common Krait (Bungarus caeruleus) nocturnal white bands", selectedSymptoms);
-            }}
-            className="bg-[#050A14] hover:bg-slate-900 border border-slate-800 text-slate-300 text-[11px] px-3 py-1.5 rounded-xl font-semibold cursor-pointer"
-          >
-            🐍 Common Krait
-          </button>
-        </div>
       </div>
 
-      {/* Dispatch Toast */}
+      {/* INITIAL STATE: Guidance overview */}
+      {!hasTriaged && (
+        <div className="bg-[#0B1220]/80 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-4 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto text-cyan-400">
+            <Activity className="w-7 h-7 animate-pulse" />
+          </div>
+          <div className="space-y-1 max-w-md mx-auto">
+            <h3 className="text-base font-extrabold text-white">
+              Instant Snake Toxicology & Antivenom Allocation
+            </h3>
+            <p className="text-xs text-slate-300">
+              Speak or describe what happened above. If you don't know the snake, tap <span className="text-red-400 font-bold">"I DON'T KNOW WHICH SNAKE"</span> to open the visual identification gallery and locate the nearest hospital with Polyvalent Antivenom vials.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left pt-2">
+            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
+              <div className="text-xs font-bold text-cyan-400">1. Instant Species ID</div>
+              <p className="text-[11px] text-slate-400">Triage between Neurotoxic (Cobra/Krait) and Hemotoxic (Vipers).</p>
+            </div>
+            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
+              <div className="text-xs font-bold text-emerald-400">2. WHO First-Aid Precautions</div>
+              <p className="text-[11px] text-slate-400">Standard immobilization rules. Zero dangerous tourniquets.</p>
+            </div>
+            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
+              <div className="text-xs font-bold text-amber-400">3. Verified AVS Inventory</div>
+              <p className="text-[11px] text-slate-400">Real-time Polyvalent Antivenom vial counts and ICU ventilator beds.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DISPATCH TOAST */}
       {alertSent && (
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
@@ -239,10 +380,77 @@ export const SnakebitePage = () => {
         </motion.div>
       )}
 
-      {/* Main Assessment Result & Antivenom Routing Card */}
-      {assessment && assessment.species && (
-        <div className="space-y-6">
-          {/* Live Hospital Antivenom Response & Farmer Rescue Video Stream */}
+      {/* CASE 1: UNKNOWN SNAKE -> VISUAL SPECIES IDENTIFICATION GALLERY */}
+      {hasTriaged && showVisualPicker && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          <div className="p-4 bg-gradient-to-r from-red-950/90 via-slate-900 to-amber-950/90 border border-red-500/60 rounded-3xl space-y-1">
+            <div className="flex items-center space-x-2 text-red-400 font-extrabold text-sm">
+              <AlertTriangle className="w-5 h-5" />
+              <span>Step 2: Tap the Snake that Matches What You Encountered</span>
+            </div>
+            <p className="text-xs text-slate-300">
+              Select the matching image below. This will instantly calculate medical precautions and allocate nearest antivenom vials.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {(snakeSpeciesData || []).map((spec) => (
+              <div 
+                key={spec.id}
+                onClick={() => handleSelectSnakeFromGallery(spec)}
+                className="bg-[#0B1220]/95 backdrop-blur-xl border border-slate-800 hover:border-cyan-400 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between cursor-pointer group transition-all hover:scale-[1.03]"
+              >
+                <div className="relative h-44 overflow-hidden bg-[#050A14]">
+                  <img 
+                    src={spec.image_source} 
+                    alt={spec.common_name}
+                    loading="lazy" 
+                    className="w-full h-full object-cover filter brightness-95 group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span className={`absolute top-2.5 right-2.5 text-[9px] font-black px-2 py-0.5 rounded-full border ${
+                    spec.venomous 
+                      ? 'bg-red-950/90 border-red-500/60 text-red-400' 
+                      : 'bg-emerald-950/90 border-emerald-500/60 text-emerald-400'
+                  }`}>
+                    {spec.venomous ? 'VENOMOUS' : 'NON-VENOMOUS'}
+                  </span>
+                </div>
+
+                <div className="p-3.5 space-y-2">
+                  <div>
+                    <h4 className="text-sm font-black text-white group-hover:text-cyan-400 transition-colors">
+                      {spec.common_name}
+                    </h4>
+                    <p className="text-[11px] font-mono text-cyan-300 italic">{spec.scientific_name}</p>
+                  </div>
+
+                  <p className="text-[11px] text-slate-300 bg-[#050A14] p-2.5 rounded-xl border border-slate-800 leading-tight">
+                    <strong className="text-white">Marker: </strong>
+                    {spec.identifying_markers?.[0]}
+                  </p>
+
+                  <div className="text-[10px] font-bold text-cyan-400 flex items-center space-x-1 pt-1">
+                    <span>Tap to view first-aid →</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* CASE 2: SPECIES IDENTIFIED / TRIAGED -> RENDER FIRST AID & NEAREST ANTIVENOM CENTERS */}
+      {hasTriaged && !showVisualPicker && assessment && assessment.species && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          {/* Live Hospital Dispatch Telemetry Card */}
           <LiveHospitalResponse
             emergencyType="SNAKEBITE"
             hospitalName={assessment.nearestAvsFacility?.name || "Government General Hospital (GGH Vijayawada)"}
@@ -250,87 +458,100 @@ export const SnakebitePage = () => {
             etaMinutes={3}
             distanceKm={assessment.nearestAvsFacility?.distanceKm || 1.2}
           />
-          <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-cyan-500/40 space-y-4 shadow-2xl">
+
+          {/* Identified Snake Toxicology Breakdown */}
+          <div className="bg-[#0B1220]/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-cyan-500/40 space-y-4 shadow-2xl">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-              <div>
-                <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Identified India Species Matrix</span>
-                <h3 className="text-xl font-black text-white">{assessment.species.common_name}</h3>
-                <p className="text-xs font-mono text-cyan-300 italic">{assessment.species.scientific_name}</p>
+              <div className="flex items-center space-x-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-[#050A14] border border-cyan-500/50 flex items-center justify-center text-cyan-400 text-xl font-black shrink-0">
+                  🐍
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Identified India Species Matrix</span>
+                  <h3 className="text-xl font-black text-white">{assessment.species.common_name}</h3>
+                  <p className="text-xs font-mono text-cyan-300 italic">{assessment.species.scientific_name}</p>
+                </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="bg-red-950/90 border border-red-500/60 text-red-400 px-3 py-1.5 rounded-xl text-xs font-black uppercase">
-                  {assessment.species.venom_type || 'VENOMOUS'}
+                  {assessment.species.venom_type || 'NEUROTOXIC VENOM'}
                 </span>
                 <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-3 py-1.5 rounded-xl text-xs font-mono font-bold">
-                  {assessment.riskTier || 'CRITICAL'} TIER
+                  {assessment.riskTier || 'CRITICAL'} RISK TIER
                 </span>
               </div>
             </div>
 
-            {/* First Aid & Critical Clinical Steps */}
-            <div className="bg-[#050A14] p-4 rounded-2xl border border-slate-800 space-y-2">
+            {/* Crucial WHO First Aid Precautions (DOs & DON'Ts) */}
+            <div className="bg-[#050A14] p-5 rounded-2xl border border-slate-800 space-y-3">
               <h4 className="text-xs font-black text-cyan-400 uppercase tracking-wider flex items-center space-x-1.5">
                 <ShieldAlert className="w-4 h-4" />
-                <span>Immediate Standard First Aid Protocol</span>
+                <span>Immediate Standard First Aid Precautions for {assessment.species.common_name}</span>
               </h4>
-              <ul className="space-y-1.5 text-xs text-slate-200">
+
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
                 {(assessment.species.first_aid || [
-                  "Immobilize the bitten limb immediately below heart level.",
-                  "Do NOT cut, suck, or apply tight arterial tourniquets.",
-                  "Keep patient calm to slow systemic lymphatic absorption.",
-                  "Rush immediately to the nearest hospital equipped with Polyvalent Anti-Venom Serum (AVS)."
+                  "Immobilize the bitten limb immediately with a splint below heart level.",
+                  "Do NOT cut, suck venom, or apply tight arterial tourniquets.",
+                  "Keep the victim completely calm and seated to slow venom circulation.",
+                  "Transport immediately to nearest antivenom hospital without wasting Golden Hour time."
                 ]).map((step, idx) => (
-                  <li key={idx} className="flex items-start space-x-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
-                    <span>{step}</span>
+                  <li key={idx} className="bg-[#0B1220] p-3 rounded-xl border border-slate-800 flex items-start space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{step}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Nearest Antivenom (AVS) Equipped Hospital from Real Dataset */}
+            {/* Nearest Antivenom (AVS) Equipped Hospitals */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
                   <HospIcon className="w-4 h-4 text-cyan-400" />
-                  <span>Nearest Antivenom (AVS) Hospital Network ({(assessment.allAvsFacilities || []).length})</span>
+                  <span>Nearest Antivenom (AVS) Hospitals ({(assessment.allAvsFacilities || []).length})</span>
                 </h4>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold">POLYVALENT AVS VERIFIED</span>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                  POLYVALENT AVS STOCKS VERIFIED
+                </span>
               </div>
 
               <div className="space-y-2.5">
                 {(assessment.allAvsFacilities || []).map((hosp) => (
                   <div 
                     key={hosp.id} 
-                    className="bg-[#050A14] p-4 rounded-2xl border border-slate-800/80 hover:border-cyan-500/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="bg-[#050A14] p-4 sm:p-5 rounded-2xl border border-slate-800/80 hover:border-cyan-500/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg"
                   >
-                    <div>
+                    <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <h5 className="text-xs font-extrabold text-white">{hosp.name}</h5>
+                        <h5 className="text-sm font-extrabold text-white">{hosp.name}</h5>
                         <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
                           AVS IN STOCK ({hosp.antivenom_stock || 150} VIALS)
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-300 mt-0.5">
-                        {hosp.distanceKm || 1.2} km away • {hosp.district || 'Trauma Center'}, {hosp.state || 'AP'} • ICU Beds: {hosp.icu_available || 12}
+                      <p className="text-xs text-slate-300">
+                        <MapPin className="w-3 h-3 text-cyan-400 inline mr-1" />
+                        {hosp.distanceKm || 1.2} km away • {hosp.district || 'Trauma Bay'}, {hosp.state || 'AP'} • ICU Ventilators: <strong className="text-white">{hosp.icu_available || 12}</strong>
                       </p>
                     </div>
 
                     <div className="flex items-center space-x-2 shrink-0">
                       <a
                         href={`tel:${hosp.contact_number || hosp.phone || '+91-866-2472777'}`}
-                        className="bg-[#0B1220] hover:bg-slate-800 text-slate-200 border border-slate-700 p-2.5 rounded-xl transition-colors min-w-[42px] min-h-[42px] flex items-center justify-center"
-                        title="Call Hospital ER"
+                        className="bg-[#0B1220] hover:bg-slate-800 text-slate-200 border border-slate-700 p-3 rounded-xl transition-colors min-w-[46px] min-h-[46px] flex items-center justify-center"
+                        title="Call Emergency Hospital"
                       >
                         <Phone className="w-4 h-4" />
                       </a>
+                      
                       <button
                         onClick={() => handleDispatchAntivenomRequest(hosp)}
-                        className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs transition-colors shadow-md min-h-[42px] cursor-pointer"
+                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black px-5 py-3 rounded-xl text-xs transition-all shadow-md shadow-cyan-950 min-h-[46px] cursor-pointer flex items-center space-x-1.5"
                       >
-                        Reserve AVS & Alert ER
+                        <Send className="w-3.5 h-3.5" />
+                        <span>RESERVE AVS & NOTIFY ER</span>
                       </button>
                     </div>
                   </div>
@@ -340,64 +561,107 @@ export const SnakebitePage = () => {
 
             {/* Disclaimer */}
             <p className="text-[10px] text-slate-400 italic pt-2 border-t border-slate-800">
-              * {assessment.disclaimer || "DECISION SUPPORT ONLY — Not a clinical diagnosis."}
+              * {assessment.disclaimer || "DECISION SUPPORT ONLY — Not a clinical diagnosis. Transport patient immediately to nearest AVS facility."}
             </p>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* India Snake Species Gallery (Real Photography Cards) */}
-      <div className="space-y-4 pt-2">
-        <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 px-1">
-          India Venomous & Harmless Snake Identification Registry
-        </h3>
+      {/* 2. TABULAR MASTER DATASET EXPLORER: India Snake Species & Toxicology Matrix */}
+      <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800 space-y-4 shadow-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center space-x-2">
+              <Table className="w-4 h-4 text-cyan-400" />
+              <span>India Snake Species & Clinical Toxicology Master Dataset</span>
+            </h3>
+            <p className="text-xs text-slate-400">
+              Comprehensive toxicology matrix, LD50 lethality, and standard polyvalent antivenom dosages.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {(snakeSpeciesData || []).map((spec) => (
-            <div 
-              key={spec.id} 
-              className="bg-[#0B1220]/80 backdrop-blur-xl border border-slate-800/80 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between"
-            >
-              <div className="relative h-44 overflow-hidden bg-[#050A14]">
-                <img 
-                  src={spec.image_source} 
-                  alt={spec.common_name}
-                  loading="lazy" 
-                  className="w-full h-full object-cover filter brightness-95 hover:scale-105 transition-transform duration-500"
-                />
-                <span className={`absolute top-3 right-3 text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
-                  spec.venomous 
-                    ? 'bg-red-950/90 border-red-500/60 text-red-400' 
-                    : 'bg-emerald-950/90 border-emerald-500/60 text-emerald-400'
-                }`}>
-                  {spec.venom_type || (spec.venomous ? 'VENOMOUS' : 'NON-VENOMOUS')}
-                </span>
-              </div>
+          <span className="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2.5 py-1.5 rounded-xl border border-cyan-800/40 self-start sm:self-auto">
+            {filteredSpecies.length} REGISTERED SPECIES
+          </span>
+        </div>
 
-              <div className="p-4 space-y-2">
-                <div>
-                  <h4 className="text-sm font-extrabold text-white">{spec.common_name}</h4>
-                  <p className="text-[11px] font-mono text-cyan-400 italic">{spec.scientific_name}</p>
-                </div>
-                
-                <p className="text-xs text-slate-300 leading-relaxed bg-[#050A14] p-2.5 rounded-xl border border-slate-800">
-                  <span className="font-bold text-slate-200">Key Markers: </span>
-                  {(spec.identifying_markers || []).join('; ')}
-                </p>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+            <input
+              type="text"
+              value={tableSearch}
+              onChange={(e) => setTableSearch(e.target.value)}
+              placeholder="Search snake by common name, scientific name, or region..."
+              className="w-full bg-[#050A14] border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+            />
+          </div>
 
-                <button
-                  onClick={() => {
-                    setDescription(spec.common_name);
-                    handleRunAssessment(spec.common_name, selectedSymptoms);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full py-2.5 bg-[#050A14] hover:bg-cyan-600 hover:text-slate-950 text-cyan-300 border border-cyan-500/40 font-bold rounded-xl text-xs transition-colors shadow-md min-h-[40px] cursor-pointer"
-                >
-                  Analyze Toxicology & Match AVS
-                </button>
-              </div>
-            </div>
-          ))}
+          <select
+            value={toxinFilter}
+            onChange={(e) => setToxinFilter(e.target.value)}
+            className="bg-[#050A14] border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-cyan-500 font-mono"
+          >
+            <option value="ALL">All Toxin Profiles</option>
+            <option value="NEURO">🧠 Neurotoxic Species</option>
+            <option value="HEMO">🩸 Hemotoxic / Vasotoxic</option>
+            <option value="NON_VENOMOUS">🌿 Non-Venomous</option>
+          </select>
+        </div>
+
+        {/* Tabular View */}
+        <div className="overflow-x-auto rounded-2xl border border-slate-800 shadow-xl">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-[#050A14] text-slate-300 border-b border-slate-800 font-mono text-[11px] uppercase tracking-wider">
+                <th className="p-3 font-extrabold">Species Name</th>
+                <th className="p-3 font-extrabold">Scientific Name</th>
+                <th className="p-3 font-extrabold">Toxin Classification</th>
+                <th className="p-3 font-extrabold">Urgency Tier</th>
+                <th className="p-3 font-extrabold">LD50 (mg/kg)</th>
+                <th className="p-3 font-extrabold">AVS Vials</th>
+                <th className="p-3 font-extrabold">Identifying Features</th>
+                <th className="p-3 font-extrabold">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/80 bg-[#0B1220]/60">
+              {filteredSpecies.map((spec) => (
+                <tr key={spec.id} className="hover:bg-slate-900/80 transition-colors">
+                  <td className="p-3 font-bold text-white whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <img src={spec.image_source} alt={spec.common_name} className="w-8 h-8 rounded-lg object-cover border border-slate-700" />
+                      <span>{spec.common_name}</span>
+                    </div>
+                  </td>
+                  <td className="p-3 font-mono text-cyan-300 italic whitespace-nowrap">{spec.scientific_name}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                      spec.venomous 
+                        ? 'bg-red-600/30 text-red-400 border border-red-500/50' 
+                        : 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/50'
+                    }`}>
+                      {spec.venom_type}
+                    </span>
+                  </td>
+                  <td className="p-3 font-bold text-slate-200 whitespace-nowrap">{spec.urgency}</td>
+                  <td className="p-3 font-mono text-amber-400">{spec.ld50_mg_kg}</td>
+                  <td className="p-3 font-mono font-bold text-white">{spec.avs_vials_needed || 0}</td>
+                  <td className="p-3 text-slate-300 max-w-[220px] truncate" title={spec.identifying_markers?.join('; ')}>
+                    {spec.identifying_markers?.join('; ')}
+                  </td>
+                  <td className="p-3 whitespace-nowrap">
+                    <button
+                      onClick={() => handleSelectSnakeFromGallery(spec)}
+                      className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-slate-950 rounded-lg text-[10px] font-bold border border-cyan-500/40 transition-colors cursor-pointer"
+                    >
+                      Triage This
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

@@ -2,11 +2,10 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDemo } from '../context/DemoContext';
 import { useLanguage } from '../context/LanguageContext';
-import { FlashBeacon } from './FlashBeacon';
 import { VoiceControlWidget } from './VoiceControlWidget';
 import { SOSModal } from './SOSModal';
 import { EmergencyContactsModal } from './EmergencyContactsModal';
-import { Shield, Radio, Globe, ShieldAlert, Users, LogOut, Zap, AlertOctagon, User } from 'lucide-react';
+import { Shield, Radio, Globe, ShieldAlert, Users, LogOut, Zap, AlertOctagon, User, Bot, Droplet, Activity } from 'lucide-react';
 
 export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
   const { user, logout } = useAuth();
@@ -18,7 +17,7 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
   const [isHoldingSOS, setIsHoldingSOS] = useState(false);
   const holdTimerRef = useRef(null);
 
-  // Press-and-Hold SOS Trigger (2-3 seconds)
+  // Press-and-Hold SOS Trigger (2 seconds)
   const handleSOSMouseDown = () => {
     setIsHoldingSOS(true);
     holdTimerRef.current = setTimeout(() => {
@@ -34,13 +33,13 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-850 px-4 py-3 shadow-xl">
+      <header className="sticky top-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           
           {/* Brand Logo */}
           <div 
             onClick={() => setActiveTab('home')}
-            className="flex items-center space-x-2.5 cursor-pointer group"
+            className="flex items-center space-x-2.5 cursor-pointer group shrink-0"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white shadow-md shadow-red-900/50 group-hover:scale-105 transition-transform">
               <Shield className="w-6 h-6 fill-white/10 text-white" />
@@ -61,18 +60,27 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+          <nav className="hidden lg:flex items-center space-x-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
             <button
               onClick={() => setActiveTab('home')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[44px] ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                 activeTab === 'home' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
               {t('nav_home')}
             </button>
             <button
+              onClick={() => setActiveTab('accident')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] flex items-center space-x-1 ${
+                activeTab === 'accident' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <AlertOctagon className="w-3.5 h-3.5" />
+              <span>3D Crash</span>
+            </button>
+            <button
               onClick={() => setActiveTab('copilot')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[44px] ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                 activeTab === 'copilot' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
@@ -80,7 +88,7 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
             </button>
             <button
               onClick={() => setActiveTab('blood')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[44px] ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                 activeTab === 'blood' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
@@ -88,7 +96,7 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
             </button>
             <button
               onClick={() => setActiveTab('snakebite')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[44px] ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                 activeTab === 'snakebite' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
@@ -96,7 +104,7 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
             </button>
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[44px] ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                 activeTab === 'dashboard' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
@@ -104,7 +112,7 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
             </button>
             <button
               onClick={() => setActiveTab('auth')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[44px] ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all min-h-[40px] ${
                 activeTab === 'auth' ? 'bg-red-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
@@ -114,18 +122,6 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
 
           {/* Right Action Bar */}
           <div className="flex items-center space-x-2">
-
-            {/* Crash Detection Simulator Badge */}
-            {onSimulateCrash && (
-              <button
-                onClick={onSimulateCrash}
-                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900/90 border border-amber-500/50 text-amber-300 text-xs font-bold transition-colors min-h-[44px]"
-                title="Test Multi-Signal Crash Auto-Detection"
-              >
-                <AlertOctagon className="w-3.5 h-3.5 text-amber-400" />
-                <span>Simulate Crash</span>
-              </button>
-            )}
 
             {/* Authentication Action Button */}
             {user ? (
@@ -159,6 +155,8 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
                 <option value="en" className="bg-slate-900 text-white">EN (English)</option>
                 <option value="te" className="bg-slate-900 text-white">TE (తెలుగు)</option>
                 <option value="hi" className="bg-slate-900 text-white">HI (हिंदी)</option>
+                <option value="ta" className="bg-slate-900 text-white">TA (தமிழ்)</option>
+                <option value="kn" className="bg-slate-900 text-white">KN (ಕನ್ನಡ)</option>
               </select>
             </div>
 
@@ -205,4 +203,3 @@ export const Navbar = ({ activeTab, setActiveTab, onSimulateCrash }) => {
     </>
   );
 };
-

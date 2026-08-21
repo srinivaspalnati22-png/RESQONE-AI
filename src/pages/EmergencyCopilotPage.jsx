@@ -4,14 +4,12 @@ import { useDemo } from '../context/DemoContext';
 import { useAuth } from '../context/AuthContext';
 import { DemoToggle } from '../components/DemoToggle';
 import LiveLocationMap from '../components/LiveLocationMap';
-import { CommandCore } from '../components/CommandCore';
-import { AmbulanceMissionMap } from '../components/AmbulanceMissionMap';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import { speakEmergencyInstruction } from '../services/audio_service';
 import { 
   Bot, Mic, MicOff, Send, ShieldAlert, AlertTriangle, 
   CheckCircle2, Sparkles, Phone, Hospital as HospIcon, 
-  Info, RefreshCw, Volume2, Radio, XCircle 
+  Info, RefreshCw, Volume2, Radio, XCircle, ArrowRight, HeartPulse
 } from 'lucide-react';
 
 export const EmergencyCopilotPage = ({ setActiveTab }) => {
@@ -25,21 +23,44 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
 
   const [aiResult, setAiResult] = useState(null);
   const [reportSuccess, setReportSuccess] = useState(null);
-  const [ambulanceState, setAmbulanceState] = useState('EN_ROUTE');
 
   const handleToggleVoice = () => {
     if (!isListening) {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        // Fallback demo simulation if browser doesn't have Web Speech API
+        setIsListening(true);
+        setTimeout(() => {
+          const sampleVoices = [
+            "Spectacled Cobra bite on right leg near Vijayawada Krishna river bank. Severe swelling & dizziness.",
+            "Severe car accident on NH-16 highway near Visakhapatnam bypass with trapped passenger.",
+            "Urgent blood crisis: Patient requires 3 units of O- Negative blood at Vijayawada GGH."
+          ];
+          const randomVoice = sampleVoices[Math.floor(Math.random() * sampleVoices.length)];
+          setInputText(randomVoice);
+          setIsListening(false);
+          processClassification(randomVoice);
+        }, 1500);
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
       setIsListening(true);
-      setTimeout(() => {
-        const sampleVoices = [
-          "Spectacled Cobra bite on right leg near Vijayawada Krishna river bank. Swelling & dizziness.",
-          "Severe car accident on NH-16 highway near Visakhapatnam bypass with trapped passenger.",
-          "Urgent blood crisis: Patient requires 3 units of O- Negative blood at Vijayawada GGH."
-        ];
-        const randomVoice = sampleVoices[Math.floor(Math.random() * sampleVoices.length)];
-        setInputText(randomVoice);
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputText(transcript);
         setIsListening(false);
-      }, 2000);
+        processClassification(transcript);
+      };
+
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
     } else {
       setIsListening(false);
     }
@@ -60,8 +81,8 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
     setError(null);
     setReportSuccess(null);
 
-    const isSnake = textToProcess.toLowerCase().includes("snake") || textToProcess.toLowerCase().includes("cobra");
-    const isBlood = textToProcess.toLowerCase().includes("blood") || textToProcess.toLowerCase().includes("o-");
+    const isSnake = textToProcess.toLowerCase().includes("snake") || textToProcess.toLowerCase().includes("cobra") || textToProcess.toLowerCase().includes("viper");
+    const isBlood = textToProcess.toLowerCase().includes("blood") || textToProcess.toLowerCase().includes("o-") || textToProcess.toLowerCase().includes("donor");
 
     const triageType = isSnake ? "SNAKEBITE" : isBlood ? "BLOOD_CRISIS" : "ACCIDENT_RESCUE";
     const triageSeverity = "CRITICAL";
@@ -90,10 +111,9 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
     };
 
     setAiResult(report);
-    setAmbulanceState('EN_ROUTE');
     queueOfflineReport(report);
-    setReportSuccess("Emergency report registered & 3D CommandCore rescue mission activated!");
-    speakEmergencyInstruction(`Critical ${triageType} emergency detected. Rescue mission dispatched.`);
+    setReportSuccess("Emergency report registered & trauma rescue mission activated!");
+    speakEmergencyInstruction(`Critical ${triageType} emergency detected. Trauma hospital alerted.`);
     setLoading(false);
   };
 
@@ -102,7 +122,6 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
     setReportSuccess(null);
     setActiveDispatch({
       active: false,
-      ambulanceState: 'AVAILABLE',
       hospitalCoords: { lat: 16.5167, lng: 80.6500 },
       userCoords: { lat: 16.5180, lng: 80.6520 }
     });
@@ -127,12 +146,12 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-white flex items-center space-x-2">
-              <span>AI Emergency Copilot & 3D Command</span>
+              <span>AI Emergency Copilot</span>
               <span className="text-[10px] font-black bg-red-600/30 text-red-400 border border-red-500/40 px-2 py-0.5 rounded-full uppercase">
                 {hasActiveEmergency ? 'EMERGENCY ACTIVE' : 'STANDBY READY'}
               </span>
             </h2>
-            <p className="text-xs text-slate-300">Natural language incident triage & 5-orbit neural dispatch</p>
+            <p className="text-xs text-slate-300">Natural language incident triage & real-time hospital ICU allocation</p>
           </div>
         </div>
       </div>
@@ -155,7 +174,7 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
               className="text-[11px] text-red-400 hover:text-red-300 font-bold px-3 py-1 bg-red-950/60 rounded-xl border border-red-800/60 cursor-pointer transition-all flex items-center space-x-1"
             >
               <XCircle className="w-3.5 h-3.5" />
-              <span>Reset Emergency Standby</span>
+              <span>Reset Standby</span>
             </button>
           )}
         </div>
@@ -196,7 +215,7 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
             ) : (
               <>
                 <Mic className="w-4 h-4 text-red-400" />
-                <span>Tap for Voice Call Input</span>
+                <span>Tap for Voice Input</span>
               </>
             )}
           </button>
@@ -236,66 +255,54 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
         )}
       </div>
 
-      {/* 3D CommandCore & 3D ALS Rescue Mission — RENDERED ONLY WHEN EMERGENCY IS ACTIVE */}
-      <AnimatePresence>
-        {hasActiveEmergency && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: 20 }}
-            transition={{ duration: 0.35 }}
-            className="space-y-6"
-          >
-            {/* Active Emergency Callout Banner */}
-            <div className="p-4 bg-gradient-to-r from-red-950/90 via-slate-900 to-amber-950/90 border border-red-500/60 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-2xl">
-              <div className="flex items-center space-x-3">
-                <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping shrink-0" />
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-wider">
-                    ⚠️ Active Emergency Mission Triggered: {aiResult?.type?.replace('_', ' ') || 'RESCUE DISPATCH'}
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Target Facility: <span className="font-bold text-white">{aiResult?.hospital_name || 'Government General Hospital (GGH)'}</span> • 3D Telemetry Orchestrating Live
-                  </p>
-                </div>
-              </div>
+      {/* Transparent AI Explainability Card */}
+      {aiResult && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          {/* Live Hospital Telemetry Card */}
+          <LiveHospitalResponse
+            emergencyType={aiResult.type}
+            hospitalName={aiResult.hospital_name}
+            hospitalPhone={aiResult.hospital_phone}
+            etaMinutes={4}
+            onClose={handleResetEmergency}
+          />
 
-              <button
-                onClick={handleResetEmergency}
-                className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
-              >
-                Close 3D Mission View
-              </button>
+          {/* Explainable Decision Factors */}
+          <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center space-x-1.5">
+                <Info className="w-4 h-4" />
+                <span>AI Clinical Decision Factors & Transparent Rationale</span>
+              </h3>
+              <span className="text-xs font-mono font-bold text-emerald-400">
+                Confidence: {aiResult.ai_confidence}%
+              </span>
             </div>
 
-            {/* Live Hospital Response & Stream matching Video Scenarios */}
-            <LiveHospitalResponse
-              emergencyType={aiResult?.type || 'ACCIDENT_RESCUE'}
-              hospitalName={aiResult?.hospital_name || "Government General Hospital (GGH Vijayawada)"}
-              hospitalPhone={aiResult?.hospital_phone || "+91-866-2472777"}
-              etaMinutes={aiResult ? 4 : 6}
-              onClose={handleResetEmergency}
-            />
+            <p className="text-xs text-slate-300 leading-relaxed bg-[#050A14] p-3.5 rounded-2xl border border-slate-800">
+              <strong className="text-white">Rationale: </strong>{aiResult.reason}
+            </p>
 
-            {/* 3D CommandCore Neural Orchestrator */}
-            <CommandCore 
-              activeEmergency={aiResult}
-              ambulanceState={ambulanceState}
-            />
+            <div className="space-y-1.5 pt-1">
+              <div className="text-[10px] font-bold text-slate-400 uppercase">Key Identified Signals:</div>
+              <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {aiResult.key_factors.map((fact, idx) => (
+                  <li key={idx} className="p-2 bg-[#050A14] rounded-xl border border-slate-800 text-[11px] text-slate-200 flex items-center space-x-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>{fact}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
-            {/* State-Driven Ambulance Mission Route */}
-            <AmbulanceMissionMap
-              state={ambulanceState}
-              onStateChange={setAmbulanceState}
-              hospitalName={aiResult?.hospital_name || "Government General Hospital (GGH Vijayawada)"}
-              hospitalPhone={aiResult?.hospital_phone || "+91-866-2472777"}
-              etaMinutes={aiResult ? 4 : 6}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Live Map Telemetry Grid */}
+      {/* Live Regional Map Telemetry Grid */}
       <LiveLocationMap />
 
     </motion.div>
