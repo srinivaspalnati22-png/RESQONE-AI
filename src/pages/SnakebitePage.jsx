@@ -466,9 +466,17 @@ export const SnakebitePage = () => {
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div className="flex items-center space-x-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-[#050A14] border border-cyan-500/50 flex items-center justify-center text-cyan-400 text-xl font-black shrink-0">
-                  🐍
-                </div>
+                {assessment.species.image_source ? (
+                  <img 
+                    src={assessment.species.image_source} 
+                    alt={assessment.species.common_name} 
+                    className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/60 shadow-lg shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-[#050A14] border border-cyan-500/50 flex items-center justify-center text-cyan-400 text-xl font-black shrink-0">
+                    🐍
+                  </div>
+                )}
                 <div>
                   <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Identified India Species Matrix</span>
                   <h3 className="text-xl font-black text-white">{assessment.species.common_name}</h3>
