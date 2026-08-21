@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Sparkles, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
@@ -11,6 +11,44 @@ import {
 import { speakEmergencyInstruction } from '../services/audio_service';
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
+
+// Cross-platform WebGL Error Boundary to prevent crashes on low-end devices
+class WebGLErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.warn("WebGL Render fallback triggered:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+function WebGLFallbackView({ simState, vehicleType, speed, gForce }) {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-b from-slate-900 to-[#030712]">
+      <div className="w-20 h-20 rounded-3xl bg-red-600/20 border border-red-500/40 flex items-center justify-center text-4xl shadow-2xl animate-pulse">
+        {vehicleType === 'bike' ? '🏍️' : vehicleType === 'ambulance' ? '🚑' : '🚗'}
+      </div>
+      <div className="space-y-1">
+        <h4 className="text-base font-black text-white">
+          {simState === 'CRASHED' ? 'CRITICAL VEHICLE IMPACT DETECTED' : '2.5D Sensor Telemetry Engine'}
+        </h4>
+        <p className="text-xs text-slate-400 max-w-sm">
+          Sensor fusion active: {speed} km/h • {gForce}G. Ultra-low battery & high-efficiency mode.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 // -------------------------------------------------------------
 // 1. Photorealistic Multi-Layered Alloy Wheel with Brembo Caliper
@@ -827,47 +865,58 @@ export function Vehicle3DSimulation({ onAccidentConfirmed = null, externalReset 
       {/* Main 3D Canvas + Telemetry Gauge HUD Overlay */}
       <div className="relative w-full h-84 sm:h-[440px] rounded-2xl bg-[#030712] border border-slate-800 overflow-hidden shadow-inner flex items-center justify-center">
         
-        {/* 3D Three.js Viewport */}
-        <Canvas shadows camera={{ position: [0, 2.6, 5.8], fov: 48 }}>
-          <ambientLight intensity={0.75} />
-          <directionalLight 
-            position={[8, 14, 8]} 
-            intensity={1.8} 
-            castShadow 
-            shadow-mapSize-width={1024} 
-            shadow-mapSize-height={1024} 
-          />
-          <directionalLight position={[-8, 6, -8]} color="#38bdf8" intensity={0.8} />
+        {/* 3D Three.js Viewport protected by WebGL Error Boundary */}
+        <WebGLErrorBoundary
+          fallback={
+            <WebGLFallbackView 
+              simState={simState} 
+              vehicleType={vehicleType} 
+              speed={speed} 
+              gForce={gForce} 
+            />
+          }
+        >
+          <Canvas shadows camera={{ position: [0, 2.6, 5.8], fov: 48 }}>
+            <ambientLight intensity={0.75} />
+            <directionalLight 
+              position={[8, 14, 8]} 
+              intensity={1.8} 
+              castShadow 
+              shadow-mapSize-width={1024} 
+              shadow-mapSize-height={1024} 
+            />
+            <directionalLight position={[-8, 6, -8]} color="#38bdf8" intensity={0.8} />
 
-          <RealisticHighwayEnvironment isCrashed={simState !== 'DRIVING'} />
+            <RealisticHighwayEnvironment isCrashed={simState !== 'DRIVING'} />
 
-          {/* Render Selected Ultra-Realistic Vehicle */}
-          {vehicleType === 'bike' && <RealisticMotorbike isCrashed={simState !== 'DRIVING'} />}
-          {vehicleType === 'ambulance' && <RealisticAmbulance isCrashed={simState !== 'DRIVING'} />}
-          {vehicleType === 'car' && <RealisticCar isCrashed={simState !== 'DRIVING'} />}
+            {/* Render Selected Ultra-Realistic Vehicle */}
+            {vehicleType === 'bike' && <RealisticMotorbike isCrashed={simState !== 'DRIVING'} />}
+            {vehicleType === 'ambulance' && <RealisticAmbulance isCrashed={simState !== 'DRIVING'} />}
+            {vehicleType === 'car' && <RealisticCar isCrashed={simState !== 'DRIVING'} />}
 
-          {/* Realistic Ground Contact Shadow under Vehicle */}
-          <ContactShadows 
-            position={[0, 0, 0]} 
-            opacity={0.8} 
-            scale={7} 
-            blur={1.6} 
-            far={3.5} 
-            color="#000000" 
-          />
+            {/* Realistic Ground Contact Shadow under Vehicle */}
+            <ContactShadows 
+              position={[0, 0, 0]} 
+              opacity={0.8} 
+              scale={7} 
+              blur={1.6} 
+              far={3.5} 
+              color="#000000" 
+            />
 
-          {/* Crash Collision Particles / Sparks */}
-          {simState === 'CRASHED' && (
-            <Sparkles count={120} scale={4} size={6} speed={3} color="#ef4444" />
-          )}
+            {/* Crash Collision Particles / Sparks */}
+            {simState === 'CRASHED' && (
+              <Sparkles count={120} scale={4} size={6} speed={3} color="#ef4444" />
+            )}
 
-          <OrbitControls 
-            enableZoom={false} 
-            enablePan={false} 
-            maxPolarAngle={Math.PI / 2.05} 
-            minPolarAngle={Math.PI / 4} 
-          />
-        </Canvas>
+            <OrbitControls 
+              enableZoom={false} 
+              enablePan={false} 
+              maxPolarAngle={Math.PI / 2.05} 
+              minPolarAngle={Math.PI / 4} 
+            />
+          </Canvas>
+        </WebGLErrorBoundary>
 
         {/* Top-Left: Live Sensor Fusion Gauges HUD */}
         <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 space-y-2 pointer-events-none shadow-2xl">

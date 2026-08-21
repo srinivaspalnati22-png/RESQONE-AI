@@ -108,101 +108,109 @@ function BloodDonationMapComponent({ selectedGroup, donors }) {
     if (!mapDivRef.current) return;
 
     if (!mapInstance.current) {
-      const map = L.map(mapDivRef.current, {
-        center: [16.5180, 80.6450],
-        zoom: 13,
-        zoomControl: true,
-        attributionControl: false
-      });
+      if (mapDivRef.current._leaflet_id) {
+        mapDivRef.current._leaflet_id = null;
+      }
 
-      // CartoDB Dark Matter Real Street Tiles with OpenStreetMap fallback
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        subdomains: 'abcd'
-      }).addTo(map);
+      try {
+        const map = L.map(mapDivRef.current, {
+          center: [16.5180, 80.6450],
+          zoom: 13,
+          zoomControl: true,
+          attributionControl: false
+        });
 
-      // 1. Patient Emergency Location Marker
-      const patientIcon = L.divIcon({
-        className: 'custom-patient-marker',
-        html: `
-          <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-            <div style="width: 44px; height: 44px; border-radius: 14px; background: rgba(127, 29, 29, 0.95); border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); display: flex; align-items: center; justify-content: center; color: #f87171; font-size: 20px;">
-              📍
-            </div>
-            <div style="position: absolute; top: -6px; right: -6px; width: 12px; height: 12px; background: #ef4444; border-radius: 50%; animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="margin-top: 4px; background: rgba(5, 10, 20, 0.95); color: #f87171; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 6px; border: 1px solid #ef4444; white-space: nowrap;">
-              PATIENT (${selectedGroup} NEEDED)
-            </div>
-          </div>
-        `,
-        iconSize: [140, 70],
-        iconAnchor: [70, 35]
-      });
-      L.marker([16.5167, 80.6500], { icon: patientIcon, zIndexOffset: 1000 }).addTo(map);
+        // CartoDB Dark Matter Real Street Tiles with OpenStreetMap fallback
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          subdomains: 'abcd'
+        }).addTo(map);
 
-      // 2. Real Blood Banks / Donation Centers Markers
-      const bloodBanks = [
-        { name: 'Rotary Central Blood Bank', units: 14, lat: 16.5180, lng: 80.6420 },
-        { name: 'Red Cross Society Blood Center', units: 18, lat: 16.5250, lng: 80.6350 },
-        { name: 'GGH Regional Blood Transfusion Center', units: 28, lat: 16.5167, lng: 80.6500 },
-        { name: 'Manipal Hospital Blood Center', units: 9, lat: 16.4833, lng: 80.6000 },
-        { name: 'Ramesh Blood Bank & Transfusion', units: 12, lat: 16.5083, lng: 80.6417 }
-      ];
-
-      bloodBanks.forEach((b) => {
-        const bankIcon = L.divIcon({
-          className: 'custom-bank-marker',
+        // 1. Patient Emergency Location Marker
+        const patientIcon = L.divIcon({
+          className: 'custom-patient-marker',
           html: `
-            <div style="display: flex; flex-direction: column; align-items: center;">
-              <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #064e3b, #022c22); border: 2px solid #34d399; box-shadow: 0 0 15px rgba(16, 185, 129, 0.7); display: flex; align-items: center; justify-content: center; color: #34d399; font-size: 18px;">
-                🏥
+            <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 44px; height: 44px; border-radius: 14px; background: rgba(127, 29, 29, 0.95); border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); display: flex; align-items: center; justify-content: center; color: #f87171; font-size: 20px;">
+                📍
               </div>
-              <div style="margin-top: 3px; background: rgba(2, 44, 34, 0.95); color: #34d399; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 6px; border: 1px solid #10b981; white-space: nowrap;">
-                ${b.name.split(' ')[0]} (${b.units} Units)
+              <div style="position: absolute; top: -6px; right: -6px; width: 12px; height: 12px; background: #ef4444; border-radius: 50%; animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+              <div style="margin-top: 4px; background: rgba(5, 10, 20, 0.95); color: #f87171; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 6px; border: 1px solid #ef4444; white-space: nowrap;">
+                PATIENT (${selectedGroup} NEEDED)
               </div>
             </div>
           `,
-          iconSize: [120, 60],
-          iconAnchor: [60, 30]
+          iconSize: [140, 70],
+          iconAnchor: [70, 35]
         });
-        L.marker([b.lat, b.lng], { icon: bankIcon }).addTo(map);
-      });
+        L.marker([16.5167, 80.6500], { icon: patientIcon, zIndexOffset: 1000 }).addTo(map);
 
-      // 3. Verified Live Donors Markers
-      (donors || VERIFIED_COMMUNITY_DONORS).forEach((donor) => {
-        const isMatch = donor.group === selectedGroup || (donor.group === 'O-' && selectedGroup !== 'O-');
-        const donorIcon = L.divIcon({
-          className: 'custom-donor-marker',
-          html: `
-            <div style="display: flex; flex-direction: column; align-items: center; opacity: ${isMatch ? '1.0' : '0.7'};">
-              <div style="width: 34px; height: 34px; border-radius: 50%; background: ${isMatch ? '#dc2626' : '#1e293b'}; border: 2px solid ${isMatch ? '#f87171' : '#64748b'}; box-shadow: ${isMatch ? '0 0 14px rgba(239, 68, 68, 0.8)' : 'none'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11px; font-weight: 900;">
-                ${donor.group}
+        // 2. Real Blood Banks / Donation Centers Markers
+        const bloodBanks = [
+          { name: 'Rotary Central Blood Bank', units: 14, lat: 16.5180, lng: 80.6420 },
+          { name: 'Red Cross Society Blood Center', units: 18, lat: 16.5250, lng: 80.6350 },
+          { name: 'GGH Regional Blood Transfusion Center', units: 28, lat: 16.5167, lng: 80.6500 },
+          { name: 'Manipal Hospital Blood Center', units: 9, lat: 16.4833, lng: 80.6000 },
+          { name: 'Ramesh Blood Bank & Transfusion', units: 12, lat: 16.5083, lng: 80.6417 }
+        ];
+
+        bloodBanks.forEach((b) => {
+          const bankIcon = L.divIcon({
+            className: 'custom-bank-marker',
+            html: `
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #064e3b, #022c22); border: 2px solid #34d399; box-shadow: 0 0 15px rgba(16, 185, 129, 0.7); display: flex; align-items: center; justify-content: center; color: #34d399; font-size: 18px;">
+                  🏥
+                </div>
+                <div style="margin-top: 3px; background: rgba(2, 44, 34, 0.95); color: #34d399; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 6px; border: 1px solid #10b981; white-space: nowrap;">
+                  ${b.name.split(' ')[0]} (${b.units} Units)
+                </div>
               </div>
-              <div style="margin-top: 2px; background: rgba(5, 10, 20, 0.95); color: ${isMatch ? '#fca5a5' : '#94a3b8'}; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 4px; border: 1px solid ${isMatch ? '#ef4444' : '#334155'}; white-space: nowrap;">
-                ${donor.name.split(' ')[0]} (${donor.distanceKm} km)
-              </div>
-            </div>
-          `,
-          iconSize: [100, 50],
-          iconAnchor: [50, 25]
+            `,
+            iconSize: [120, 60],
+            iconAnchor: [60, 30]
+          });
+          L.marker([b.lat, b.lng], { icon: bankIcon }).addTo(map);
         });
-        L.marker([donor.lat, donor.lng], { icon: donorIcon }).addTo(map);
-      });
 
-      // 4. Cold-Chain Courier Route Line
-      L.polyline([
-        [16.5180, 80.6420],
-        [16.5175, 80.6460],
-        [16.5167, 80.6500]
-      ], {
-        color: '#f59e0b',
-        weight: 5,
-        opacity: 0.9,
-        dashArray: '8, 6',
-        lineCap: 'round'
-      }).addTo(map);
+        // 3. Verified Live Donors Markers
+        (donors || VERIFIED_COMMUNITY_DONORS).forEach((donor) => {
+          const isMatch = donor.group === selectedGroup || (donor.group === 'O-' && selectedGroup !== 'O-');
+          const donorIcon = L.divIcon({
+            className: 'custom-donor-marker',
+            html: `
+              <div style="display: flex; flex-direction: column; align-items: center; opacity: ${isMatch ? '1.0' : '0.7'};">
+                <div style="width: 34px; height: 34px; border-radius: 50%; background: ${isMatch ? '#dc2626' : '#1e293b'}; border: 2px solid ${isMatch ? '#f87171' : '#64748b'}; box-shadow: ${isMatch ? '0 0 14px rgba(239, 68, 68, 0.8)' : 'none'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11px; font-weight: 900;">
+                  ${donor.group}
+                </div>
+                <div style="margin-top: 2px; background: rgba(5, 10, 20, 0.95); color: ${isMatch ? '#fca5a5' : '#94a3b8'}; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 4px; border: 1px solid ${isMatch ? '#ef4444' : '#334155'}; white-space: nowrap;">
+                  ${donor.name.split(' ')[0]} (${donor.distanceKm} km)
+                </div>
+              </div>
+            `,
+            iconSize: [100, 50],
+            iconAnchor: [50, 25]
+          });
+          L.marker([donor.lat, donor.lng], { icon: donorIcon }).addTo(map);
+        });
 
-      mapInstance.current = map;
+        // 4. Cold-Chain Courier Route Line
+        L.polyline([
+          [16.5180, 80.6420],
+          [16.5175, 80.6460],
+          [16.5167, 80.6500]
+        ], {
+          color: '#f59e0b',
+          weight: 5,
+          opacity: 0.9,
+          dashArray: '8, 6',
+          lineCap: 'round'
+        }).addTo(map);
+
+        mapInstance.current = map;
+      } catch (mapErr) {
+        console.warn('[BloodDonationMap] Leaflet map init handled gracefully:', mapErr);
+      }
     }
 
     // Force multiple invalidateSize calls to guarantee tile load
@@ -218,7 +226,11 @@ function BloodDonationMapComponent({ selectedGroup, donors }) {
       clearTimeout(t1);
       clearTimeout(t2);
       if (mapInstance.current) {
-        mapInstance.current.remove();
+        try {
+          mapInstance.current.remove();
+        } catch (e) {
+          // Ignore unmount error
+        }
         mapInstance.current = null;
       }
     };

@@ -12,30 +12,49 @@ const LANG_MAP = {
 };
 
 export const speakText = (text, langCode = 'en') => {
-  if (!('speechSynthesis' in window)) {
-    console.warn('SpeechSynthesis is not supported on this browser.');
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     return false;
   }
 
-  window.speechSynthesis.cancel(); // Cancel ongoing utterance
+  try {
+    window.speechSynthesis.cancel(); // Cancel ongoing utterance
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  const targetLang = LANG_MAP[langCode]?.speechCode || 'en-IN';
-  utterance.lang = targetLang;
-  utterance.rate = 0.95;
-  utterance.pitch = 1.0;
+    if (!text || typeof text !== 'string') return false;
 
-  const voices = window.speechSynthesis.getVoices();
-  const matchedVoice = voices.find(v => v.lang.startsWith(targetLang) || v.lang.startsWith(langCode));
-  if (matchedVoice) {
-    utterance.voice = matchedVoice;
+    const utterance = new SpeechSynthesisUtterance(text);
+    const targetLang = LANG_MAP[langCode]?.speechCode || 'en-IN';
+    utterance.lang = targetLang;
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    utterance.onerror = (e) => {
+      console.warn('[VoiceService] Speech utterance error:', e?.error);
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      const matchedVoice = voices.find(v => v.lang && (v.lang.startsWith(targetLang) || v.lang.startsWith(langCode)));
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      }
+    }
+
+    setTimeout(() => {
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn('[VoiceService] Speak call failed gracefully:', e);
+      }
+    }, 50);
+    return true;
+  } catch (err) {
+    console.warn('[VoiceService] SpeechSynthesis error:', err);
+    return false;
   }
-
-  window.speechSynthesis.speak(utterance);
-  return true;
 };
 
 export const startVoiceRecognition = (langCode = 'en', onResult, onError, onEnd) => {
+  if (typeof window === 'undefined') return null;
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {

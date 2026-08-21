@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { DemoProvider } from './context/DemoContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -9,15 +9,26 @@ import { BackgroundVideo } from './components/BackgroundVideo';
 import { AccidentAlertModal } from './components/AccidentAlertModal';
 import { accidentDetector } from './services/AccidentDetectionService';
 import { LandingPage } from './pages/LandingPage';
-import { AccidentPage } from './pages/AccidentPage';
-import { AuthPage } from './pages/AuthPage';
-import { EmergencyCopilotPage } from './pages/EmergencyCopilotPage';
-import { BloodDonorPage } from './pages/BloodDonorPage';
-import { SnakebitePage } from './pages/SnakebitePage';
-import { DashboardPage } from './pages/DashboardPage';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { RefreshCw } from 'lucide-react';
 import { VoiceControlWidget } from './components/VoiceControlWidget';
+
+// Code-split heavy secondary pages for instant initial load across all platforms
+const AccidentPage = lazy(() => import('./pages/AccidentPage').then(m => ({ default: m.AccidentPage })));
+const EmergencyCopilotPage = lazy(() => import('./pages/EmergencyCopilotPage').then(m => ({ default: m.EmergencyCopilotPage })));
+const BloodDonorPage = lazy(() => import('./pages/BloodDonorPage').then(m => ({ default: m.BloodDonorPage })));
+const SnakebitePage = lazy(() => import('./pages/SnakebitePage').then(m => ({ default: m.SnakebitePage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const AuthPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.AuthPage })));
+
+const PageLoadingFallback = () => (
+  <div className="w-full min-h-[60vh] flex flex-col items-center justify-center space-y-3">
+    <div className="w-12 h-12 rounded-2xl bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-400 animate-pulse">
+      <RefreshCw className="w-6 h-6 animate-spin" />
+    </div>
+    <p className="text-xs font-mono text-slate-400">Loading module...</p>
+  </div>
+);
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('home');
@@ -41,17 +52,41 @@ function AppContent() {
   const renderTab = () => {
     switch (activeTab) {
       case 'accident':
-        return <AccidentPage />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <AccidentPage />
+          </Suspense>
+        );
       case 'copilot':
-        return <EmergencyCopilotPage setActiveTab={setActiveTab} />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <EmergencyCopilotPage setActiveTab={setActiveTab} />
+          </Suspense>
+        );
       case 'blood':
-        return <BloodDonorPage />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <BloodDonorPage />
+          </Suspense>
+        );
       case 'snakebite':
-        return <SnakebitePage />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <SnakebitePage />
+          </Suspense>
+        );
       case 'dashboard':
-        return <DashboardPage />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <DashboardPage />
+          </Suspense>
+        );
       case 'auth':
-        return <AuthPage />;
+        return (
+          <Suspense fallback={<PageLoadingFallback />}>
+            <AuthPage />
+          </Suspense>
+        );
       case 'home':
       default:
         return <LandingPage setActiveTab={setActiveTab} onSimulateCrash={handleSimulateCrash} />;
