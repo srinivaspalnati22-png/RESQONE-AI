@@ -499,7 +499,7 @@ export const SnakebitePage = () => {
         </div>
       </div>
 
-      {/* INITIAL STATE: When user hasn't input / triaged yet (DATASET IS HIDDEN) */}
+      {/* INITIAL STATE: When user hasn't input / triaged yet (DATASET IS 100% HIDDEN) */}
       {!hasTriaged && (
         <div className="bg-[#0B1220]/80 backdrop-blur-md p-6 rounded-3xl border border-slate-800 space-y-4 text-center">
           <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto text-cyan-400">
