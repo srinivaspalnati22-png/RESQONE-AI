@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, ShieldAlert, CheckCircle2, Phone, MapPin, 
   Hospital as HospIcon, Info, RefreshCw, AlertOctagon, 
