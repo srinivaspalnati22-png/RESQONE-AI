@@ -7,7 +7,7 @@ import {
   Navigation, Hospital, Users, Zap, Volume2, 
   RotateCcw, Play, Pause, Compass, Gauge, Radio, 
   Car, Bike, Siren, MapPin, Clock, Phone, ArrowRight, Sparkles as SparkleIcon,
-  Flame, Wrench
+  Flame, Wrench, Shield, X, AlertTriangle
 } from 'lucide-react';
 import { speakEmergencyInstruction } from '../services/audio_service';
 import { useLanguage } from '../context/LanguageContext';
@@ -767,7 +767,7 @@ function CrashFXParticles() {
 }
 
 // -------------------------------------------------------------
-// MAIN VEHICLE 3D SIMULATION CONTAINER
+// MAIN VEHICLE 3D SIMULATION CONTAINER WITH 25-SECOND BIG SCREEN COUNTDOWN
 // -------------------------------------------------------------
 export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
   const { language } = useLanguage();
@@ -786,7 +786,7 @@ export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
     setSpeed(0);
     setGForce(4.85); // Critical G-Force Spike
     setCountdown(25);
-    speakEmergencyInstruction("Critical impact detected! 4.85G collision spike. Initiating emergency rescue countdown.");
+    speakEmergencyInstruction("Critical impact detected! 4.85G collision spike. Initiating emergency 25 seconds rescue countdown.");
   };
 
   // Reset Simulation
@@ -804,10 +804,15 @@ export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
     setSimState('CRUISING');
   }, []);
 
-  // 25-Second Autonomous Countdown Loop
+  // 25-Second Autonomous Countdown Loop with Audio Announcements
   useEffect(() => {
     let timer = null;
     if (simState === 'CRASHED' && countdown > 0 && !alertDispatched) {
+      // Periodic vocal countdown announcements
+      if (countdown === 20) speakEmergencyInstruction("20 seconds to autonomous rescue dispatch.");
+      if (countdown === 10) speakEmergencyInstruction("10 seconds remaining. Trauma units standing by.");
+      if (countdown === 5) speakEmergencyInstruction("5, 4, 3, 2, 1. Dispatching SOS.");
+
       timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -826,7 +831,7 @@ export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
 
   const handleConfirmEmergency = () => {
     setAlertDispatched(true);
-    speakEmergencyInstruction("Emergency SOS dispatched to nearest trauma hospital and 108 ambulance units.");
+    speakEmergencyInstruction("Emergency SOS confirmed and dispatched to nearest trauma hospital and 108 ambulance units.");
 
     const payload = {
       id: `crash-${Date.now().toString().slice(-4)}`,
@@ -844,7 +849,7 @@ export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
   };
 
   return (
-    <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl space-y-4 p-4 sm:p-6">
+    <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl space-y-4 p-4 sm:p-6 relative">
       
       {/* 1. Header Bar: Vehicle Picker & Telemetry HUD */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
@@ -919,7 +924,7 @@ export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
       </div>
 
       {/* 2. Three.js 3D Viewport with Realistic Camera & Lighting */}
-      <div className="relative w-full h-[360px] sm:h-[440px] rounded-3xl overflow-hidden border border-slate-800 bg-[#030712] shadow-inner">
+      <div className="relative w-full h-[380px] sm:h-[480px] rounded-3xl overflow-hidden border border-slate-800 bg-[#030712] shadow-inner">
         
         <WebGLErrorBoundary fallback={<WebGLFallbackView simState={simState} vehicleType={vehicleType} speed={speed} gForce={gForce} />}>
           <Canvas
@@ -993,57 +998,119 @@ export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
         {simState !== 'CRASHED' && (
           <button
             onClick={handleTriggerCrash}
-            className="absolute bottom-4 right-4 z-10 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-xl shadow-red-950/80 flex items-center space-x-2 transition-all cursor-pointer hover:scale-105"
+            className="absolute bottom-4 right-4 z-10 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs px-6 py-3.5 rounded-2xl shadow-2xl shadow-red-950 flex items-center space-x-2.5 transition-all cursor-pointer hover:scale-105"
           >
-            <AlertOctagon className="w-4 h-4 animate-pulse" />
-            <span>TRIGGER 3D CRASH (4.85G)</span>
+            <AlertOctagon className="w-5 h-5 animate-pulse" />
+            <span className="text-sm">TRIGGER 3D CRASH (4.85G)</span>
           </button>
         )}
       </div>
 
-      {/* 3. Crash Countdown & Confirmation Modal Card */}
-      {simState === 'CRASHED' && (
-        <div className="p-5 bg-gradient-to-br from-red-950/90 via-slate-900 to-[#0B1220] border-2 border-red-500/80 rounded-3xl space-y-4 shadow-2xl animate-fade-in">
+      {/* 3. FULL BIG SCREEN 25-SECOND EMERGENCY COUNTDOWN MODAL OVERLAY */}
+      {simState === 'CRASHED' && !alertDispatched && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-2xl animate-fade-in">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-500/30 pb-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-2xl bg-red-600 border border-red-400 text-white flex items-center justify-center text-xl font-black animate-pulse shadow-lg shadow-red-600/50 shrink-0">
-                {countdown}s
+          {/* Background Ambient Red Strobe Glow */}
+          <div className="absolute inset-0 bg-radial from-red-600/30 via-transparent to-transparent pointer-events-none animate-pulse" />
+
+          <div className="relative w-full max-w-2xl bg-gradient-to-b from-[#0F172A] to-[#020617] border-2 border-red-500/80 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(239,68,68,0.5)] text-center space-y-6 overflow-hidden">
+            
+            {/* Top Critical Header */}
+            <div className="flex items-center justify-between border-b border-red-500/30 pb-3">
+              <div className="flex items-center space-x-2 text-red-400 font-mono text-xs font-black uppercase tracking-wider">
+                <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+                <span>CRITICAL 4.85G SENSOR IMPACT DETECTED</span>
               </div>
-              <div>
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">
-                  CRITICAL SENSOR SPIKE DETECTED
-                </span>
-                <h4 className="text-base font-black text-white">
-                  Autonomous Multi-Hospital Emergency Rescue Alert
-                </h4>
+
+              <span className="bg-red-500/20 text-red-300 font-mono text-[11px] font-black px-3 py-1 rounded-full border border-red-500/50">
+                LIFE-CRITICAL SOS
+              </span>
+            </div>
+
+            {/* BIG SCREEN 25s RADIAL COUNTDOWN DISPLAY */}
+            <div className="space-y-3">
+              <div className="relative w-44 h-44 sm:w-52 sm:h-52 mx-auto flex items-center justify-center">
+                
+                {/* Outer SVG Radial Progress Arc */}
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="50%"
+                    cy="50%"
+                    r="42%"
+                    className="stroke-slate-800 fill-none"
+                    strokeWidth="10"
+                  />
+                  <circle
+                    cx="50%"
+                    cy="50%"
+                    r="42%"
+                    className="stroke-red-500 fill-none transition-all duration-1000 ease-linear"
+                    strokeWidth="10"
+                    strokeDasharray={264}
+                    strokeDashoffset={264 - (264 * (countdown / 25))}
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                {/* Inner Massive Countdown Digits */}
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-5xl sm:text-6xl font-mono font-black text-white tracking-tight drop-shadow-[0_0_20px_rgba(239,68,68,0.8)]">
+                    {countdown}
+                  </span>
+                  <span className="text-xs font-mono font-extrabold text-red-400 uppercase tracking-widest mt-1">
+                    SECONDS REMAINING
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-xl sm:text-2xl font-black text-white">
+                  ARE YOU INJURED OR NEED RESCUE?
+                </h3>
+                <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                  Autonomous satellite telemetry is preparing to alert <strong className="text-white">Government General Hospital (GGH Vijayawada)</strong>, <strong className="text-white">AIIMS Trauma</strong>, and <strong className="text-white">108 ALS Ambulance</strong> dispatch.
+                </p>
               </div>
             </div>
 
-            <span className="text-xs font-mono font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-3 py-1.5 rounded-xl self-start sm:self-auto">
-              Auto-Dispatching in {countdown}s
-            </span>
-          </div>
+            {/* Live Sensor Breakdown Matrix */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 text-left font-mono">
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase">Impact G-Force</span>
+                <div className="text-sm font-black text-red-400">4.85 G SPIKE</div>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase">Speed Drop</span>
+                <div className="text-sm font-black text-amber-400">78 → 0 km/h</div>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase">Rollover Angle</span>
+                <div className="text-sm font-black text-red-400">68.4° TILT</div>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase">GPS Location</span>
+                <div className="text-sm font-black text-cyan-400">NH-16 Corridor</div>
+              </div>
+            </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Accelerometer G-Force spiked to <strong className="text-red-400">4.85G</strong> with rapid deceleration (78 km/h → 0 km/h). If you are safe, tap cancel. Otherwise, nearest trauma hospitals (GGH Vijayawada, AIIMS Mangalagiri) are receiving instant telemetry.
-          </p>
+            {/* Big Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                onClick={handleConfirmEmergency}
+                className="flex-1 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-black py-4 px-6 rounded-2xl text-sm shadow-[0_0_30px_rgba(239,68,68,0.7)] flex items-center justify-center space-x-2.5 transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <Siren className="w-5 h-5 animate-bounce" />
+                <span>DISPATCH EMERGENCY RESCUE NOW</span>
+              </button>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button
-              onClick={handleConfirmEmergency}
-              className="flex-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black py-3.5 px-5 rounded-2xl text-xs shadow-xl shadow-red-950 flex items-center justify-center space-x-2 transition-all cursor-pointer"
-            >
-              <Siren className="w-4 h-4 animate-bounce" />
-              <span>DISPATCH EMERGENCY RESCUE NOW</span>
-            </button>
+              <button
+                onClick={handleReset}
+                className="px-6 py-4 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 rounded-2xl text-sm font-bold transition-all cursor-pointer"
+              >
+                I AM SAFE (CANCEL SOS)
+              </button>
+            </div>
 
-            <button
-              onClick={handleReset}
-              className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 rounded-2xl text-xs font-bold transition-colors cursor-pointer"
-            >
-              I AM SAFE (CANCEL SOS)
-            </button>
           </div>
         </div>
       )}
