@@ -6,7 +6,8 @@ import {
   AlertOctagon, ShieldAlert, CheckCircle2, Activity, 
   Navigation, Hospital, Users, Zap, Volume2, 
   RotateCcw, Play, Pause, Compass, Gauge, Radio, 
-  Car, Bike, Siren, MapPin, Clock, Phone, ArrowRight, Sparkles as SparkleIcon
+  Car, Bike, Siren, MapPin, Clock, Phone, ArrowRight, Sparkles as SparkleIcon,
+  Flame, Wrench
 } from 'lucide-react';
 import { speakEmergencyInstruction } from '../services/audio_service';
 import { useLanguage } from '../context/LanguageContext';
@@ -51,54 +52,64 @@ function WebGLFallbackView({ simState, vehicleType, speed, gForce }) {
 }
 
 // -------------------------------------------------------------
-// 1. Photorealistic Multi-Layered Alloy Wheel with Brembo Caliper
+// 1. High-Fidelity Multi-Piece Alloy Wheel with Drilled Rotor & Caliper
 // -------------------------------------------------------------
-function RealisticWheel({ position, rotation = [0, 0, Math.PI / 2], radius = 0.32, width = 0.18, isRear = false }) {
+function RealisticWheel({ position, rotation = [0, 0, Math.PI / 2], radius = 0.33, width = 0.18, isRear = false }) {
   const wheelGroupRef = useRef();
 
   return (
     <group ref={wheelGroupRef} position={position} rotation={rotation}>
-      {/* Outer Black Rubber Tire with Detailed Sidewall */}
+      {/* Outer Tread Rubber Tire */}
       <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[radius, radius, width, 36]} />
-        <meshStandardMaterial color="#0b0f19" roughness={0.92} metalness={0.08} />
+        <cylinderGeometry args={[radius, radius, width, 40]} />
+        <meshStandardMaterial color="#0a0e17" roughness={0.94} metalness={0.06} />
       </mesh>
 
-      {/* Silver / Diamond-Cut Chrome 5-Twin-Spoke Alloy Rim */}
-      <mesh position={[0, 0.008, 0]}>
-        <cylinderGeometry args={[radius * 0.74, radius * 0.74, width * 1.02, 28]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.95} roughness={0.12} />
+      {/* Sidewall Rim Chamfer */}
+      <mesh position={[0, width * 0.48, 0]}>
+        <cylinderGeometry args={[radius * 0.94, radius * 0.76, 0.02, 32]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.7} metalness={0.4} />
+      </mesh>
+      <mesh position={[0, -width * 0.48, 0]}>
+        <cylinderGeometry args={[radius * 0.94, radius * 0.76, 0.02, 32]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.7} metalness={0.4} />
       </mesh>
 
-      {/* Dark Rim Barrel Inset */}
-      <mesh position={[0, 0.005, 0]}>
-        <cylinderGeometry args={[radius * 0.68, radius * 0.68, width * 1.01, 24]} />
-        <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.3} />
+      {/* 5-Twin-Spoke Forged Diamond Cut Alloy Rim */}
+      <mesh position={[0, 0.006, 0]}>
+        <cylinderGeometry args={[radius * 0.72, radius * 0.72, width * 1.02, 32]} />
+        <meshPhysicalMaterial color="#f1f5f9" metalness={0.95} roughness={0.1} clearcoat={1.0} />
       </mesh>
 
-      {/* Center Hubcap Badge with Lug Nuts */}
-      <mesh position={[0, (width / 2) + 0.012, 0]}>
-        <cylinderGeometry args={[radius * 0.22, radius * 0.22, 0.02, 18]} />
-        <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.1} />
+      {/* Gloss Black Rim Barrel Inset */}
+      <mesh position={[0, 0.003, 0]}>
+        <cylinderGeometry args={[radius * 0.65, radius * 0.65, width * 1.01, 24]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.25} />
       </mesh>
 
-      {/* Ventilated Drilled Disc Brake Rotor (Behind Rim) */}
-      <mesh position={[0, -(width / 2) - 0.006, 0]}>
-        <cylinderGeometry args={[radius * 0.62, radius * 0.62, 0.015, 24]} />
-        <meshStandardMaterial color="#94a3b8" metalness={0.98} roughness={0.2} />
+      {/* Center Hubcap Logo with Lug Nuts */}
+      <mesh position={[0, (width / 2) + 0.014, 0]}>
+        <cylinderGeometry args={[radius * 0.24, radius * 0.24, 0.018, 20]} />
+        <meshStandardMaterial color="#0284c7" metalness={0.95} roughness={0.1} />
       </mesh>
 
-      {/* Red High-Performance Brembo Brake Caliper */}
-      <mesh position={[radius * 0.42, -(width / 2) - 0.01, 0]}>
-        <boxGeometry args={[0.08, 0.03, 0.14]} />
-        <meshStandardMaterial color="#dc2626" metalness={0.8} roughness={0.2} />
+      {/* Drilled Slotted Ventilated Carbon-Ceramic Rotor */}
+      <mesh position={[0, -(width / 2) - 0.008, 0]}>
+        <cylinderGeometry args={[radius * 0.62, radius * 0.62, 0.014, 28]} />
+        <meshStandardMaterial color="#94a3b8" metalness={0.98} roughness={0.18} />
+      </mesh>
+
+      {/* High-Performance Red Brembo 6-Piston Brake Caliper */}
+      <mesh position={[radius * 0.42, -(width / 2) - 0.012, 0]}>
+        <boxGeometry args={[0.09, 0.035, 0.16]} />
+        <meshPhysicalMaterial color="#dc2626" metalness={0.8} roughness={0.15} clearcoat={1.0} />
       </mesh>
     </group>
   );
 }
 
 // -------------------------------------------------------------
-// 2. Ultra-Realistic 3D Sports Sedan Car Model
+// 2. Ultra-Realistic 3D Sports Sedan Car Model (Rich Geometry)
 // -------------------------------------------------------------
 function RealisticCar({ isCrashed }) {
   const groupRef = useRef();
@@ -123,12 +134,12 @@ function RealisticCar({ isCrashed }) {
         groupRef.current.rotation.x = 0;
       }
     } else {
-      // Crashed state: severe rollover tilt, spin, and ground impact
+      // Crashed state: rollover impact tilt, crumpled front, and smoke
       if (groupRef.current) {
         groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0.65, delta * 4);
         groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 1.15, delta * 3);
         groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.42, delta * 3);
-        groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, 0.24, delta * 4);
+        groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, 0.22, delta * 4);
       }
     }
   });
@@ -136,105 +147,146 @@ function RealisticCar({ isCrashed }) {
   return (
     <group ref={groupRef} position={[0, 0.38, 0]}>
       
-      {/* 1. Main Aerodynamic Lower Body Chassis with Automotive Clearcoat */}
+      {/* 1. Main Lower Monocoque Chassis with Automotive Deep Metallic Clearcoat */}
       <mesh position={[0, 0.26, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.42, 0.46, 3.1]} />
-        <meshPhysicalMaterial 
-          color={isCrashed ? '#dc2626' : '#2563eb'} 
-          metalness={0.92} 
-          roughness={0.14} 
-          clearcoat={1.0}
-          clearcoatRoughness={0.08}
-        />
-      </mesh>
-
-      {/* Front Aggressive Splitter & Lower Air Dam */}
-      <mesh position={[0, 0.08, 1.58]} castShadow>
-        <boxGeometry args={[1.38, 0.06, 0.18]} />
-        <meshStandardMaterial color="#090d16" metalness={0.9} roughness={0.3} />
-      </mesh>
-
-      {/* Honeycomb Radiator Air Intake Grille */}
-      <mesh position={[0, 0.18, 1.56]} castShadow>
-        <boxGeometry args={[1.1, 0.22, 0.08]} />
-        <meshStandardMaterial color="#020617" roughness={0.9} />
-      </mesh>
-
-      {/* Sculpted Aerodynamic Front Hood */}
-      <mesh position={[0, 0.42, 0.98]} rotation={[-0.2, 0, 0]} castShadow>
-        <boxGeometry args={[1.36, 0.12, 1.15]} />
+        <boxGeometry args={[1.44, 0.44, 3.16]} />
         <meshPhysicalMaterial 
           color={isCrashed ? '#b91c1c' : '#1d4ed8'} 
           metalness={0.92} 
-          roughness={0.14} 
+          roughness={0.12} 
           clearcoat={1.0}
+          clearcoatRoughness={0.06}
         />
       </mesh>
 
-      {/* 2. Sleek Passenger Cabin & Fastback Roofline */}
-      <mesh position={[0, 0.68, -0.12]} castShadow>
-        <boxGeometry args={[1.18, 0.44, 1.62]} />
+      {/* Aerodynamic Side Skirts with Aero Winglets */}
+      <mesh position={[-0.74, 0.12, 0]}>
+        <boxGeometry args={[0.08, 0.08, 2.7]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.74, 0.12, 0]}>
+        <boxGeometry args={[0.08, 0.08, 2.7]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
+      </mesh>
+
+      {/* Front Carbon Fiber Splitter & Lower Air Dam */}
+      <mesh position={[0, 0.07, 1.62]} castShadow>
+        <boxGeometry args={[1.42, 0.05, 0.18]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.15} />
+      </mesh>
+
+      {/* Honeycomb Radiator Air Intake Grille with Chrome Trim */}
+      <mesh position={[0, 0.18, 1.60]} castShadow>
+        <boxGeometry args={[1.12, 0.22, 0.08]} />
+        <meshStandardMaterial color="#020617" roughness={0.85} metalness={0.5} />
+      </mesh>
+      <mesh position={[0, 0.22, 1.62]}>
+        <cylinderGeometry args={[0.06, 0.06, 0.02, 16]} rotation={[Math.PI / 2, 0, 0]} />
+        <meshStandardMaterial color="#38bdf8" metalness={0.95} roughness={0.1} />
+      </mesh>
+
+      {/* Sculpted Hood with Aerodynamic Power Dome & Vents */}
+      <mesh position={[0, 0.44, 0.96]} rotation={[-0.22, 0, 0]} castShadow>
+        <boxGeometry args={[1.38, 0.11, 1.2]} />
         <meshPhysicalMaterial 
-          color={isCrashed ? '#b91c1c' : '#1d4ed8'} 
+          color={isCrashed ? '#991b1b' : '#1e40af'} 
           metalness={0.92} 
-          roughness={0.14} 
+          roughness={0.12} 
+          clearcoat={1.0}
+        />
+      </mesh>
+      {/* Hood Dual Heat Extraction Vents */}
+      <mesh position={[-0.32, 0.52, 0.88]} rotation={[-0.22, 0, 0]}>
+        <boxGeometry args={[0.16, 0.02, 0.28]} />
+        <meshStandardMaterial color="#090d16" roughness={0.9} />
+      </mesh>
+      <mesh position={[0.32, 0.52, 0.88]} rotation={[-0.22, 0, 0]}>
+        <boxGeometry args={[0.16, 0.02, 0.28]} />
+        <meshStandardMaterial color="#090d16" roughness={0.9} />
+      </mesh>
+
+      {/* 2. Sleek Passenger Cabin & Tapered Roof Arch */}
+      <mesh position={[0, 0.70, -0.14]} castShadow>
+        <boxGeometry args={[1.20, 0.44, 1.68]} />
+        <meshPhysicalMaterial 
+          color={isCrashed ? '#991b1b' : '#1e40af'} 
+          metalness={0.92} 
+          roughness={0.12} 
           clearcoat={1.0}
         />
       </mesh>
 
-      {/* Front Windshield (Deep Tinted Automotive Glass) */}
-      <mesh position={[0, 0.64, 0.66]} rotation={[-0.56, 0, 0]}>
-        <planeGeometry args={[1.14, 0.56]} />
+      {/* Front Curved Windshield (Deep Smoked Automotive Glass) */}
+      <mesh position={[0, 0.66, 0.68]} rotation={[-0.58, 0, 0]}>
+        <planeGeometry args={[1.16, 0.58]} />
         <meshPhysicalMaterial 
-          color="#0369a1" 
+          color="#0284c7" 
           transmission={0.65} 
-          opacity={0.88} 
+          opacity={0.9} 
           transparent 
-          roughness={0.04} 
+          roughness={0.03} 
           metalness={0.95} 
         />
+      </mesh>
+
+      {/* Interior Dashboard & Sport Steering Wheel Silhouette */}
+      <mesh position={[0, 0.52, 0.48]}>
+        <boxGeometry args={[1.05, 0.12, 0.35]} />
+        <meshStandardMaterial color="#0f172a" roughness={0.8} />
+      </mesh>
+      <mesh position={[-0.32, 0.60, 0.36]} rotation={[0.4, 0, 0]}>
+        <torusGeometry args={[0.1, 0.02, 12, 24]} />
+        <meshStandardMaterial color="#1e293b" roughness={0.5} />
       </mesh>
 
       {/* Rear Fastback Windshield */}
-      <mesh position={[0, 0.64, -0.92]} rotation={[0.54, 0, 0]}>
-        <planeGeometry args={[1.12, 0.52]} />
+      <mesh position={[0, 0.66, -0.96]} rotation={[0.56, 0, 0]}>
+        <planeGeometry args={[1.14, 0.54]} />
         <meshPhysicalMaterial 
-          color="#0369a1" 
+          color="#0284c7" 
           transmission={0.65} 
-          opacity={0.88} 
+          opacity={0.9} 
           transparent 
-          roughness={0.04} 
+          roughness={0.03} 
           metalness={0.95} 
         />
       </mesh>
 
-      {/* Side Windows with Tint */}
-      <mesh position={[-0.60, 0.68, -0.1]} rotation={[0, -Math.PI / 2, 0]}>
-        <planeGeometry args={[1.4, 0.36]} />
-        <meshPhysicalMaterial color="#0284c7" transmission={0.6} transparent opacity={0.88} roughness={0.05} />
+      {/* Side Privacy Windows with Chrome Window Line */}
+      <mesh position={[-0.61, 0.70, -0.12]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[1.45, 0.36]} />
+        <meshPhysicalMaterial color="#0369a1" transmission={0.6} transparent opacity={0.9} roughness={0.04} />
       </mesh>
-      <mesh position={[0.60, 0.68, -0.1]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[1.4, 0.36]} />
-        <meshPhysicalMaterial color="#0284c7" transmission={0.6} transparent opacity={0.88} roughness={0.05} />
-      </mesh>
-
-      {/* Aerodynamic Wing Mirrors */}
-      <mesh position={[-0.76, 0.56, 0.46]}>
-        <boxGeometry args={[0.16, 0.08, 0.18]} />
-        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
-      </mesh>
-      <mesh position={[0.76, 0.56, 0.46]}>
-        <boxGeometry args={[0.16, 0.08, 0.18]} />
-        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
+      <mesh position={[0.61, 0.70, -0.12]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[1.45, 0.36]} />
+        <meshPhysicalMaterial color="#0369a1" transmission={0.6} transparent opacity={0.9} roughness={0.04} />
       </mesh>
 
-      {/* 3. Projector Lens LED Headlights with Halo DRL Rings */}
-      <mesh position={[-0.52, 0.32, 1.54]}>
-        <boxGeometry args={[0.28, 0.14, 0.06]} />
+      {/* Aerodynamic Carbon Wing Mirrors with LED Turn Signals */}
+      <mesh position={[-0.78, 0.58, 0.48]}>
+        <boxGeometry args={[0.16, 0.08, 0.20]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
+      </mesh>
+      <mesh position={[-0.79, 0.58, 0.48]}>
+        <boxGeometry args={[0.02, 0.02, 0.16]} />
+        <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={2} />
+      </mesh>
+      <mesh position={[0.78, 0.58, 0.48]}>
+        <boxGeometry args={[0.16, 0.08, 0.20]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.79, 0.58, 0.48]}>
+        <boxGeometry args={[0.02, 0.02, 0.16]} />
+        <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={2} />
+      </mesh>
+
+      {/* 3. Dual Projector Crystal LED Headlights with Angular Halo DRL */}
+      <mesh position={[-0.54, 0.33, 1.58]}>
+        <boxGeometry args={[0.28, 0.13, 0.06]} />
         <meshStandardMaterial color="#ffffff" emissive="#bae6fd" emissiveIntensity={isCrashed ? 0.3 : 4.5} />
       </mesh>
-      <mesh position={[0.52, 0.32, 1.54]}>
-        <boxGeometry args={[0.28, 0.14, 0.06]} />
+      <mesh position={[0.54, 0.33, 1.58]}>
+        <boxGeometry args={[0.28, 0.13, 0.06]} />
         <meshStandardMaterial color="#ffffff" emissive="#bae6fd" emissiveIntensity={isCrashed ? 0.3 : 4.5} />
       </mesh>
 
@@ -242,67 +294,79 @@ function RealisticCar({ isCrashed }) {
       {!isCrashed && (
         <>
           <spotLight 
-            position={[-0.5, 0.38, 1.6]} 
-            target-position={[-0.5, 0, 12]} 
+            position={[-0.54, 0.38, 1.62]} 
+            target-position={[-0.54, 0, 14]} 
             angle={0.42} 
             penumbra={0.5} 
             intensity={6} 
             color="#e0f2fe" 
-            distance={20} 
+            distance={22} 
           />
           <spotLight 
-            position={[0.5, 0.38, 1.6]} 
-            target-position={[0.5, 0, 12]} 
+            position={[0.54, 0.38, 1.62]} 
+            target-position={[0.54, 0, 14]} 
             angle={0.42} 
             penumbra={0.5} 
             intensity={6} 
             color="#e0f2fe" 
-            distance={20} 
+            distance={22} 
           />
         </>
       )}
 
-      {/* 4. Rear Full-Width Continuous LED Taillight Lightbar */}
-      <mesh position={[0, 0.36, -1.56]}>
-        <boxGeometry args={[1.34, 0.1, 0.06]} />
-        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={3.5} />
+      {/* 4. Rear Continuous 3D Neon LED Taillight Lightbar */}
+      <mesh position={[0, 0.38, -1.60]}>
+        <boxGeometry args={[1.36, 0.09, 0.06]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={4.0} />
       </mesh>
 
-      {/* Rear Sport Carbon Spoiler Wing */}
-      <mesh position={[0, 0.58, -1.48]}>
-        <boxGeometry args={[1.28, 0.04, 0.22]} />
-        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.2} />
+      {/* Carbon Fiber Sport Wing Spoiler */}
+      <mesh position={[0, 0.60, -1.52]}>
+        <boxGeometry args={[1.32, 0.04, 0.24]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} roughness={0.15} />
+      </mesh>
+      <mesh position={[-0.45, 0.48, -1.52]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.22, 12]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} />
+      </mesh>
+      <mesh position={[0.45, 0.48, -1.52]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.22, 12]} />
+        <meshStandardMaterial color="#090d16" metalness={0.95} />
       </mesh>
 
-      {/* Rear Quad Chrome Exhaust Tips */}
-      <mesh position={[-0.42, 0.12, -1.58]} rotation={[Math.PI / 2, 0, 0]}>
+      {/* Rear Aggressive Diffuser with Quad Chrome Exhaust Tips */}
+      <mesh position={[0, 0.14, -1.58]}>
+        <boxGeometry args={[1.2, 0.12, 0.1]} />
+        <meshStandardMaterial color="#020617" roughness={0.9} />
+      </mesh>
+      <mesh position={[-0.44, 0.13, -1.62]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.1, 16]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.98} roughness={0.1} />
       </mesh>
-      <mesh position={[-0.32, 0.12, -1.58]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[-0.34, 0.13, -1.62]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.1, 16]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.98} roughness={0.1} />
       </mesh>
-      <mesh position={[0.32, 0.12, -1.58]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0.34, 0.13, -1.62]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.1, 16]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.98} roughness={0.1} />
       </mesh>
-      <mesh position={[0.42, 0.12, -1.58]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0.44, 0.13, -1.62]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.045, 0.045, 0.1, 16]} />
         <meshStandardMaterial color="#cbd5e1" metalness={0.98} roughness={0.1} />
       </mesh>
 
-      {/* 5. 4 Ultra-Realistic Alloy Wheels */}
-      <group ref={wheelFL} position={[-0.76, 0.02, 0.95]}>
+      {/* 5. 4 High-Spec Alloy Wheels */}
+      <group ref={wheelFL} position={[-0.78, 0.02, 0.98]}>
         <RealisticWheel position={[0, 0, 0]} />
       </group>
-      <group ref={wheelFR} position={[0.76, 0.02, 0.95]}>
+      <group ref={wheelFR} position={[0.78, 0.02, 0.98]}>
         <RealisticWheel position={[0, 0, 0]} />
       </group>
-      <group ref={wheelRL} position={[-0.76, 0.02, -0.95]}>
+      <group ref={wheelRL} position={[-0.78, 0.02, -0.98]}>
         <RealisticWheel position={[0, 0, 0]} isRear />
       </group>
-      <group ref={wheelRR} position={[0.76, 0.02, -0.95]}>
+      <group ref={wheelRR} position={[0.78, 0.02, -0.98]}>
         <RealisticWheel position={[0, 0, 0]} isRear />
       </group>
     </group>
@@ -341,21 +405,25 @@ function RealisticMotorbike({ isCrashed }) {
   return (
     <group ref={groupRef} position={[0, 0.40, 0]}>
       
-      {/* 1. Red Exposed Racing Trellis Frame */}
+      {/* 1. Red Tubular Steel Trellis Frame */}
       <mesh position={[0, 0.28, 0]} castShadow>
         <boxGeometry args={[0.28, 0.44, 1.1]} />
         <meshPhysicalMaterial color="#dc2626" metalness={0.9} roughness={0.2} clearcoat={1.0} />
       </mesh>
 
-      {/* Metallic V-Twin Engine Block & Cooling Fins */}
-      <mesh position={[0, 0.12, 0.02]} castShadow>
-        <boxGeometry args={[0.34, 0.32, 0.48]} />
+      {/* 4-Cylinder Engine Block with Cooling Fins & Clutch Cover */}
+      <mesh position={[0, 0.14, 0.02]} castShadow>
+        <boxGeometry args={[0.36, 0.34, 0.52]} />
         <meshStandardMaterial color="#334155" metalness={0.95} roughness={0.15} />
       </mesh>
+      <mesh position={[0.20, 0.14, 0.02]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.12, 0.12, 0.04, 16]} />
+        <meshStandardMaterial color="#eab308" metalness={0.9} roughness={0.2} />
+      </mesh>
 
-      {/* 2. Sculpted Fuel Tank (Cyan/Teal Racing Livery) */}
-      <mesh position={[0, 0.48, 0.24]} rotation={[-0.15, 0, 0]} castShadow>
-        <boxGeometry args={[0.36, 0.28, 0.65]} />
+      {/* 2. Sculpted High-Rise Racing Fuel Tank with Knee Indents */}
+      <mesh position={[0, 0.50, 0.24]} rotation={[-0.15, 0, 0]} castShadow>
+        <boxGeometry args={[0.38, 0.30, 0.68]} />
         <meshPhysicalMaterial 
           color={isCrashed ? '#ef4444' : '#06b6d4'} 
           metalness={0.92} 
@@ -363,66 +431,94 @@ function RealisticMotorbike({ isCrashed }) {
           clearcoat={1.0} 
         />
       </mesh>
+      {/* Carbon Tank Pad Protector */}
+      <mesh position={[0, 0.54, 0.02]} rotation={[0.4, 0, 0]}>
+        <planeGeometry args={[0.14, 0.22]} />
+        <meshStandardMaterial color="#090d16" roughness={0.9} />
+      </mesh>
 
-      {/* Stepped Rider & Pillion Seat */}
+      {/* Stepped Alcantara Leather Rider & Pillion Seat */}
       <mesh position={[0, 0.44, -0.32]} rotation={[0.08, 0, 0]}>
-        <boxGeometry args={[0.26, 0.12, 0.6]} />
+        <boxGeometry args={[0.26, 0.12, 0.62]} />
         <meshStandardMaterial color="#0f172a" roughness={0.9} />
+      </mesh>
+      {/* Aerodynamic Tail Cowl with Integrated LED Stop Light */}
+      <mesh position={[0, 0.46, -0.70]} rotation={[0.2, 0, 0]}>
+        <boxGeometry args={[0.22, 0.14, 0.35]} />
+        <meshPhysicalMaterial color={isCrashed ? '#ef4444' : '#0891b2'} metalness={0.9} clearcoat={1.0} />
+      </mesh>
+      <mesh position={[0, 0.47, -0.88]}>
+        <boxGeometry args={[0.16, 0.04, 0.02]} />
+        <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={4} />
       </mesh>
 
       {/* Front Aerodynamic Fairing & Smoked Windshield */}
-      <mesh position={[0, 0.58, 0.72]} rotation={[-0.32, 0, 0]} castShadow>
-        <boxGeometry args={[0.38, 0.34, 0.45]} />
+      <mesh position={[0, 0.60, 0.74]} rotation={[-0.32, 0, 0]} castShadow>
+        <boxGeometry args={[0.40, 0.36, 0.48]} />
         <meshPhysicalMaterial color={isCrashed ? '#ef4444' : '#0891b2'} metalness={0.9} clearcoat={1.0} />
       </mesh>
-      <mesh position={[0, 0.72, 0.74]} rotation={[-0.55, 0, 0]}>
-        <planeGeometry args={[0.28, 0.26]} />
+      <mesh position={[0, 0.74, 0.76]} rotation={[-0.55, 0, 0]}>
+        <planeGeometry args={[0.30, 0.28]} />
         <meshPhysicalMaterial color="#0284c7" transmission={0.7} transparent opacity={0.85} />
       </mesh>
 
+      {/* Clip-on Handlebars with Levers and TFT Digital Dash */}
+      <mesh position={[0, 0.64, 0.52]}>
+        <boxGeometry args={[0.54, 0.03, 0.04]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.8} />
+      </mesh>
+      <mesh position={[0, 0.66, 0.54]} rotation={[-0.6, 0, 0]}>
+        <planeGeometry args={[0.14, 0.08]} />
+        <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={2} />
+      </mesh>
+
       {/* Dual Twin Projector Headlights */}
-      <mesh position={[-0.1, 0.48, 0.94]}>
-        <boxGeometry args={[0.1, 0.08, 0.04]} />
+      <mesh position={[-0.11, 0.50, 0.96]}>
+        <boxGeometry args={[0.11, 0.09, 0.04]} />
         <meshStandardMaterial color="#ffffff" emissive="#bae6fd" emissiveIntensity={isCrashed ? 0.3 : 5} />
       </mesh>
-      <mesh position={[0.1, 0.48, 0.94]}>
-        <boxGeometry args={[0.1, 0.08, 0.04]} />
+      <mesh position={[0.11, 0.50, 0.96]}>
+        <boxGeometry args={[0.11, 0.09, 0.04]} />
         <meshStandardMaterial color="#ffffff" emissive="#bae6fd" emissiveIntensity={isCrashed ? 0.3 : 5} />
       </mesh>
       {!isCrashed && (
         <spotLight 
-          position={[0, 0.5, 0.95]} 
-          target-position={[0, 0, 10]} 
+          position={[0, 0.52, 0.98]} 
+          target-position={[0, 0, 12]} 
           angle={0.4} 
           penumbra={0.6} 
           intensity={5.5} 
           color="#e0f2fe" 
-          distance={16} 
+          distance={18} 
         />
       )}
 
-      {/* Gold Inverted Telescopic Front Suspension Forks */}
-      <mesh position={[-0.12, 0.22, 0.82]} rotation={[-0.32, 0, 0]}>
-        <cylinderGeometry args={[0.03, 0.03, 0.65, 16]} />
+      {/* Gold Anodized Inverted Telescopic Front Suspension Forks */}
+      <mesh position={[-0.13, 0.24, 0.84]} rotation={[-0.32, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.68, 16]} />
         <meshStandardMaterial color="#eab308" metalness={0.95} roughness={0.1} />
       </mesh>
-      <mesh position={[0.12, 0.22, 0.82]} rotation={[-0.32, 0, 0]}>
-        <cylinderGeometry args={[0.03, 0.03, 0.65, 16]} />
+      <mesh position={[0.13, 0.24, 0.84]} rotation={[-0.32, 0, 0]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.68, 16]} />
         <meshStandardMaterial color="#eab308" metalness={0.95} roughness={0.1} />
       </mesh>
 
-      {/* Swept-up Titanium Exhaust Pipe */}
-      <mesh position={[0.24, 0.22, -0.38]} rotation={[0.42, 0, 0]}>
-        <cylinderGeometry args={[0.05, 0.04, 0.6, 16]} />
+      {/* Titanium Upswept Exhaust with Blue Heat Gradient Tip */}
+      <mesh position={[0.25, 0.24, -0.40]} rotation={[0.42, 0, 0]}>
+        <cylinderGeometry args={[0.055, 0.045, 0.62, 16]} />
         <meshStandardMaterial color="#94a3b8" metalness={0.95} roughness={0.15} />
+      </mesh>
+      <mesh position={[0.26, 0.42, -0.66]} rotation={[0.42, 0, 0]}>
+        <cylinderGeometry args={[0.048, 0.045, 0.12, 16]} />
+        <meshStandardMaterial color="#38bdf8" metalness={0.95} roughness={0.1} />
       </mesh>
 
       {/* Wheels */}
-      <group ref={wheelF} position={[0, 0.02, 1.05]}>
-        <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.12} />
+      <group ref={wheelF} position={[0, 0.02, 1.08]}>
+        <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.13} />
       </group>
-      <group ref={wheelR} position={[0, 0.02, -0.9]}>
-        <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.18} isRear />
+      <group ref={wheelR} position={[0, 0.02, -0.92]}>
+        <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.19} isRear />
       </group>
     </group>
   );
@@ -465,84 +561,84 @@ function RealisticAmbulance({ isCrashed }) {
     <group ref={groupRef} position={[0, 0.42, 0]}>
       
       {/* 1. Main Paramedic Medical Box Van Chassis */}
-      <mesh position={[0, 0.68, -0.22]} castShadow receiveShadow>
-        <boxGeometry args={[1.52, 1.05, 2.95]} />
-        <meshPhysicalMaterial color="#ffffff" metalness={0.3} roughness={0.2} clearcoat={0.9} />
+      <mesh position={[0, 0.70, -0.22]} castShadow receiveShadow>
+        <boxGeometry args={[1.54, 1.08, 2.98]} />
+        <meshPhysicalMaterial color="#ffffff" metalness={0.25} roughness={0.15} clearcoat={0.95} />
       </mesh>
 
       {/* Front Driver Cab Section */}
-      <mesh position={[0, 0.42, 1.2]} castShadow>
-        <boxGeometry args={[1.48, 0.68, 1.15]} />
-        <meshPhysicalMaterial color="#ffffff" metalness={0.3} roughness={0.2} clearcoat={0.9} />
+      <mesh position={[0, 0.44, 1.22]} castShadow>
+        <boxGeometry args={[1.50, 0.70, 1.18]} />
+        <meshPhysicalMaterial color="#ffffff" metalness={0.25} roughness={0.15} clearcoat={0.95} />
       </mesh>
 
       {/* Front Large Windshield */}
-      <mesh position={[0, 0.68, 1.48]} rotation={[-0.45, 0, 0]}>
-        <planeGeometry args={[1.32, 0.55]} />
+      <mesh position={[0, 0.70, 1.50]} rotation={[-0.45, 0, 0]}>
+        <planeGeometry args={[1.34, 0.56]} />
         <meshPhysicalMaterial color="#0284c7" transmission={0.65} transparent opacity={0.85} />
       </mesh>
 
-      {/* High-Vis Red & Yellow Battenburg Reflective Side Decals */}
-      <mesh position={[0, 0.55, -0.2]}>
-        <boxGeometry args={[1.54, 0.32, 2.85]} />
+      {/* High-Vis Fluorescent Red & Yellow Battenburg Emergency Chevrons */}
+      <mesh position={[0, 0.56, -0.2]}>
+        <boxGeometry args={[1.56, 0.34, 2.88]} />
         <meshStandardMaterial color="#dc2626" roughness={0.3} />
       </mesh>
       <mesh position={[0, 0.32, -0.2]}>
-        <boxGeometry args={[1.54, 0.12, 2.85]} />
+        <boxGeometry args={[1.56, 0.14, 2.88]} />
         <meshStandardMaterial color="#facc15" roughness={0.3} />
       </mesh>
 
       {/* Emergency Roof Strobe Light Bar (Alternating Red/Blue Flasher) */}
-      <group position={[0, 1.28, 0.4]}>
-        <mesh position={[-0.35, 0, 0]}>
-          <boxGeometry args={[0.45, 0.14, 0.25]} />
-          <meshStandardMaterial emissive="#ef4444" emissiveIntensity={isCrashed ? 1 : 6} color="#ef4444" />
+      <group position={[0, 1.30, 0.42]}>
+        <mesh position={[-0.38, 0, 0]}>
+          <boxGeometry args={[0.48, 0.15, 0.26]} />
+          <meshStandardMaterial emissive="#ef4444" emissiveIntensity={isCrashed ? 1 : 7} color="#ef4444" />
         </mesh>
-        <mesh position={[0.35, 0, 0]}>
-          <boxGeometry args={[0.45, 0.14, 0.25]} />
-          <meshStandardMaterial emissive="#3b82f6" emissiveIntensity={isCrashed ? 1 : 6} color="#3b82f6" />
+        <mesh position={[0.38, 0, 0]}>
+          <boxGeometry args={[0.48, 0.15, 0.26]} />
+          <meshStandardMaterial emissive="#3b82f6" emissiveIntensity={isCrashed ? 1 : 7} color="#3b82f6" />
         </mesh>
       </group>
-      <pointLight position={[0, 1.4, 0.4]} color="#ef4444" intensity={isCrashed ? 1.5 : 6} distance={12} />
+      <pointLight position={[0, 1.42, 0.42]} color="#ef4444" intensity={isCrashed ? 1.5 : 7} distance={14} />
 
-      {/* Front Headlights */}
-      <mesh position={[-0.54, 0.34, 1.78]}>
+      {/* Front LED Headlights */}
+      <mesh position={[-0.56, 0.35, 1.80]}>
         <boxGeometry args={[0.26, 0.16, 0.05]} />
         <meshStandardMaterial color="#ffffff" emissive="#bae6fd" emissiveIntensity={isCrashed ? 0.3 : 4} />
       </mesh>
-      <mesh position={[0.54, 0.34, 1.78]}>
+      <mesh position={[0.56, 0.35, 1.80]}>
         <boxGeometry args={[0.26, 0.16, 0.05]} />
         <meshStandardMaterial color="#ffffff" emissive="#bae6fd" emissiveIntensity={isCrashed ? 0.3 : 4} />
       </mesh>
       {!isCrashed && (
-        <spotLight position={[0, 0.4, 1.8]} target-position={[0, 0, 10]} angle={0.5} penumbra={0.6} intensity={5} color="#e0f2fe" distance={18} />
+        <spotLight position={[0, 0.42, 1.82]} target-position={[0, 0, 10]} angle={0.5} penumbra={0.6} intensity={5} color="#e0f2fe" distance={20} />
       )}
 
       {/* Rear Double Doors & Ambulance Red Cross Emblem */}
-      <mesh position={[0, 0.72, -1.7]}>
-        <boxGeometry args={[0.42, 0.42, 0.02]} />
+      <mesh position={[0, 0.74, -1.72]}>
+        <boxGeometry args={[0.44, 0.44, 0.02]} />
         <meshStandardMaterial color="#dc2626" />
       </mesh>
-      <mesh position={[0, 0.72, -1.71]}>
-        <boxGeometry args={[0.14, 0.34, 0.02]} />
+      <mesh position={[0, 0.74, -1.73]}>
+        <boxGeometry args={[0.15, 0.36, 0.02]} />
         <meshStandardMaterial color="#ffffff" />
       </mesh>
-      <mesh position={[0, 0.72, -1.71]}>
-        <boxGeometry args={[0.34, 0.14, 0.02]} />
+      <mesh position={[0, 0.74, -1.73]}>
+        <boxGeometry args={[0.36, 0.15, 0.02]} />
         <meshStandardMaterial color="#ffffff" />
       </mesh>
 
       {/* 4 Heavy-Duty Wheels */}
-      <group ref={wheelFL} position={[-0.78, 0.02, 1.05]}>
+      <group ref={wheelFL} position={[-0.80, 0.02, 1.08]}>
         <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.19} />
       </group>
-      <group ref={wheelFR} position={[0.78, 0.02, 1.05]}>
+      <group ref={wheelFR} position={[0.80, 0.02, 1.08]}>
         <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.19} />
       </group>
-      <group ref={wheelRL} position={[-0.78, 0.02, -0.9]}>
+      <group ref={wheelRL} position={[-0.80, 0.02, -0.92]}>
         <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.24} isRear />
       </group>
-      <group ref={wheelRR} position={[0.78, 0.02, -0.9]}>
+      <group ref={wheelRR} position={[0.80, 0.02, -0.92]}>
         <RealisticWheel position={[0, 0, 0]} radius={0.34} width={0.24} isRear />
       </group>
     </group>
@@ -602,259 +698,219 @@ function RealisticHighwayEnvironment({ isCrashed }) {
         ))}
       </group>
 
-      {/* Double Steel Guardrails */}
-      <mesh position={[-4.6, 0.45, 0]}>
-        <boxGeometry args={[0.18, 0.45, 60]} />
-        <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.15} />
+      {/* Highway Guardrails */}
+      <mesh position={[-4.8, 0.35, 0]}>
+        <boxGeometry args={[0.15, 0.5, 60]} />
+        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
       </mesh>
-      <mesh position={[4.6, 0.45, 0]}>
-        <boxGeometry args={[0.18, 0.45, 60]} />
-        <meshStandardMaterial color="#64748b" metalness={0.9} roughness={0.15} />
+      <mesh position={[4.8, 0.35, 0]}>
+        <boxGeometry args={[0.15, 0.5, 60]} />
+        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
       </mesh>
 
-      {/* Moving Overhead Streetlights & Roadside Milestone Posts */}
+      {/* Distant Moving Highway Streetlight Poles */}
       <group ref={sceneryRef}>
-        {[-30, -10, 10, 30].map((zPos, idx) => (
-          <group key={idx} position={[0, 0, zPos]}>
-            {/* Streetlight Post */}
-            <mesh position={[-5.6, 2.2, 0]}>
-              <cylinderGeometry args={[0.08, 0.1, 4.4, 16]} />
-              <meshStandardMaterial color="#334155" metalness={0.9} />
+        {[-30, -15, 0, 15, 30].map((zPos, idx) => (
+          <group key={idx} position={[5.4, 0, zPos]}>
+            <mesh position={[0, 2.5, 0]}>
+              <cylinderGeometry args={[0.08, 0.1, 5, 12]} />
+              <meshStandardMaterial color="#64748b" metalness={0.9} />
             </mesh>
-            <mesh position={[-4.6, 4.3, 0]} rotation={[0, 0, -0.6]}>
-              <cylinderGeometry args={[0.06, 0.06, 2.2, 12]} />
-              <meshStandardMaterial color="#334155" metalness={0.9} />
+            <mesh position={[-0.8, 4.9, 0]} rotation={[0, 0, Math.PI / 3]}>
+              <cylinderGeometry args={[0.06, 0.06, 1.8, 12]} />
+              <meshStandardMaterial color="#64748b" metalness={0.9} />
             </mesh>
-            <mesh position={[-3.8, 4.2, 0]}>
-              <sphereGeometry args={[0.18, 16, 16]} />
-              <meshStandardMaterial emissive="#fed7aa" emissiveIntensity={3.5} color="#ffedd5" />
+            <mesh position={[-1.4, 4.4, 0]}>
+              <boxGeometry args={[0.4, 0.1, 0.2]} />
+              <meshStandardMaterial emissive="#fef08a" emissiveIntensity={2} color="#fef08a" />
             </mesh>
-            <pointLight position={[-3.8, 3.8, 0]} color="#fed7aa" intensity={2.2} distance={16} />
-
-            {/* Milestone Post */}
-            <mesh position={[5.4, 0.6, 0]}>
-              <boxGeometry args={[0.3, 1.2, 0.3]} />
-              <meshStandardMaterial color="#f8fafc" roughness={0.8} />
-            </mesh>
-            <mesh position={[5.4, 1.0, 0]}>
-              <boxGeometry args={[0.32, 0.35, 0.32]} />
-              <meshStandardMaterial color="#22c55e" roughness={0.5} />
-            </mesh>
+            <pointLight position={[-1.4, 4.2, 0]} color="#fef08a" intensity={1.5} distance={10} />
           </group>
         ))}
       </group>
-
-      {/* Skid Marks on Road when Crashed */}
-      {isCrashed && (
-        <group position={[0, 0.02, 0]}>
-          <mesh rotation={[-Math.PI / 2, 0.25, 0]} position={[-0.3, 0, 0.4]}>
-            <planeGeometry args={[0.28, 4.5]} />
-            <meshBasicMaterial color="#020617" transparent opacity={0.85} />
-          </mesh>
-          <mesh rotation={[-Math.PI / 2, 0.25, 0]} position={[0.4, 0, 0.2]}>
-            <planeGeometry args={[0.28, 4.5]} />
-            <meshBasicMaterial color="#020617" transparent opacity={0.85} />
-          </mesh>
-        </group>
-      )}
     </group>
   );
 }
 
 // -------------------------------------------------------------
-// 6. Main 3D Vehicle Simulation & Telemetry HUD Component
+// 6. Realistic 3D Crash Particles (Sparks & Smoke Geometry)
 // -------------------------------------------------------------
-export function Vehicle3DSimulation({ onAccidentConfirmed = null, externalReset = null }) {
-  const { t, language } = useLanguage();
-  const { setActiveDispatch } = useDemo();
+function CrashFXParticles() {
+  const sparksRef = useRef();
+
+  useFrame((state, delta) => {
+    if (sparksRef.current) {
+      sparksRef.current.rotation.y += delta * 1.5;
+      sparksRef.current.position.y = 0.5 + Math.sin(state.clock.elapsedTime * 8) * 0.15;
+    }
+  });
+
+  return (
+    <group ref={sparksRef} position={[0, 0.5, 0]}>
+      <Sparkles 
+        count={80} 
+        scale={3.5} 
+        size={4.5} 
+        speed={2.2} 
+        color="#ef4444" 
+      />
+      <Sparkles 
+        count={50} 
+        scale={2.8} 
+        size={3.2} 
+        speed={3.5} 
+        color="#facc15" 
+      />
+      <pointLight position={[0, 0.6, 0]} color="#ef4444" intensity={8} distance={6} />
+    </group>
+  );
+}
+
+// -------------------------------------------------------------
+// MAIN VEHICLE 3D SIMULATION CONTAINER
+// -------------------------------------------------------------
+export function Vehicle3DSimulation({ onAccidentConfirmed, externalReset }) {
+  const { language } = useLanguage();
+  const { queueOfflineReport } = useDemo();
 
   const [vehicleType, setVehicleType] = useState('car'); // 'car' | 'bike' | 'ambulance'
-  const [simState, setSimState] = useState('DRIVING'); // 'DRIVING' | 'CRASHED' | 'DISPATCHED' | 'SAFE'
+  const [simState, setSimState] = useState('IDLE'); // 'IDLE' | 'CRUISING' | 'CRASHED' | 'COUNTDOWN'
   const [speed, setSpeed] = useState(78);
-  const [gForce, setGForce] = useState(1.02);
-  const [gyroTilt, setGyroTilt] = useState({ roll: 1.8, pitch: 0.7, yaw: 0 });
+  const [gForce, setGForce] = useState(0.98);
   const [countdown, setCountdown] = useState(25);
-  const [dispatchDetails, setDispatchDetails] = useState(null);
+  const [alertDispatched, setAlertDispatched] = useState(false);
 
-  const countdownTimerRef = useRef(null);
-
-  // Sync with external reset
-  useEffect(() => {
-    if (externalReset === false) {
-      handleResetSim();
-    }
-  }, [externalReset]);
-
-  // Normal Driving Telemetry Flutter
-  useEffect(() => {
-    let interval = null;
-    if (simState === 'DRIVING') {
-      interval = setInterval(() => {
-        setSpeed((prev) => 74 + Math.floor(Math.random() * 8));
-        setGForce((prev) => +(0.98 + Math.random() * 0.12).toFixed(2));
-        setGyroTilt({
-          roll: +(Math.sin(Date.now() / 600) * 2.8).toFixed(1),
-          pitch: +(Math.cos(Date.now() / 800) * 1.4).toFixed(1),
-          yaw: +(Math.sin(Date.now() / 1200) * 1.8).toFixed(1)
-        });
-      }, 300);
-    }
-    return () => clearInterval(interval);
-  }, [simState]);
-
-  // Trigger Crash Simulation Handler
-  const handleSimulateCrash = () => {
+  // Crash Trigger Function
+  const handleTriggerCrash = () => {
     setSimState('CRASHED');
     setSpeed(0);
-    setGForce(4.85); // Critical impact spike
-    setGyroTilt({ roll: 68.4, pitch: 24.2, yaw: 142.0 });
+    setGForce(4.85); // Critical G-Force Spike
     setCountdown(25);
-
-    // Audio Voice Alert
-    speakEmergencyInstruction(
-      "High impact crash detected. Multi-sensor fusion activated. Are you safe? Emergency SOS dispatching in 25 seconds."
-    );
-
-    // Start 25s Countdown
-    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    countdownTimerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownTimerRef.current);
-          handleTriggerAutonomousDispatch('AUTO_TIMEOUT');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // User Clicks "I AM SAFE (CANCEL)"
-  const handleMarkSafe = () => {
-    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    setSimState('SAFE');
-    speakEmergencyInstruction("Accident alert cancelled. User confirmed safe.");
-    setTimeout(() => {
-      setSimState('DRIVING');
-      setSpeed(76);
-      setGForce(1.02);
-    }, 2500);
-  };
-
-  // Autonomous Rescue Dispatch Trigger (Timeout or "I NEED HELP")
-  const handleTriggerAutonomousDispatch = (triggerSource = 'USER_CONFIRMED') => {
-    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    setSimState('DISPATCHED');
-
-    const details = {
-      incidentId: `INC-${Math.floor(100000 + Math.random() * 900000)}`,
-      location: 'NH-16 Highway, Vijayawada Bypass (KM 42.8)',
-      coordinates: { lat: 16.5180, lng: 80.6520 },
-      severity: 'CRITICAL (Level-1 Trauma)',
-      sensors: {
-        maxGForce: '4.85 G (Severe Deceleration)',
-        speedDrop: '78 km/h -> 0 km/h in 0.6s',
-        angularTilt: '68.4° Roll Over',
-        postImpactStillness: 'CONFIRMED (Zero Movement)'
-      },
-      hospital: {
-        name: 'Government General Hospital (GGH Vijayawada)',
-        distanceKm: 2.1,
-        etaMin: 3.8,
-        icuBedReserved: 'Trauma Bay-04',
-        phone: '+91-866-2472777'
-      }
-    };
-
-    setDispatchDetails(details);
-
-    setActiveDispatch({
-      active: true,
-      hospitalCoords: details.coordinates,
-      userCoords: details.coordinates
-    });
-
-    if (onAccidentConfirmed) {
-      onAccidentConfirmed(details);
-    }
-
-    speakEmergencyInstruction(
-      "Emergency rescue confirmed. ALS Ambulance 108 and trauma hospital notified."
-    );
+    speakEmergencyInstruction("Critical impact detected! 4.85G collision spike. Initiating emergency rescue countdown.");
   };
 
   // Reset Simulation
-  const handleResetSim = () => {
-    if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-    setSimState('DRIVING');
+  const handleReset = () => {
+    setSimState('CRUISING');
     setSpeed(78);
-    setGForce(1.02);
+    setGForce(0.98);
     setCountdown(25);
-    setDispatchDetails(null);
+    setAlertDispatched(false);
+    if (externalReset) externalReset();
+  };
+
+  // Auto-Start Cruising on Mount
+  useEffect(() => {
+    setSimState('CRUISING');
+  }, []);
+
+  // 25-Second Autonomous Countdown Loop
+  useEffect(() => {
+    let timer = null;
+    if (simState === 'CRASHED' && countdown > 0 && !alertDispatched) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            handleConfirmEmergency();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [simState, countdown, alertDispatched]);
+
+  const handleConfirmEmergency = () => {
+    setAlertDispatched(true);
+    speakEmergencyInstruction("Emergency SOS dispatched to nearest trauma hospital and 108 ambulance units.");
+
+    const payload = {
+      id: `crash-${Date.now().toString().slice(-4)}`,
+      type: 'VEHICULAR_COLLISION_CRITICAL',
+      vehicle_type: vehicleType,
+      gForce: 4.85,
+      impactSpeed: 78,
+      location: 'National Highway 16, Gollapudi Corridor',
+      coordinates: [16.5412, 80.5843],
+      timestamp: new Date().toISOString()
+    };
+
+    queueOfflineReport(payload);
+    if (onAccidentConfirmed) onAccidentConfirmed(payload);
   };
 
   return (
-    <div className="w-full bg-[#070D1A] rounded-3xl border border-slate-800 shadow-2xl p-4 sm:p-6 space-y-5 overflow-hidden relative">
+    <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl space-y-4 p-4 sm:p-6">
       
-      {/* Top Header & Simulation Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500 to-amber-600 border border-red-400/40 text-white flex items-center justify-center shadow-lg shadow-red-950/60">
-            <AlertOctagon className="w-6 h-6 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="text-base sm:text-lg font-black text-white">
-                {t('sim_title') || '3D Real-Time Vehicle Crash & Multi-Sensor Screening'}
-              </h3>
-              <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
-                THREE.JS PHOTOREALISTIC
-              </span>
-            </div>
-            <p className="text-xs text-slate-300 max-w-xl">
-              Live multi-sensor screening evaluating Accelerometer G-Force, 3D Gyroscope tilt, and GPS Speed drop.
-            </p>
-          </div>
+      {/* 1. Header Bar: Vehicle Picker & Telemetry HUD */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+        
+        {/* Vehicle Selection Tabs */}
+        <div className="flex items-center space-x-1.5 bg-[#050A14] p-1.5 rounded-2xl border border-slate-800">
+          <button
+            onClick={() => setVehicleType('car')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center space-x-1.5 transition-all cursor-pointer ${
+              vehicleType === 'car' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Car className="w-4 h-4" />
+            <span>Sports Sedan</span>
+          </button>
+
+          <button
+            onClick={() => setVehicleType('bike')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center space-x-1.5 transition-all cursor-pointer ${
+              vehicleType === 'bike' 
+                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/50' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Bike className="w-4 h-4" />
+            <span>Superbike</span>
+          </button>
+
+          <button
+            onClick={() => setVehicleType('ambulance')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center space-x-1.5 transition-all cursor-pointer ${
+              vehicleType === 'ambulance' 
+                ? 'bg-red-600 text-white shadow-lg shadow-red-900/50' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Siren className="w-4 h-4" />
+            <span>ALS Ambulance</span>
+          </button>
         </div>
 
-        {/* Vehicle Selection & Reset */}
-        <div className="flex items-center space-x-2">
-          <div className="bg-[#050A14] p-1 rounded-xl border border-slate-800 flex space-x-1">
-            <button
-              onClick={() => setVehicleType('car')}
-              className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1 ${
-                vehicleType === 'car' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
-              }`}
-              title="Sports Sedan Car"
-            >
-              <Car className="w-4 h-4" />
-              <span className="hidden sm:inline">Sports Car</span>
-            </button>
-            <button
-              onClick={() => setVehicleType('bike')}
-              className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1 ${
-                vehicleType === 'bike' ? 'bg-cyan-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
-              }`}
-              title="Sports Motorbike"
-            >
-              <Bike className="w-4 h-4" />
-              <span className="hidden sm:inline">Superbike</span>
-            </button>
-            <button
-              onClick={() => setVehicleType('ambulance')}
-              className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1 ${
-                vehicleType === 'ambulance' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'
-              }`}
-              title="ALS Emergency Ambulance"
-            >
-              <Siren className="w-4 h-4" />
-              <span className="hidden sm:inline">ALS Rescue</span>
-            </button>
+        {/* Live Sensor Telemetry Badges */}
+        <div className="flex items-center space-x-2.5">
+          <div className="bg-[#050A14] px-3.5 py-2 rounded-2xl border border-slate-800 flex items-center space-x-2">
+            <Gauge className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs font-mono font-bold text-white">
+              {speed} <span className="text-[10px] text-slate-400">km/h</span>
+            </span>
+          </div>
+
+          <div className={`px-3.5 py-2 rounded-2xl border flex items-center space-x-2 ${
+            gForce > 3.0 
+              ? 'bg-red-950/80 border-red-500/80 text-red-400 animate-pulse' 
+              : 'bg-[#050A14] border-slate-800 text-emerald-400'
+          }`}>
+            <Activity className="w-4 h-4" />
+            <span className="text-xs font-mono font-bold">
+              {gForce} <span className="text-[10px]">G</span>
+            </span>
           </div>
 
           <button
-            onClick={handleResetSim}
-            className="p-2.5 bg-[#050A14] hover:bg-slate-800 text-slate-300 border border-slate-700 rounded-xl transition-all cursor-pointer"
+            onClick={handleReset}
+            className="p-2.5 bg-[#050A14] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-2xl transition-colors cursor-pointer"
             title="Reset Simulation"
           >
             <RotateCcw className="w-4 h-4" />
@@ -862,195 +918,135 @@ export function Vehicle3DSimulation({ onAccidentConfirmed = null, externalReset 
         </div>
       </div>
 
-      {/* Main 3D Canvas + Telemetry Gauge HUD Overlay */}
-      <div className="relative w-full h-84 sm:h-[440px] rounded-2xl bg-[#030712] border border-slate-800 overflow-hidden shadow-inner flex items-center justify-center">
+      {/* 2. Three.js 3D Viewport with Realistic Camera & Lighting */}
+      <div className="relative w-full h-[360px] sm:h-[440px] rounded-3xl overflow-hidden border border-slate-800 bg-[#030712] shadow-inner">
         
-        {/* 3D Three.js Viewport protected by WebGL Error Boundary */}
-        <WebGLErrorBoundary
-          fallback={
-            <WebGLFallbackView 
-              simState={simState} 
-              vehicleType={vehicleType} 
-              speed={speed} 
-              gForce={gForce} 
-            />
-          }
-        >
-          <Canvas shadows camera={{ position: [0, 2.6, 5.8], fov: 48 }}>
-            <ambientLight intensity={0.75} />
+        <WebGLErrorBoundary fallback={<WebGLFallbackView simState={simState} vehicleType={vehicleType} speed={speed} gForce={gForce} />}>
+          <Canvas
+            shadows
+            camera={{ position: [0, 2.2, 5.2], fov: 46 }}
+            style={{ width: '100%', height: '100%' }}
+          >
+            {/* Realistic Environment Lighting */}
+            <ambientLight intensity={0.7} />
             <directionalLight 
-              position={[8, 14, 8]} 
-              intensity={1.8} 
+              position={[8, 14, 6]} 
+              intensity={2.2} 
               castShadow 
-              shadow-mapSize-width={1024} 
-              shadow-mapSize-height={1024} 
+              shadow-mapSize={[1024, 1024]} 
+              shadow-camera-near={0.5} 
+              shadow-camera-far={30} 
+              shadow-camera-left={-8} 
+              shadow-camera-right={8} 
+              shadow-camera-top={8} 
+              shadow-camera-bottom={-8} 
             />
-            <directionalLight position={[-8, 6, -8]} color="#38bdf8" intensity={0.8} />
+            <pointLight position={[-6, 4, -4]} intensity={1.2} color="#38bdf8" />
+            <pointLight position={[6, 4, 4]} intensity={1.2} color="#f59e0b" />
 
-            <RealisticHighwayEnvironment isCrashed={simState !== 'DRIVING'} />
+            {/* 3D Highway Road Surface & Scenery */}
+            <RealisticHighwayEnvironment isCrashed={simState === 'CRASHED'} />
 
-            {/* Render Selected Ultra-Realistic Vehicle */}
-            {vehicleType === 'bike' && <RealisticMotorbike isCrashed={simState !== 'DRIVING'} />}
-            {vehicleType === 'ambulance' && <RealisticAmbulance isCrashed={simState !== 'DRIVING'} />}
-            {vehicleType === 'car' && <RealisticCar isCrashed={simState !== 'DRIVING'} />}
+            {/* Realistic Vehicle Mesh */}
+            <Float 
+              speed={simState === 'CRASHED' ? 0 : 2} 
+              rotationIntensity={simState === 'CRASHED' ? 0 : 0.05} 
+              floatIntensity={simState === 'CRASHED' ? 0 : 0.08}
+            >
+              {vehicleType === 'car' && <RealisticCar isCrashed={simState === 'CRASHED'} />}
+              {vehicleType === 'bike' && <RealisticMotorbike isCrashed={simState === 'CRASHED'} />}
+              {vehicleType === 'ambulance' && <RealisticAmbulance isCrashed={simState === 'CRASHED'} />}
+            </Float>
 
-            {/* Realistic Ground Contact Shadow under Vehicle */}
+            {/* Crash FX Sparks & Smoke */}
+            {simState === 'CRASHED' && <CrashFXParticles />}
+
+            {/* Ground Contact Soft Shadows */}
             <ContactShadows 
               position={[0, 0, 0]} 
-              opacity={0.8} 
-              scale={7} 
-              blur={1.6} 
-              far={3.5} 
-              color="#000000" 
+              opacity={0.75} 
+              scale={12} 
+              blur={1.8} 
+              far={4} 
             />
 
-            {/* Crash Collision Particles / Sparks */}
-            {simState === 'CRASHED' && (
-              <Sparkles count={120} scale={4} size={6} speed={3} color="#ef4444" />
-            )}
-
+            {/* Orbit Controls (Interactive 360 degree drag & inspect) */}
             <OrbitControls 
               enableZoom={false} 
-              enablePan={false} 
-              maxPolarAngle={Math.PI / 2.05} 
-              minPolarAngle={Math.PI / 4} 
+              maxPolarAngle={Math.PI / 2 - 0.05} 
+              minPolarAngle={Math.PI / 6} 
             />
           </Canvas>
         </WebGLErrorBoundary>
 
-        {/* Top-Left: Live Sensor Fusion Gauges HUD */}
-        <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 space-y-2 pointer-events-none shadow-2xl">
-          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-            <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Live Multi-Sensor Screening</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {/* Speed Gauge */}
-            <div className="bg-[#0B1220] p-2 rounded-xl border border-slate-800/80 text-center min-w-[72px]">
-              <div className="text-[9px] text-slate-400 font-bold">GPS SPEED</div>
-              <div className={`text-base font-black font-mono ${speed > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {speed} <span className="text-[9px] text-slate-400">km/h</span>
-              </div>
-            </div>
-
-            {/* G-Force Gauge */}
-            <div className="bg-[#0B1220] p-2 rounded-xl border border-slate-800/80 text-center min-w-[72px]">
-              <div className="text-[9px] text-slate-400 font-bold">G-FORCE</div>
-              <div className={`text-base font-black font-mono ${gForce > 2.5 ? 'text-red-400 animate-pulse' : 'text-cyan-300'}`}>
-                {gForce} <span className="text-[9px] text-slate-400">g</span>
-              </div>
-            </div>
-
-            {/* Gyroscope Tilt */}
-            <div className="bg-[#0B1220] p-2 rounded-xl border border-slate-800/80 text-center min-w-[72px]">
-              <div className="text-[9px] text-slate-400 font-bold">GYRO TILT</div>
-              <div className={`text-base font-black font-mono ${Math.abs(gyroTilt.roll) > 40 ? 'text-red-400' : 'text-amber-400'}`}>
-                {gyroTilt.roll}°
-              </div>
-            </div>
-          </div>
-
-          <div className="text-[10px] text-slate-400 flex items-center space-x-1.5 pt-0.5">
-            <span className={`w-2 h-2 rounded-full ${simState === 'DRIVING' ? 'bg-emerald-400 animate-ping' : 'bg-red-500'}`} />
-            <span>Telemetry: <strong className="text-white">{simState === 'DRIVING' ? 'MONITORING CRASH VECTORS' : 'COLLISION SPIKE LOGGED'}</strong></span>
-          </div>
+        {/* Status Overlay HUD Badge */}
+        <div className="absolute top-3 left-3 z-10 bg-slate-950/80 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 text-[11px] font-mono text-slate-300 flex items-center space-x-2 shadow-lg">
+          <span className={`w-2.5 h-2.5 rounded-full ${
+            simState === 'CRASHED' ? 'bg-red-500 animate-ping' : 'bg-emerald-400'
+          }`} />
+          <span>
+            {simState === 'CRASHED' ? 'CRASH SIMULATOR: 4.85G IMPACT' : 'PHYSICS SIMULATOR: REAL HIGHWAY'}
+          </span>
         </div>
 
-        {/* Top-Right: Highway Location Badge */}
-        <div className="absolute top-3 right-3 bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-800 text-[11px] font-mono text-cyan-300 flex items-center space-x-1.5 shadow-lg pointer-events-none">
-          <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-          <span>NH-16 Vijayawada Bypass</span>
-        </div>
+        {/* Simulated Trigger Crash Action Button */}
+        {simState !== 'CRASHED' && (
+          <button
+            onClick={handleTriggerCrash}
+            className="absolute bottom-4 right-4 z-10 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs px-5 py-3 rounded-2xl shadow-xl shadow-red-950/80 flex items-center space-x-2 transition-all cursor-pointer hover:scale-105"
+          >
+            <AlertOctagon className="w-4 h-4 animate-pulse" />
+            <span>TRIGGER 3D CRASH (4.85G)</span>
+          </button>
+        )}
+      </div>
 
-        {/* 25-Second Safety Countdown Modal Overlay (When Crashed) */}
-        {simState === 'CRASHED' && (
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 z-30">
-            <div className="max-w-md w-full bg-[#0B1220] border-2 border-red-500 rounded-3xl p-6 shadow-2xl text-center space-y-4 animate-in zoom-in-95">
-              
-              <div className="w-14 h-14 rounded-full bg-red-600/20 border-2 border-red-500 flex items-center justify-center mx-auto text-red-500 animate-pulse">
-                <AlertOctagon className="w-8 h-8" />
+      {/* 3. Crash Countdown & Confirmation Modal Card */}
+      {simState === 'CRASHED' && (
+        <div className="p-5 bg-gradient-to-br from-red-950/90 via-slate-900 to-[#0B1220] border-2 border-red-500/80 rounded-3xl space-y-4 shadow-2xl animate-fade-in">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-red-500/30 pb-3">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-2xl bg-red-600 border border-red-400 text-white flex items-center justify-center text-xl font-black animate-pulse shadow-lg shadow-red-600/50 shrink-0">
+                {countdown}s
               </div>
-
               <div>
-                <span className="bg-red-500/20 text-red-400 text-[10px] font-black px-3 py-1 rounded-full border border-red-500/40 uppercase">
-                  High-G Collision Impact ({gForce}G)
+                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">
+                  CRITICAL SENSOR SPIKE DETECTED
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-white mt-2">
-                  {t('sim_countdown_title') || 'ARE YOU SAFE?'}
-                </h3>
-                <p className="text-xs text-slate-300 mt-1">
-                  {t('sim_countdown_desc') || 'Multi-sensor impact detected. Alerting emergency hospital & volunteer rescue in:'}
-                </p>
-              </div>
-
-              {/* Big 25s Countdown Dial */}
-              <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full border-4 border-red-500/40 animate-ping" />
-                <div className="w-24 h-24 rounded-full bg-red-950/80 border-4 border-red-500 flex items-center justify-center shadow-lg shadow-red-950">
-                  <span className="text-4xl font-black text-red-400 font-mono">{countdown}s</span>
-                </div>
-              </div>
-
-              {/* Interactive Safety Response Action Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <button
-                  onClick={handleMarkSafe}
-                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-2xl text-xs shadow-lg transition-all min-h-[48px] cursor-pointer"
-                >
-                  {t('sim_safe_btn') || "I'M SAFE (CANCEL)"}
-                </button>
-
-                <button
-                  onClick={() => handleTriggerAutonomousDispatch('USER_CONFIRMED')}
-                  className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl text-xs shadow-lg shadow-red-950 transition-all min-h-[48px] cursor-pointer"
-                >
-                  {t('sim_help_btn') || 'I NEED HELP NOW'}
-                </button>
+                <h4 className="text-base font-black text-white">
+                  Autonomous Multi-Hospital Emergency Rescue Alert
+                </h4>
               </div>
             </div>
+
+            <span className="text-xs font-mono font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+              Auto-Dispatching in {countdown}s
+            </span>
           </div>
-        )}
 
-        {/* "I'm Safe" Banner */}
-        {simState === 'SAFE' && (
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-30">
-            <div className="bg-emerald-950/90 border border-emerald-500 p-6 rounded-3xl text-center space-y-2 max-w-sm">
-              <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-              <h4 className="text-lg font-black text-white">Emergency Alert Cancelled</h4>
-              <p className="text-xs text-emerald-200">User confirmed safe. No rescue services dispatched.</p>
-            </div>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Accelerometer G-Force spiked to <strong className="text-red-400">4.85G</strong> with rapid deceleration (78 km/h → 0 km/h). If you are safe, tap cancel. Otherwise, nearest trauma hospitals (GGH Vijayawada, AIIMS Mangalagiri) are receiving instant telemetry.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={handleConfirmEmergency}
+              className="flex-1 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black py-3.5 px-5 rounded-2xl text-xs shadow-xl shadow-red-950 flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            >
+              <Siren className="w-4 h-4 animate-bounce" />
+              <span>DISPATCH EMERGENCY RESCUE NOW</span>
+            </button>
+
+            <button
+              onClick={handleReset}
+              className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 rounded-2xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              I AM SAFE (CANCEL SOS)
+            </button>
           </div>
-        )}
-      </div>
-
-      {/* Simulation Action Bar (Cruise vs Trigger Crash) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#050A14] p-4 rounded-2xl border border-slate-800">
-        <div className="text-xs text-slate-300">
-          <strong className="text-white">Live 3D Testing: </strong>
-          <span>Vehicle is cruising smoothly on highway with live sensor screening. Click "Simulate Highway Crash" to trigger impact.</span>
         </div>
-
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
-          {simState === 'DRIVING' ? (
-            <button
-              onClick={handleSimulateCrash}
-              className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-slate-950 font-black px-6 py-3 rounded-xl text-xs shadow-xl shadow-red-950 transition-all flex items-center justify-center space-x-2 cursor-pointer min-h-[44px]"
-            >
-              <Zap className="w-4 h-4 stroke-[2.5]" />
-              <span>{t('sim_trigger_crash') || 'SIMULATE HIGHWAY CRASH (4.8G)'}</span>
-            </button>
-          ) : (
-            <button
-              onClick={handleResetSim}
-              className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all flex items-center justify-center space-x-2 cursor-pointer min-h-[44px]"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>{t('sim_reset') || 'RESET DRIVING MODE'}</span>
-            </button>
-          )}
-        </div>
-      </div>
+      )}
 
     </div>
   );

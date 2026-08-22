@@ -115,11 +115,138 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
     return { lat, lng, angle: angleDeg };
   };
 
+  // Helper function to generate Real 3D Small Ambulance HTML
+  const create3DAmbulanceHTML = (angleDeg = 0, isReturning = false) => {
+    return `
+      <div id="ambulance-3d-wrapper" style="
+        position: relative; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        transform: rotate(${angleDeg}deg); 
+        transform-origin: center center;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      ">
+        <!-- Forward Headlight Cones (Beams shining onto the road) -->
+        <div style="
+          position: absolute; 
+          top: -45px; 
+          left: 50%; 
+          transform: translateX(-50%); 
+          width: 60px; 
+          height: 50px; 
+          background: radial-gradient(ellipse at bottom, rgba(254, 240, 138, 0.7) 0%, rgba(254, 240, 138, 0) 80%);
+          pointer-events: none;
+          filter: blur(2px);
+          z-index: 1;
+        "></div>
+
+        <!-- 3D Isometric Styled Paramedic Vehicle Body -->
+        <div style="
+          position: relative;
+          width: 52px; 
+          height: 84px; 
+          border-radius: 14px; 
+          background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 40%, #e2e8f0 100%); 
+          border: 2.5px solid #0f172a; 
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.7), 0 0 20px rgba(16, 185, 129, 0.5), inset 0 2px 4px rgba(255,255,255,0.9); 
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          overflow: hidden;
+          z-index: 2;
+        ">
+          <!-- Front Hood & Windshield -->
+          <div style="
+            width: 40px; 
+            height: 18px; 
+            background: linear-gradient(180deg, #0284c7, #0369a1); 
+            border-radius: 6px 6px 3px 3px; 
+            margin-top: 4px; 
+            border: 1.5px solid #075985;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4);
+          "></div>
+
+          <!-- Dual Alternating Strobe Emergency Lightbar -->
+          <div style="
+            width: 32px; 
+            height: 8px; 
+            border-radius: 4px; 
+            background: #0f172a; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 1px 2px; 
+            margin-top: 3px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+          ">
+            <span style="width: 12px; height: 6px; border-radius: 2px; background: #ef4444; box-shadow: 0 0 12px #ef4444; animation: ping 0.6s infinite;"></span>
+            <span style="width: 12px; height: 6px; border-radius: 2px; background: #3b82f6; box-shadow: 0 0 12px #3b82f6; animation: ping 0.6s infinite 0.3s;"></span>
+          </div>
+
+          <!-- Paramedic Medical Cross Emblem & Text -->
+          <div style="
+            margin-top: 6px; 
+            font-size: 16px; 
+            line-height: 1; 
+            filter: drop-shadow(0 0 4px #ef4444);
+          ">
+            🚑
+          </div>
+          <div style="
+            font-size: 7px; 
+            font-weight: 900; 
+            color: #0f172a; 
+            font-family: monospace; 
+            letter-spacing: 0.5px;
+            margin-top: 1px;
+          ">
+            ALS 108
+          </div>
+
+          <!-- High-Vis Battenburg Reflective Stripes on Rear -->
+          <div style="
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 10px; 
+            background: repeating-linear-gradient(45deg, #dc2626, #dc2626 6px, #facc15 6px, #facc15 12px);
+          "></div>
+        </div>
+
+        <!-- Dynamic Floating Speed & Status Badge -->
+        <div style="
+          position: absolute; 
+          bottom: -32px; 
+          background: rgba(5, 10, 20, 0.95); 
+          color: #34d399; 
+          font-size: 9px; 
+          font-family: monospace; 
+          font-weight: 900; 
+          padding: 3px 8px; 
+          border-radius: 8px; 
+          border: 1px solid #10b981; 
+          box-shadow: 0 4px 15px rgba(0,0,0,0.9);
+          white-space: nowrap;
+          transform: rotate(-${angleDeg}deg);
+          pointer-events: none;
+          z-index: 10;
+        ">
+          ${isReturning ? '🚨 RETURNING TO ICU (88 km/h)' : '🚑 EN ROUTE TO VICTIM (85 km/h)'}
+        </div>
+      </div>
+    `;
+  };
+
   // Initialize Real OpenStreetMap / CartoDB Dark Navigation Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
+      if (mapContainerRef.current._leaflet_id) {
+        mapContainerRef.current._leaflet_id = null;
+      }
+
       const map = L.map(mapContainerRef.current, {
         center: [16.5250, 80.6180],
         zoom: 13,
@@ -136,9 +263,9 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
       // 1. Draw Glowing Emergency Green Corridor Polyline along Real Streets
       const polyline = L.polyline(gpsRouteWaypoints, {
         color: '#10b981',
-        weight: 6,
-        opacity: 0.9,
-        dashArray: '10, 8',
+        weight: 7,
+        opacity: 0.95,
+        dashArray: '12, 8',
         lineCap: 'round',
         lineJoin: 'round'
       }).addTo(map);
@@ -158,13 +285,12 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
               border: 2px solid #34d399; 
               box-shadow: 0 10px 25px rgba(16, 185, 129, 0.7), inset 0 2px 4px rgba(255,255,255,0.2); 
               display: flex; 
-              flex-direction: column;
+              flex-direction: column; 
               align-items: center; 
               justify-content: center; 
               transform: rotateX(15deg);
               position: relative;
             ">
-              <!-- Rotating Red Cross -->
               <div style="font-size: 22px; line-height: 1; filter: drop-shadow(0 0 6px #ef4444);">
                 🏥
               </div>
@@ -307,57 +433,27 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
       });
       L.marker([16.5412, 80.5843], { icon: crash3DIcon, zIndexOffset: 600 }).addTo(map);
 
-      // 5. Ultra-Realistic 3D Isometric Moving Ambulance Marker on Real Map
+      // 5. Ultra-Realistic 3D Small Animated Ambulance Marker on Real Map
+      const initialCoords = gpsRouteWaypoints[0];
       const ambulance3DIcon = L.divIcon({
-        className: 'custom-3d-ambulance-marker',
-        html: `
-          <div id="ambulance-3d-card" style="
-            position: relative; 
-            display: flex; 
-            align-items: center; 
-            background: linear-gradient(135deg, #050a14, #0f172a); 
-            border: 2px solid #f59e0b; 
-            border-radius: 16px; 
-            padding: 6px 12px; 
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.8), 0 0 15px rgba(239, 68, 68, 0.5); 
-            gap: 8px; 
-            white-space: nowrap;
-            transform-origin: center center;
-            transition: transform 0.15s ease-out;
-          ">
-            <!-- 3D Ambulance Vehicle Graphic with Spinning Light -->
-            <div style="font-size: 24px; line-height: 1; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.9));">
-              🚑
-            </div>
-
-            <div style="display: flex; flex-direction: column;">
-              <div style="color: #ffffff; font-size: 11px; font-weight: 900; display: flex; items-center; gap: 4px;">
-                <span>ALS 108-AP</span>
-                <span style="background: #ef4444; color: #fff; font-size: 8px; padding: 1px 4px; border-radius: 4px;">SIREN ON</span>
-              </div>
-              <span style="color: #fbbf24; font-size: 9px; font-family: monospace; font-weight: bold;">
-                85 km/h • GREEN CORRIDOR
-              </span>
-            </div>
-
-            <!-- Roof Flashing Beacons -->
-            <div style="position: absolute; top: -5px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px;">
-              <span style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 8px #ef4444; display: inline-block;"></span>
-              <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 8px #3b82f6; display: inline-block;"></span>
-            </div>
-          </div>
-        `,
-        iconSize: [170, 50],
-        iconAnchor: [85, 25]
+        className: 'custom-3d-small-ambulance-marker',
+        html: create3DAmbulanceHTML(0, false),
+        iconSize: [120, 120],
+        iconAnchor: [60, 60]
       });
 
-      const ambulanceMarker = L.marker([16.5167, 80.6500], { icon: ambulance3DIcon, zIndexOffset: 1000 }).addTo(map);
+      const ambulanceMarker = L.marker(initialCoords, { icon: ambulance3DIcon, zIndexOffset: 1000 }).addTo(map);
       ambulanceMarkerRef.current = ambulanceMarker;
 
       mapInstanceRef.current = map;
     }
 
+    const t1 = setTimeout(() => {
+      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
+    }, 200);
+
     return () => {
+      clearTimeout(t1);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -365,13 +461,23 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
     };
   }, []);
 
-  // Update Ambulance Position on Real Street Map
+  // Update Ambulance Position & 3D Orientation on Real Street Map
   useEffect(() => {
     if (ambulanceMarkerRef.current) {
-      const { lat, lng } = getInterpolatedGPSAndAngle(ambulanceProgress);
+      const isReturning = rescueStage === 'AMBULANCE_RETURNING_TO_HOSPITAL' || rescueStage === 'VICTIM_SAFE_IN_HOSPITAL';
+      const { lat, lng, angle } = getInterpolatedGPSAndAngle(ambulanceProgress);
       ambulanceMarkerRef.current.setLatLng([lat, lng]);
+
+      // Update the 3D Ambulance HTML with dynamic angle rotation and state
+      const updatedIcon = L.divIcon({
+        className: 'custom-3d-small-ambulance-marker',
+        html: create3DAmbulanceHTML(angle, isReturning),
+        iconSize: [120, 120],
+        iconAnchor: [60, 60]
+      });
+      ambulanceMarkerRef.current.setIcon(updatedIcon);
     }
-  }, [ambulanceProgress]);
+  }, [ambulanceProgress, rescueStage]);
 
   // Stage 1: Notify Hospitals & Acknowledge GGH Acceptance
   useEffect(() => {
@@ -413,7 +519,7 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             speakEmergencyInstruction("Ambulance arrived at crash scene. Paramedics stabilizing victim onto stretcher.");
             return 100;
           }
-          return prev + 4; // takes ~5 seconds
+          return prev + 3; // takes ~6 seconds smoothly
         });
       }, 180);
     } else if (rescueStage === 'PATIENT_PICKUP') {
@@ -432,7 +538,7 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             speakEmergencyInstruction("Victim arrived safely at hospital trauma bay. Admitted to ICU. Patient is safe.");
             return 0;
           }
-          return prev - 4; // takes ~5 seconds
+          return prev - 3; // takes ~6 seconds smoothly
         });
       }, 180);
     }
@@ -449,60 +555,95 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
       exit={{ opacity: 0, y: -20 }}
       className="w-full space-y-6"
     >
-      
-      {/* 1. Multi-Hospital Autonomous Notification & Response Radar */}
-      <div className="bg-[#0B1220]/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-red-500/40 shadow-2xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      {/* 1. Live Multi-Agency Response Status Header */}
+      <div className="bg-[#0B1220]/95 backdrop-blur-2xl p-5 sm:p-6 rounded-3xl border border-emerald-500/40 shadow-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400">
-              <Radio className="w-5 h-5 animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 font-black shadow-lg">
+              <Siren className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white flex items-center space-x-2">
-                <span>Nearby Hospitals Broadcast & Response Triage</span>
-                <span className="bg-red-600/20 text-red-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-red-500/30">
-                  4 HOSPITALS EVALUATED
-                </span>
+              <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-wider">
+                AUTONOMOUS MULTI-AGENCY RESCUE ACTIVE
+              </span>
+              <h3 className="text-lg font-black text-white">
+                Live 3D Ambulance Mission & Trauma Hospital Telemetry
               </h3>
-              <p className="text-xs text-slate-300">
-                Live radar screening showing <strong className="text-emerald-400">GGH Vijayawada (Responded & Accepted)</strong> and <strong className="text-slate-300">3 Standby Trauma Centers</strong>.
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-amber-400 self-start sm:self-auto">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            <span>INCIDENT ID: {crashDetails?.incidentId || 'INC-849201'}</span>
+          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-emerald-400 self-start sm:self-auto">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <span>REAL-TIME SATELLITE GPS ACTIVE</span>
           </div>
         </div>
 
-        {/* 4 Hospital Response Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* 2. REAL INTERACTIVE NAVIGATION MAP WITH MOVING 3D AMBULANCE */}
+        <div className="relative w-full h-[460px] sm:h-[540px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+          <div ref={mapContainerRef} className="w-full h-full" />
+
+          {/* Map Mission HUD Overlay */}
+          <div className="absolute top-3 left-3 z-[1000] bg-slate-950/90 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800 text-xs font-mono text-slate-300 shadow-2xl space-y-1.5 pointer-events-none">
+            <div className="text-white font-bold text-xs flex items-center space-x-1.5">
+              <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
+              <span>Rescue Stage:</span>
+              <span className="text-emerald-400 font-black uppercase">
+                {rescueStage.replace(/_/g, ' ')}
+              </span>
+            </div>
+
+            <div className="text-[10px] text-slate-400 space-y-0.5">
+              <div>📍 Corridor: <strong className="text-white">NH-16 Gollapudi ↔ GGH Vijayawada</strong></div>
+              <div>⚡ Green Signal Corridors: <strong className="text-emerald-400">4 Intersections Cleared</strong></div>
+              <div>🏥 Lead Hospital: <strong className="text-cyan-300">GGH Vijayawada (14 ICU Beds Ready)</strong></div>
+            </div>
+
+            {/* Mission Progress Bar */}
+            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-2">
+              <div 
+                className="bg-gradient-to-r from-cyan-500 via-emerald-400 to-green-500 h-full transition-all duration-300"
+                style={{ 
+                  width: `${
+                    rescueStage === 'AMBULANCE_EN_ROUTE_TO_VICTIM' 
+                      ? (ambulanceProgress * 0.5) 
+                      : rescueStage === 'PATIENT_PICKUP' 
+                      ? 50 
+                      : rescueStage === 'AMBULANCE_RETURNING_TO_HOSPITAL' 
+                      ? (50 + (100 - ambulanceProgress) * 0.5) 
+                      : rescueStage === 'VICTIM_SAFE_IN_HOSPITAL' 
+                      ? 100 
+                      : 10
+                  }%` 
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Hospital Dispatch Cards Matrix */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
           {hospitals.map((hosp) => (
-            <div 
+            <div
               key={hosp.id}
-              className={`p-4 rounded-2xl border transition-all space-y-2 ${
-                hosp.status.includes('ACCEPTED')
-                  ? 'bg-gradient-to-b from-emerald-950/90 to-[#050A14] border-emerald-400 shadow-2xl shadow-emerald-950/80 ring-2 ring-emerald-500/50'
-                  : hosp.status === 'STANDBY BACKUP'
-                  ? 'bg-[#050A14] border-slate-800 opacity-80'
-                  : 'bg-[#050A14] border-amber-500/40 animate-pulse'
+              className={`p-4 rounded-2xl border transition-all ${
+                hosp.isResponded
+                  ? 'bg-emerald-950/40 border-emerald-500/60 shadow-lg'
+                  : 'bg-[#050A14] border-slate-800 opacity-75'
               }`}
             >
               <div className="flex items-center justify-between">
-                <Hospital className={`w-4 h-4 ${hosp.status.includes('ACCEPTED') ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className="text-[10px] font-mono text-slate-400">{hosp.distance} • ETA: {hosp.eta}</span>
-              </div>
+                <div className="flex items-center space-x-2.5">
+                  <Hospital className={`w-5 h-5 ${hosp.isResponded ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <div>
+                    <h5 className="text-xs font-black text-white">{hosp.shortName}</h5>
+                    <p className="text-[10px] text-slate-400">{hosp.role} • {hosp.distance}</p>
+                  </div>
+                </div>
 
-              <div>
-                <h4 className="text-xs font-black text-white line-clamp-1">{hosp.shortName}</h4>
-                <p className="text-[10px] text-slate-400 font-mono">{hosp.role}</p>
-              </div>
-
-              <div className="flex items-center justify-between text-[10px] font-mono pt-1.5 border-t border-slate-800/80">
-                <span className="text-slate-400">ICU: <strong className="text-white">{hosp.icu} Beds</strong></span>
-                <span className={`font-black ${
-                  hosp.status.includes('ACCEPTED') ? 'text-emerald-400' : hosp.status === 'STANDBY BACKUP' ? 'text-slate-400' : 'text-amber-400'
+                <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
+                  hosp.isResponded
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50'
+                    : 'bg-slate-800 text-slate-400 border-slate-700'
                 }`}>
                   {hosp.status}
                 </span>
@@ -510,176 +651,23 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             </div>
           ))}
         </div>
-      </div>
 
-      {/* 2. UNIFIED REAL STREET MAP: 3D HOSPITALS + 3D MOVING AMBULANCE DIRECTLY ON REAL OPENSTREETMAP TILES */}
-      <div className="bg-[#0B1220]/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-cyan-500/40 shadow-2xl space-y-4">
-        
-        {/* Map Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-          <div>
-            <div className="flex items-center space-x-2">
-              <Navigation className="w-5 h-5 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
-              <h3 className="text-base font-black text-white">
-                Live Real-World Street Map with 3D Hospitals & 3D Moving Ambulance
-              </h3>
-            </div>
-            <p className="text-xs text-slate-300">
-              Directly on the authentic <strong className="text-white">OpenStreetMap GPS navigation layer</strong> of Vijayawada and NH-16:
-            </p>
+        {/* 4. Action Controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          <div className="text-xs text-slate-400 flex items-center space-x-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Telemetry automatically mirrored to State Highway Police Control Room (112).</span>
           </div>
 
-          <div className="flex items-center space-x-2 bg-[#050A14] px-4 py-2 rounded-2xl border border-slate-800 self-start sm:self-auto shadow-md">
-            <Siren className="w-4 h-4 text-red-500 animate-bounce" />
-            <span className="text-xs font-mono font-bold text-white uppercase">
-              {rescueStage === 'NOTIFYING_HOSPITALS' && 'MULTICASTING SOS TO ALL HOSPITALS...'}
-              {rescueStage === 'HOSPITAL_RESPONDED' && 'GGH VIJAYAWADA ACCEPTED • DISPATCHING ALS-108'}
-              {rescueStage === 'AMBULANCE_EN_ROUTE_TO_VICTIM' && 'ALS AMBULANCE EN ROUTE TO VICTIM (85 km/h)'}
-              {rescueStage === 'PATIENT_PICKUP' && '🩺 PARAMEDICS STABILIZING VICTIM'}
-              {rescueStage === 'AMBULANCE_RETURNING_TO_HOSPITAL' && '🚑 RAPID RETURN TO GGH ICU BAY'}
-              {rescueStage === 'VICTIM_SAFE_IN_HOSPITAL' && '🎉 VICTIM SAFELY ADMITTED TO ICU'}
-            </span>
-          </div>
+          <button
+            onClick={onReset}
+            className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors flex items-center space-x-1.5 cursor-pointer self-stretch sm:self-auto justify-center"
+          >
+            <RefreshCw className="w-4 h-4 text-cyan-400" />
+            <span>Reset & New Simulation</span>
+          </button>
         </div>
-
-        {/* Full-Width Real Leaflet Map Container */}
-        <div className="relative w-full h-[460px] sm:h-[540px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
-          <div ref={mapContainerRef} className="w-full h-full z-0" />
-
-          {/* Top-Left: Live GPS Telemetry Badge */}
-          <div className="absolute top-3 left-3 z-[1000] bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-800 text-[11px] font-mono text-cyan-300 pointer-events-none shadow-xl space-y-0.5">
-            <div className="font-bold flex items-center space-x-1.5 text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>REAL-TIME GPS MISSION ACTIVE</span>
-            </div>
-            <div className="text-[10px] text-slate-400">Corridor: NH-16 Gollapudi ⟷ GGH Vijayawada</div>
-          </div>
-
-          {/* Patient On-Scene Pickup Overlay Modal */}
-          {rescueStage === 'PATIENT_PICKUP' && (
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-[#0B1220]/95 border-2 border-amber-500 rounded-3xl p-5 text-center max-w-sm shadow-2xl space-y-2 backdrop-blur-xl"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500 mx-auto flex items-center justify-center">
-                <Stethoscope className="w-6 h-6 animate-pulse" />
-              </div>
-              <h4 className="text-sm font-black text-white">Paramedics On Scene • Patient Boarded</h4>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Paramedics applied cervical collar immobilization & boarded victim onto stretcher with active oxygen support. ALS Unit returning to GGH Trauma Bay.
-              </p>
-            </motion.div>
-          )}
-
-          {/* Mission Progress Indicator Bar across Bottom of Map */}
-          <div className="absolute bottom-3 left-4 right-4 z-[1000] bg-[#0B1220]/90 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
-            <div className="flex items-center space-x-2 text-xs font-bold text-slate-300 shrink-0">
-              <Clock className="w-4 h-4 text-cyan-400" />
-              <span>Mission Progress:</span>
-              <span className="text-amber-400 font-mono text-xs">
-                {rescueStage === 'AMBULANCE_EN_ROUTE_TO_VICTIM' && '🚗 Driving to Crash Site (85 km/h)'}
-                {rescueStage === 'PATIENT_PICKUP' && '🩺 On Scene (Boarding Patient)'}
-                {rescueStage === 'AMBULANCE_RETURNING_TO_HOSPITAL' && '🏥 Transporting to GGH Trauma Bay'}
-                {rescueStage === 'VICTIM_SAFE_IN_HOSPITAL' && '✅ Patient Admitted into ICU'}
-              </span>
-            </div>
-
-            <div className="flex-1 w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800">
-              <div 
-                className="bg-gradient-to-r from-cyan-500 via-amber-500 to-emerald-500 h-full transition-all duration-300"
-                style={{ 
-                  width: rescueStage === 'AMBULANCE_EN_ROUTE_TO_VICTIM' 
-                    ? `${ambulanceProgress * 0.5}%` 
-                    : rescueStage === 'PATIENT_PICKUP'
-                    ? '50%'
-                    : rescueStage === 'AMBULANCE_RETURNING_TO_HOSPITAL'
-                    ? `${50 + ((100 - ambulanceProgress) * 0.5)}%`
-                    : rescueStage === 'VICTIM_SAFE_IN_HOSPITAL'
-                    ? '100%'
-                    : '10%'
-                }}
-              />
-            </div>
-
-            <span className="text-xs font-mono font-bold text-emerald-400 shrink-0">
-              {rescueStage === 'VICTIM_SAFE_IN_HOSPITAL' ? '100% COMPLETE' : `${Math.round(ambulanceProgress)}% PROGRESS`}
-            </span>
-          </div>
-        </div>
-
       </div>
-
-      {/* 3. VICTIM IS SAFE CELEBRATORY STATUS CARD (Rendered upon Hospital Arrival) */}
-      {rescueStage === 'VICTIM_SAFE_IN_HOSPITAL' && (
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.4 }}
-          className="bg-gradient-to-b from-emerald-950/90 via-[#0B1220] to-[#050A14] p-6 sm:p-7 rounded-3xl border-2 border-emerald-500 shadow-2xl shadow-emerald-950/80 space-y-5 text-center"
-        >
-          <div className="w-16 h-16 rounded-3xl bg-emerald-500 text-slate-950 flex items-center justify-center mx-auto shadow-xl shadow-emerald-950 font-black">
-            <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
-          </div>
-
-          <div className="space-y-1.5 max-w-lg mx-auto">
-            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-600/60 px-3 py-1 rounded-full uppercase tracking-wider">
-              RESCUE MISSION SUCCESSFUL
-            </span>
-            <h2 className="text-2xl font-black text-white">
-              VICTIM IS SAFE & ADMITTED TO ICU TRAUMA BAY!
-            </h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Patient safely transported within the critical Golden Hour to <strong className="text-white">Government General Hospital (GGH Vijayawada)</strong>. Advanced life support team and trauma surgeons have stabilized all vitals.
-            </p>
-          </div>
-
-          {/* Vitals Stabilization Report */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left pt-2 max-w-2xl mx-auto">
-            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase font-bold flex items-center space-x-1">
-                <HeartPulse className="w-3.5 h-3.5 text-red-500" />
-                <span>Heart Rate</span>
-              </div>
-              <div className="text-sm font-black font-mono text-white">78 BPM <span className="text-emerald-400 text-xs font-normal">● Stable</span></div>
-            </div>
-
-            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase font-bold flex items-center space-x-1">
-                <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Blood Pressure</span>
-              </div>
-              <div className="text-sm font-black font-mono text-white">120/80 <span className="text-emerald-400 text-xs font-normal">● Normal</span></div>
-            </div>
-
-            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase font-bold flex items-center space-x-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Oxygen (SpO2)</span>
-              </div>
-              <div className="text-sm font-black font-mono text-white">98% <span className="text-emerald-400 text-xs font-normal">● Optimal</span></div>
-            </div>
-
-            <div className="bg-[#050A14] p-3.5 rounded-2xl border border-slate-800 space-y-1">
-              <div className="text-[10px] text-slate-400 uppercase font-bold flex items-center space-x-1">
-                <UserCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Attending Lead</span>
-              </div>
-              <div className="text-xs font-bold text-white truncate">Dr. K. Sharma (GGH)</div>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={onReset}
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black px-7 py-3 rounded-2xl text-xs transition-all shadow-xl shadow-emerald-950 cursor-pointer"
-            >
-              RESET TO 3D VEHICLE HIGHWAY SIMULATION
-            </button>
-          </div>
-        </motion.div>
-      )}
-
     </motion.div>
   );
 }
