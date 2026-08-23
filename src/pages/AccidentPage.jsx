@@ -18,10 +18,15 @@ export const AccidentPage = () => {
   const handleAccidentConfirmed = (details) => {
     setActiveCrashDetails(details);
     setIsDispatched(true);
-    // Smooth scroll down to the hospital dispatch and map section
+    // Smooth scroll down directly to the Live Interactive Rescue Map
     setTimeout(() => {
-      window.scrollTo({ top: 520, behavior: 'smooth' });
-    }, 400);
+      const el = document.getElementById('rescue-mission-workflow');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        window.scrollTo({ top: 580, behavior: 'smooth' });
+      }
+    }, 250);
   };
 
   const handleResetAll = () => {
@@ -75,10 +80,12 @@ export const AccidentPage = () => {
       {/* 2. Autonomous Multi-Hospital Radar & Real Animated Route Map (Revealed upon Crash Confirmation) */}
       <AnimatePresence>
         {isDispatched && (
-          <AccidentRescueWorkflow 
-            crashDetails={activeCrashDetails} 
-            onReset={handleResetAll} 
-          />
+          <div id="rescue-mission-workflow" className="scroll-mt-6">
+            <AccidentRescueWorkflow 
+              crashDetails={activeCrashDetails} 
+              onReset={handleResetAll} 
+            />
+          </div>
         )}
       </AnimatePresence>
 

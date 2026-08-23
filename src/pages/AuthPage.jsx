@@ -1,283 +1,264 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, User, Heart, Stethoscope, Building2, CheckCircle2, Lock, Mail, Phone, Droplet } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { 
+  Shield, User, Heart, Stethoscope, Building2, CheckCircle2, 
+  Lock, Mail, Phone, Droplet, Users, UserPlus, Trash2, 
+  Send, Sparkles, AlertCircle, Save, ExternalLink, Activity, Globe, ArrowRight, Check
+} from 'lucide-react';
+import { speakEmergencyInstruction } from '../services/audio_service';
 
-export const AuthPage = () => {
-  const { user, login, signup, logout, updateUserRole, loginWithGoogle } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+export const AuthPage = ({ onOnboardingComplete }) => {
+  const { 
+    user, 
+    completeOnboarding,
+    familyContacts,
+    updateFamilyContacts,
+    updateProfile
+  } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('+91-');
-  const [role, setRole] = useState('user');
-  const [bloodGroup, setBloodGroup] = useState('O-');
+  const { language, setLanguage, t } = useLanguage();
+
+  const [name, setName] = useState(user?.name || 'Srinivas Palnati');
+  const [phone, setPhone] = useState(user?.phone || '+91-9876543210');
+  const [email, setEmail] = useState(user?.email || 'victim.emergency@resqone.ai');
+  const [role, setRole] = useState(user?.role || 'user');
+  const [bloodGroup, setBloodGroup] = useState(user?.blood_group || 'O-');
+  const [medicalNotes, setMedicalNotes] = useState(user?.medical_notes || 'Universal O- blood preferred. No known drug allergies.');
+
+  // 5 Family Members Editable State
+  const [contactsList, setContactsList] = useState(familyContacts || [
+    { id: 'fc-1', name: 'Father (Primary SOS)', relation: 'Father', phone: '+91-9440123456' },
+    { id: 'fc-2', name: 'Mother (Emergency)', relation: 'Mother', phone: '+91-9440123457' },
+    { id: 'fc-3', name: 'Brother / Sister', relation: 'Sibling', phone: '+91-9440123458' },
+    { id: 'fc-4', name: 'Best Friend', relation: 'Friend', phone: '+91-9440123459' },
+    { id: 'fc-5', name: 'Family Physician / Doctor', relation: 'Doctor', phone: '+91-9440123460' },
+  ]);
 
   const [message, setMessage] = useState(null);
 
-  const handleGoogleSignIn = async () => {
-    setMessage(null);
-    const res = await loginWithGoogle();
-    if (res.success) {
-      setMessage({ type: 'success', text: `Signed in with Google successfully!` });
-    }
+  const handleContactChange = (index, field, value) => {
+    const updated = [...contactsList];
+    updated[index] = { ...updated[index], [field]: value };
+    setContactsList(updated);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(null);
-
-    if (isLogin) {
-      const res = await login(email, password);
-      if (res.success) {
-        setMessage({ type: 'success', text: `Welcome back, ${res.user.name || res.user.email}!` });
-      }
+  const handleLanguageSelect = (langCode) => {
+    setLanguage(langCode);
+    if (langCode === 'te') {
+      speakEmergencyInstruction("తెలుగు భాష ఎంచుకోబడింది. రెస్క్యూ వన్ యాప్ సిద్ధంగా ఉంది.", 'te');
+    } else if (langCode === 'hi') {
+      speakEmergencyInstruction("हिंदी भाषा चुनी गई है। रेस्क्यू वन ऐप तैयार है।", 'hi');
     } else {
-      const res = await signup(email, password, name, role, bloodGroup, phone);
-      if (res.success) {
-        setMessage({ type: 'success', text: `Account created successfully as ${role.toUpperCase()}!` });
-      }
+      speakEmergencyInstruction("English language selected. RESQONE is ready.", 'en');
     }
   };
 
-  const roleOptions = [
-    { id: 'user', label: 'Standard User / Victim', icon: User, desc: 'Report emergencies & request rescue' },
-    { id: 'donor', label: 'Blood Donor', icon: Heart, desc: 'Alerted for matching blood emergencies' },
-    { id: 'volunteer', label: 'First Responder / Volunteer', icon: Stethoscope, desc: 'Trust-scored emergency responder' },
-    { id: 'hospital', label: 'Hospital Admin', icon: Building2, desc: 'Manage ICU & antivenom telemetry' }
-  ];
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const profileData = {
+      name,
+      email,
+      phone,
+      blood_group: bloodGroup,
+      role,
+      medical_notes: medicalNotes
+    };
+    completeOnboarding(profileData, contactsList);
+    if (onOnboardingComplete) onOnboardingComplete();
+  };
 
   return (
-    <div className="w-full pb-28 pt-4 px-4 max-w-md mx-auto space-y-6">
+    <div className="w-full pb-28 pt-4 px-3 sm:px-4 max-w-2xl mx-auto space-y-6">
       
-      {/* Header */}
+      {/* 1. Prominent Multilingual Language Switcher Bar */}
+      <div className="bg-[#0B1220]/95 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-cyan-500/40 shadow-2xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 text-cyan-400 font-bold text-xs uppercase tracking-wider">
+            <Globe className="w-4 h-4" />
+            <span>{language === 'te' ? 'యాప్ భాషను ఎంచుకోండి' : 'Choose Application Language'}</span>
+          </div>
+          <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+            {language === 'te' ? 'తెలుగు యాక్టివ్' : language === 'hi' ? 'हिन्दी सक्रिय' : 'ENGLISH ACTIVE'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {[
+            { code: 'en', label: 'English', sub: 'Global' },
+            { code: 'te', label: 'తెలుగు', sub: 'Telugu' },
+            { code: 'hi', label: 'हिन्दी', sub: 'Hindi' },
+            { code: 'ta', label: 'தமிழ்', sub: 'Tamil' },
+            { code: 'kn', label: 'ಕನ್ನಡ', sub: 'Kannada' },
+          ].map((item) => (
+            <button
+              key={item.code}
+              type="button"
+              onClick={() => handleLanguageSelect(item.code)}
+              className={`p-3 rounded-2xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+                language === item.code 
+                  ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-lg shadow-cyan-950/60 ring-2 ring-cyan-400/40' 
+                  : 'bg-[#050A14] border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+              }`}
+            >
+              <div className="text-sm font-black flex items-center space-x-1">
+                <span>{item.label}</span>
+                {language === item.code && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+              </div>
+              <span className="text-[9px] text-slate-400 font-mono">{item.sub}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2. Header Welcome Card */}
       <div className="text-center space-y-2">
-        <div className="w-12 h-12 rounded-2xl bg-red-600/20 border border-red-500/40 text-red-500 mx-auto flex items-center justify-center shadow-lg">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 border border-red-500/40 text-white mx-auto flex items-center justify-center shadow-lg shadow-red-950/60">
           <Shield className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-extrabold text-white">
-          {user ? 'Responder Profile & Security' : (isLogin ? 'Access RESQONE AI+' : 'Join Emergency Network')}
+        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          {language === 'te' ? 'అత్యవసర ప్రొఫైల్ & 5 కుటుంబ సభ్యుల SOS నెట్‌వర్క్' : 'Emergency Profile & 5-Family SOS Safety Net'}
         </h2>
-        <p className="text-xs text-slate-400">
-          Role-based security enforced via Supabase Auth & RLS policies
+        <p className="text-xs text-slate-300 max-w-md mx-auto">
+          {language === 'te' 
+            ? 'ప్రమాదం జరిగినప్పుడు, మీ లైవ్ GPS మరియు క్రాష్ రిపోర్ట్ ఆటోమేటిక్‌గా ఈ 5 కుటుంబ నంబర్లకు & సమీప ఆసుపత్రులకు చేరుతుంది.' 
+            : 'When an accident happens, your live GPS coordinates & crash report are automatically transmitted to these 5 family contacts & 4 nearest hospitals.'}
         </p>
       </div>
 
       {message && (
-        <div className={`p-3.5 rounded-xl text-xs font-semibold flex items-center space-x-2 border ${
-          message.type === 'success' ? 'bg-emerald-950/80 border-emerald-700 text-emerald-300' : 'bg-red-950/80 border-red-700 text-red-300'
-        }`}>
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{message.text}</span>
+        <div className="p-4 rounded-2xl text-xs font-bold flex items-center space-x-3 border shadow-lg bg-emerald-950/90 border-emerald-500 text-emerald-300">
+          <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+          <span>{message}</span>
         </div>
       )}
 
-      {/* Logged In View */}
-      {user ? (
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-5">
-          <div className="flex items-center space-x-4 border-b border-slate-800 pb-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-red-600 to-amber-500 text-white font-black text-xl flex items-center justify-center shadow-lg">
-              {user.name ? user.name[0].toUpperCase() : 'U'}
-            </div>
+      {/* 3. Main Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* Victim / User Personal Details */}
+        <div className="bg-[#0B1220]/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800 space-y-4 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center space-x-2">
+              <User className="w-4 h-4" />
+              <span>{language === 'te' ? 'బాధితుడి / మీ అత్యవసర వివరాలు' : 'Victim / Your Emergency Medical Details'}</span>
+            </h3>
+            <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/30">
+              {language === 'te' ? 'ఆటో సింక్' : 'AUTO-SYNC'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <h3 className="text-lg font-bold text-white">{user.name}</h3>
-              <p className="text-xs text-slate-400">{user.email}</p>
-              <div className="inline-block mt-1 bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">
-                {user.role} ACCOUNT
-              </div>
+              <label className="text-slate-300 font-bold block mb-1.5">{language === 'te' ? 'పూర్తి పేరు' : 'Full Name'}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full bg-[#050A14] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-cyan-500"
+              />
             </div>
+
+            <div>
+              <label className="text-slate-300 font-bold block mb-1.5">{language === 'te' ? 'ఫోన్ నంబర్' : 'Phone Number'}</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="w-full bg-[#050A14] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-slate-300 font-bold block mb-1.5">{language === 'te' ? 'రక్త గ్రూప్' : 'Blood Group (ABO/Rh)'}</label>
+              <select
+                value={bloodGroup}
+                onChange={(e) => setBloodGroup(e.target.value)}
+                className="w-full bg-[#050A14] border border-slate-800 rounded-xl px-3.5 py-2.5 text-red-400 font-bold focus:outline-none focus:border-red-500"
+              >
+                {['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'].map((bg) => (
+                  <option key={bg} value={bg}>{bg} Blood Group</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-slate-300 font-bold block mb-1.5">{language === 'te' ? 'ఈమెయిల్ చిరునామా' : 'Email Address'}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-[#050A14] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-medium focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 5 Registered Family SOS Contacts */}
+        <div className="bg-[#0B1220]/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-red-500/30 space-y-4 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>{language === 'te' ? '5 కుటుంబ సభ్యుల అత్యవసర SOS నంబర్లు' : '5 Priority Family SOS Contacts (Crash Alert Targets)'}</span>
+            </h3>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+              5/5 SLOTS
+            </span>
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Switch Active Role (Demo)</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {['user', 'donor', 'volunteer', 'hospital'].map((r) => (
-                <button
-                  key={r}
-                  onClick={() => updateUserRole(r)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all uppercase ${
-                    user.role === r 
-                      ? 'bg-red-600 border-red-500 text-white shadow-md' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
+            {contactsList.map((contact, index) => (
+              <div key={contact.id || index} className="bg-[#050A14] p-3 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-red-600/20 border border-red-500/40 text-red-400 flex items-center justify-center font-bold text-xs shrink-0">
+                  {index + 1}
+                </div>
 
-          <div className="pt-2">
-            <button
-              onClick={logout}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 text-red-400 font-bold py-3 rounded-xl text-xs transition-colors"
-            >
-              Sign Out of Session
-            </button>
-          </div>
-        </div>
-      ) : (
-        /* Form View */
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 space-y-5">
-          
-          <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs font-bold">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 rounded-lg transition-colors ${isLogin ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 rounded-lg transition-colors ${!isLogin ? 'bg-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              Create Account
-            </button>
-          </div>
-
-          {/* Google Sign-In Button */}
-          <div className="space-y-3 pt-1">
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-500 text-white font-extrabold py-3.5 rounded-xl text-xs flex items-center justify-center space-x-3 transition-all shadow-md active:scale-[0.99]"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Continue with Google</span>
-            </button>
-
-            <div className="relative flex items-center justify-center my-3">
-              <div className="border-t border-slate-800/80 w-full"></div>
-              <span className="bg-slate-950/90 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest absolute rounded-full border border-slate-800/50 py-0.5">
-                or use email
-              </span>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {!isLogin && (
-              <>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Full Name</label>
+                <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input
                     type="text"
+                    placeholder="Name & Relation"
+                    value={contact.name}
+                    onChange={(e) => handleContactChange(index, 'name', e.target.value)}
                     required
-                    placeholder="e.g. Dr. Rajesh Sharma"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-red-500"
+                    className="bg-[#0B1220] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Relation"
+                    value={contact.relation}
+                    onChange={(e) => handleContactChange(index, 'relation', e.target.value)}
+                    className="bg-[#0B1220] border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-red-500"
+                  />
+
+                  <input
+                    type="tel"
+                    placeholder="Phone Number (+91...)"
+                    value={contact.phone}
+                    onChange={(e) => handleContactChange(index, 'phone', e.target.value)}
+                    required
+                    className="bg-[#0B1220] border border-slate-800 rounded-xl px-3 py-2 text-xs text-cyan-300 font-mono focus:outline-none focus:border-red-500"
                   />
                 </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Select Network Role</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {roleOptions.map((opt) => {
-                      const Icon = opt.icon;
-                      const isSelected = role === opt.id;
-                      return (
-                        <div
-                          key={opt.id}
-                          onClick={() => setRole(opt.id)}
-                          className={`p-2.5 rounded-xl border cursor-pointer flex items-center space-x-3 transition-all ${
-                            isSelected ? 'bg-red-950/40 border-red-500 text-white' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                          }`}
-                        >
-                          <Icon className={`w-5 h-5 ${isSelected ? 'text-red-400' : 'text-slate-500'}`} />
-                          <div>
-                            <div className="text-xs font-bold">{opt.label}</div>
-                            <div className="text-[10px] text-slate-400">{opt.desc}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Blood Group</label>
-                    <select
-                      value={bloodGroup}
-                      onChange={(e) => setBloodGroup(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-500"
-                    >
-                      {['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'].map(g => (
-                        <option key={g} value={g}>{g}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-300 block mb-1">Mobile Phone</label>
-                    <input
-                      type="text"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="email"
-                  required
-                  placeholder="responder@resqone.ai"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-500"
-                />
               </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-red-500"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-red-950 transition-all text-xs border border-red-500/30 mt-2"
-            >
-              {isLogin ? 'Sign In to RESQONE Network' : 'Register Profile & Role'}
-            </button>
-          </form>
+            ))}
+          </div>
         </div>
-      )}
 
+        {/* Action Button: Save & Enter Live App */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <button
+            type="submit"
+            className="flex-1 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-slate-950 font-black py-4 px-6 rounded-2xl text-sm shadow-[0_0_35px_rgba(239,68,68,0.7)] flex items-center justify-center space-x-2.5 transition-all cursor-pointer hover:scale-[1.02]"
+          >
+            <span>{language === 'te' ? 'లాగిన్ చేసి RESQONE AI లోకి ప్రవేశించండి' : 'Save & Enter Live RESQONE AI'}</span>
+            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+          </button>
+        </div>
+
+      </form>
     </div>
   );
 };

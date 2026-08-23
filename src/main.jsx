@@ -18,6 +18,17 @@ class ErrorBoundary extends React.Component {
     console.error('RESQONE Uncaught UI Error:', error, errorInfo);
   }
 
+  handleResetAndLaunch = () => {
+    try {
+      // Clear any stale demo or session cache that might cause JSON parse error
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn('Storage clear notice:', e);
+    }
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -30,40 +41,72 @@ class ErrorBoundary extends React.Component {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '20px',
-          fontFamily: 'sans-serif',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           textAlign: 'center'
         }}>
           <div style={{
-            maxWidth: '500px',
+            maxWidth: '520px',
             backgroundColor: '#0B1220',
             border: '1px solid rgba(239, 68, 68, 0.4)',
-            padding: '30px',
-            borderRadius: '20px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.8)'
+            padding: '36px',
+            borderRadius: '24px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
           }}>
-            <h2 style={{ color: '#ef4444', fontSize: '22px', fontWeight: '800', marginBottom: '10px' }}>
-              RESQONE-AI System Notice
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px',
+              fontSize: '28px'
+            }}>
+              🚨
+            </div>
+
+            <h2 style={{ color: '#ffffff', fontSize: '20px', fontWeight: '800', marginBottom: '8px' }}>
+              RESQONE Interface Ready
             </h2>
-            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: '1.6', marginBottom: '20px' }}>
-              An interface reload is needed to sync updated real-time modules.
+            <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+              Click below to launch the live application and sync sensor telemetry.
             </p>
+
+            {this.state.error && (
+              <div style={{
+                backgroundColor: '#050A14',
+                border: '1px solid rgba(239,68,68,0.2)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                fontSize: '11px',
+                fontFamily: 'monospace',
+                color: '#f87171',
+                textAlign: 'left',
+                marginBottom: '20px',
+                overflowX: 'auto',
+                maxHeight: '120px'
+              }}>
+                {this.state.error.toString()}
+              </div>
+            )}
+
             <button
-              onClick={() => {
-                localStorage.clear();
-                window.location.reload();
-              }}
+              onClick={this.handleResetAndLaunch}
               style={{
                 backgroundColor: '#dc2626',
                 color: '#ffffff',
-                fontWeight: 'bold',
-                padding: '12px 24px',
-                borderRadius: '12px',
+                fontWeight: '800',
+                padding: '12px 32px',
+                borderRadius: '14px',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: '13px'
+                fontSize: '13px',
+                boxShadow: '0 10px 25px rgba(220, 38, 38, 0.4)'
               }}
             >
-              Clear Cache & Refresh App
+              Launch Live App
             </button>
           </div>
         </div>

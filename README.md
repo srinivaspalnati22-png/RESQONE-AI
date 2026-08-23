@@ -26,26 +26,39 @@
 
 ## 🌟 Flagship Features
 
-### 1. 🏎️ 3D Photorealistic Vehicle Crash Simulation & Sensor Fusion
+### 1. 🏎️ 3D Photorealistic Vehicle Crash Simulation & Real Humans
 - Real-time sensor fusion screening evaluating **Accelerometer G-Force spikes (4.85G)**, **3D Gyroscope angular rollover (68.4°)**, and **GPS speed drops (78 km/h → 0 km/h)**.
-- Ultra-realistic interactive 3D vehicle models (Sports Sedan, Superbike, ALS Ambulance) powered by Three.js with WebGL crash-proof fallbacks.
-- Automated 25-second countdown with autonomous multi-hospital ER notification.
+- Ultra-realistic interactive 3D vehicle models (**High-Poly Sports Sedan, Superbike, ALS Ambulance**) with **animated forward spinning wheels** (alloy rims, ventilated brake discs, and Brembo calipers).
+- **3D Humans Inside Vehicles**: Driver & passenger in cockpit with realistic seatbelts and crash whiplash inertia, motorcycle racer in aerodynamic tuck, and paramedic crew in ambulance.
 
-### 2. 🩸 Smart ABO/Rh Blood Donor & NHP Bank Registry
+### 2. 🗺️ 6-Stage Autonomous Multi-Agency Rescue Workflow
+- Auto-scrolls to live Leaflet radar map upon 25s crash countdown completion or manual dispatch.
+- **Hospital Acceptance**: GGH Vijayawada accepts case $\rightarrow$ **ALS-108 Ambulance drives along NH-16** with active rooftop beacon to Gollapudi crash scene $\rightarrow$ Paramedics stabilize patient $\rightarrow$ High-speed return via Green Corridor $\rightarrow$ Final **"Victim Arrived Safely at Hospital! 🎉"** celebration card with stable vitals ($120/80\text{ mmHg}$, $99\%\text{ SpO}_2$) and 5 family member SMS confirmation.
+
+### 3. 🌐 First-Time Onboarding & Whole-App Language Switcher
+- New users first select their preferred language: **English**, **తెలుగు (Telugu)**, **हिन्दी (Hindi)**, **தமிழ் (Tamil)**, or **ಕನ್ನಡ (Kannada)**.
+- Choosing a language instantly translates all text, headings, buttons, and telemetry throughout the whole application.
+- Configurable **5 Priority Family SOS Contacts** transmitted during crash alerts.
+
+### 4. 🎙️ AI Multilingual Voice & Text Emergency Assistant
+- Directly on the Home Page hero section:
+  - **Voice Microphone Assistant**: Speaks & listens in Telugu (`te-IN`), English (`en-IN`), or Hindi (`hi-IN`).
+  - **Smart Voice/Text Directing**:
+    - 🩸 `"రక్తం కావాలి"` / `"Need Blood"` ➔ Directs to **Blood Donor Matcher**.
+    - 🐍 `"పాము కాటు"` / `"Snake Bite"` ➔ Directs to **Snakebite Antivenom Hub**.
+    - 🚨 `"వాహన ప్రమాదం"` / `"Car Crash"` ➔ Directs to **3D Crash Sensor Telemetry**.
+    - 🏥 `"సమీప ఆసుపత్రి"` / `"Nearest Hospital"` ➔ Directs to **Mission Control**.
+
+### 5. 🔊 Authentic Telugu Audio Speech Output
+- Real-time voice guidance and audio announcements spoken aloud in authentic **Telugu** throughout all rescue steps, first-aid procedures, and emergency navigation.
+
+### 6. 🩸 Smart ABO/Rh Blood Donor & NHP Bank Registry
 - Deterministic clinical ABO/Rh compatibility matching preventing lethal transfusion errors.
 - **Live Real GPS Map** plotting active community donors, National Health Portal (NHP) blood centers, and cold-chain cryo-courier transit corridors (4°C active temperature boxes).
 
-### 3. 🐍 Snakebite Clinical Toxicology & Antivenom (AVS) Locator
+### 7. 🐍 Snakebite Clinical Toxicology & Antivenom (AVS) Locator
 - **Authentic Scientific Photo Matrix** for India's "Big Four" venomous snakes (Spectacled Cobra, Russell's Viper, Common Krait, Saw-scaled Viper) + harmless lookalikes.
 - **Live GPS Victim-to-Hospital Radar Map** connecting victim coordinates to the nearest equipped AVS hospital with verified vial stocks and ICU ventilator beds.
-- **Voice-Assisted WHO First-Aid Precautions** spoken aloud automatically in English, Telugu (తెలుగు), and Hindi (हिंदी).
-
-### 4. 🤖 AI Emergency Copilot & Voice Navigation
-- Dual-Mode Web Speech AI assistant for hands-free voice emergency reporting, navigation, and hospital ER dialing.
-- Multi-lingual emergency intent recognition.
-
-### 5. 📡 Offline-First PWA Support & Supabase Cloud Sync
-- Full offline reliability with local caching of first-aid protocols, emergency contacts, and offline incident report queues that auto-sync upon reconnection.
 
 ---
 
@@ -59,20 +72,14 @@ cd RESQONE-AI
 # 2. Install Node dependencies
 npm install
 
-# 3. Start Frontend (Vite)
+# 3. Start local development server
 npm run dev
-
-# 4. Start Backend API (FastAPI)
-python -m uvicorn backend.main:app --reload --port 8000
 ```
 
 ---
 
-## 👨‍💻 Author & Repository
+## 🚀 Deployment
 
-- **GitHub:** [@srinivaspalnati22-png](https://github.com/srinivaspalnati22-png)
-- **Repository:** [https://github.com/srinivaspalnati22-png/RESQONE-AI](https://github.com/srinivaspalnati22-png/RESQONE-AI)
-- **Live Production App:** [https://resqone-ai-app.vercel.app](https://resqone-ai-app.vercel.app)
-
----
-*Built for Emergency Responders, Victims, and Healthcare Providers.*
+The app is configured for continuous deployment on **Vercel** connected directly to GitHub repository:
+- **Production URL**: [https://resqone-ai-app.vercel.app](https://resqone-ai-app.vercel.app)
+- **GitHub Repository**: [https://github.com/srinivaspalnati22-png/RESQONE-AI](https://github.com/srinivaspalnati22-png/RESQONE-AI)

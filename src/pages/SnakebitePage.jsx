@@ -12,7 +12,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
-import { speakEmergencyInstruction } from '../services/audio_service';
+import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import snakeSpeciesData from '../data/snake_species.json';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 
@@ -176,6 +176,12 @@ export const SnakebitePage = () => {
   // Table filter state
   const [tableSearch, setTableSearch] = useState('');
   const [toxinFilter, setToxinFilter] = useState('ALL');
+
+  useEffect(() => {
+    return () => {
+      stopAllAudio();
+    };
+  }, []);
 
   const symptomChecklist = [
     'Fang Puncture Marks',

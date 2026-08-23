@@ -11,7 +11,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
-import { speakEmergencyInstruction } from '../services/audio_service';
+import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import bloodBanksMaster from '../data/blood_banks.json';
 
@@ -254,6 +254,12 @@ export const BloodDonorPage = () => {
   const [voiceQuery, setVoiceQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showTableExplorer, setShowTableExplorer] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      stopAllAudio();
+    };
+  }, []);
 
   // Form Parameters
   const [selectedGroup, setSelectedGroup] = useState('O-');

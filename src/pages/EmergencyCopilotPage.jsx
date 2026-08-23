@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDemo } from '../context/DemoContext';
 import { useAuth } from '../context/AuthContext';
 import { DemoToggle } from '../components/DemoToggle';
 import LiveLocationMap from '../components/LiveLocationMap';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
-import { speakEmergencyInstruction } from '../services/audio_service';
+import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { 
   Bot, Mic, MicOff, Send, ShieldAlert, AlertTriangle, 
   CheckCircle2, Sparkles, Phone, Hospital as HospIcon, 
@@ -15,6 +15,12 @@ import {
 export const EmergencyCopilotPage = ({ setActiveTab }) => {
   const { isDemoMode, queueOfflineReport, activeDispatch, setActiveDispatch } = useDemo();
   const { user } = useAuth();
+
+  useEffect(() => {
+    return () => {
+      stopAllAudio();
+    };
+  }, []);
 
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);

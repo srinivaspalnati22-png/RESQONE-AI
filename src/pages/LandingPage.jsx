@@ -8,9 +8,89 @@ import {
 } from 'lucide-react';
 import { PreventiveHealthHub } from '../components/PreventiveHealthHub';
 import { useLanguage } from '../context/LanguageContext';
+import { speakEmergencyInstruction } from '../services/audio_service';
 
 export const LandingPage = ({ setActiveTab, onSimulateCrash }) => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+
+  const [assistantInput, setAssistantInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
+
+  const handleEmergencyQuery = (queryText) => {
+    if (!queryText || !queryText.trim()) return;
+    const q = queryText.toLowerCase().trim();
+
+    // 1. Blood donation matching (English, Telugu, Hindi)
+    if (q.includes('blood') || q.includes('donor') || q.includes('రక్తం') || q.includes('రక్త') || q.includes('బ్లడ్') || q.includes('khoon') || q.includes('raktham')) {
+      speakEmergencyInstruction("Navigating to Blood Donation Finder.");
+      setActiveTab('blood');
+      return;
+    }
+
+    // 2. Snakebite emergency
+    if (q.includes('snake') || q.includes('bite') || q.includes('venom') || q.includes('పాము') || q.includes('కాటు') || q.includes('saap') || q.includes('paamu')) {
+      speakEmergencyInstruction("Navigating to Snakebite First Aid and Antivenom.");
+      setActiveTab('snakebite');
+      return;
+    }
+
+    // 3. Accident / Crash
+    if (q.includes('accident') || q.includes('crash') || q.includes('car') || q.includes('bike') || q.includes('ప్రమాదం') || q.includes('యాక్సిడెంట్') || q.includes('haadsa') || q.includes('collision')) {
+      speakEmergencyInstruction("Navigating to 3D Vehicle Crash Simulation.");
+      setActiveTab('accident');
+      return;
+    }
+
+    // 4. Hospital / ICU
+    if (q.includes('hospital') || q.includes('icu') || q.includes('doctor') || q.includes('ఆసుపత్రి') || q.includes('హాస్పిటల్') || q.includes('asupathri')) {
+      speakEmergencyInstruction("Navigating to Hospital Mission Control.");
+      setActiveTab('dashboard');
+      return;
+    }
+
+    // Default to Emergency Copilot
+    setActiveTab('copilot');
+  };
+
+  const handleVoiceListen = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Speech recognition is not supported on this browser. You can type your emergency in the box.");
+      return;
+    }
+
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+
+      recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const spoken = event.results[0][0].transcript;
+        setAssistantInput(spoken);
+        handleEmergencyQuery(spoken);
+      };
+
+      recognition.onerror = (e) => {
+        console.warn("Speech recognition notice:", e);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.warn("Speech recognition error:", err);
+      setIsListening(false);
+    }
+  };
 
   // Daily Safety & Preparedness Tips Auto-Ticker
   const dailyTips = [
@@ -106,36 +186,111 @@ export const LandingPage = ({ setActiveTab, onSimulateCrash }) => {
           </p>
         </div>
 
-        {/* Hero CTA Launchers */}
-        <div className="relative z-10 pt-2 flex flex-col sm:flex-row items-center gap-3">
-          <button
-            onClick={() => setActiveTab('copilot')}
-            className="w-full sm:w-auto bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-slate-950 font-black px-7 py-3.5 rounded-2xl shadow-xl shadow-red-950/80 transition-all flex items-center justify-center space-x-2.5 text-sm border border-amber-300/80 cursor-pointer group min-h-[48px]"
-          >
-            <ShieldAlert className="w-5 h-5 stroke-[2.5]" />
-            <span>REPORT EMERGENCY NOW</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform stroke-[2.5]" />
-          </button>
+        {/* 3. AI Multilingual Voice & Text Emergency Command Center */}
+        <div className="relative z-10 bg-[#050A14]/90 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl border border-cyan-500/40 shadow-2xl space-y-3.5 mt-2">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div className="flex items-center space-x-2 text-cyan-400 font-bold text-xs">
+              <Bot className="w-4 h-4" />
+              <span>{language === 'te' ? 'AI అత్యవసర వాయిస్ & టెక్స్ట్ సహాయకుడు' : 'AI Multilingual Emergency Voice & Text Assistant'}</span>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 self-start sm:self-auto">
+              {language === 'te' ? 'తెలుగు మాట్లాడండి లేదా టైప్ చేయండి' : 'SPEAK OR TYPE IN ANY LANGUAGE'}
+            </span>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('accident')}
-            className="w-full sm:w-auto bg-slate-900/90 hover:bg-slate-800 text-white font-bold px-6 py-3.5 rounded-2xl border border-red-500/40 backdrop-blur-xl transition-all text-sm flex items-center justify-center space-x-2 min-h-[48px] cursor-pointer"
-          >
-            <AlertOctagon className="w-4 h-4 text-red-400 animate-pulse" />
-            <span>3D Crash Telemetry</span>
-          </button>
+          {/* Input Bar with Mic & Send */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={assistantInput}
+                onChange={(e) => setAssistantInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleEmergencyQuery(assistantInput);
+                }}
+                placeholder={
+                  language === 'te' 
+                    ? "అత్యవసర పరిస్థితిని టైప్ చేయండి (ఉదా: 'రక్తం కావాలి', 'పాము కాటు', 'వాహన ప్రమాదం')..."
+                    : "Type or speak emergency (e.g. 'Blood needed', 'Snake bite', 'Car crash', 'రక్తం కావాలి')..."
+                }
+                className="w-full bg-[#0B1220] border border-slate-700 focus:border-cyan-400 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none pr-10 shadow-inner"
+              />
 
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className="w-full sm:w-auto bg-slate-950/80 hover:bg-slate-900 text-slate-200 font-bold px-6 py-3.5 rounded-2xl border border-slate-700 backdrop-blur-xl transition-all text-sm flex items-center justify-center space-x-2 min-h-[48px] cursor-pointer"
-          >
-            <Radio className="w-4 h-4 text-cyan-400" />
-            <span>Live Mission Radar</span>
-          </button>
+              {assistantInput && (
+                <button
+                  onClick={() => setAssistantInput('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Voice Assistant Microphone Button */}
+            <button
+              onClick={handleVoiceListen}
+              className={`p-3 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                isListening 
+                  ? 'bg-red-600 text-white border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.8)] animate-pulse' 
+                  : 'bg-cyan-600/20 text-cyan-300 border-cyan-500/40 hover:bg-cyan-600/30'
+              }`}
+              title={language === 'te' ? 'మాట్లాడండి' : 'Voice Input'}
+            >
+              <Radio className={`w-5 h-5 ${isListening ? 'animate-spin' : ''}`} />
+            </button>
+
+            {/* Direct Send Action Button */}
+            <button
+              onClick={() => handleEmergencyQuery(assistantInput)}
+              className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black px-4 py-3 rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer shrink-0"
+            >
+              <span>{language === 'te' ? 'వెతకండి' : 'Submit'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Quick Keyword Direct Action Chips */}
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            <span className="text-[10px] text-slate-400 font-mono py-1 self-center">
+              {language === 'te' ? 'శీఘ్ర సహాయం:' : 'Quick Direct:'}
+            </span>
+            {[
+              { 
+                label: language === 'te' ? '🩸 రక్తం కావాలి' : '🩸 Need Blood', 
+                val: language === 'te' ? 'రక్తం కావాలి' : 'Need blood donor' 
+              },
+              { 
+                label: language === 'te' ? '🐍 పాము కాటు' : '🐍 Snake Bite', 
+                val: language === 'te' ? 'పాము కాటు' : 'Snake bite antivenom' 
+              },
+              { 
+                label: language === 'te' ? '🚨 వాహన ప్రమాదం' : '🚨 Car Accident', 
+                val: language === 'te' ? 'వాహన ప్రమాదం' : 'Vehicle crash accident' 
+              },
+              { 
+                label: language === 'te' ? '🏥 సమీప ICU ఆసుపత్రి' : '🏥 Nearest ICU Hospital', 
+                val: language === 'te' ? 'సమీప ఆసుపత్రి' : 'Nearest ICU hospital' 
+              },
+            ].map((chip, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setAssistantInput(chip.val);
+                  handleEmergencyQuery(chip.val);
+                }}
+                className="text-[10px] font-bold bg-[#0B1220] hover:bg-cyan-950/60 text-slate-300 hover:text-cyan-300 border border-slate-800 hover:border-cyan-500/40 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+
         </div>
+
       </section>
 
-      {/* 3. Key Telemetry Metrics Bar */}
+      {/* 4. Key Telemetry Metrics Bar */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Avg Emergency Response', val: '< 4.2 Mins', icon: Clock, color: 'text-cyan-400', border: 'border-cyan-500/30' },
