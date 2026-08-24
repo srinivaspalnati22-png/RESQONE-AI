@@ -125,6 +125,92 @@ export const DemoProvider = ({ children }) => {
     localStorage.removeItem('resqone_offline_queue');
   };
 
+  // Multi-Role Global Alerts Feed
+  const [activeAlerts, setActiveAlerts] = useState([
+    {
+      id: 'alt-crash-101',
+      type: 'ACCIDENT_RESCUE',
+      title: 'Severe Vehicle Collision on NH-16 Gollapudi',
+      severity: 'CRITICAL',
+      location: 'NH-16 Bypass, Vijayawada',
+      gForce: '4.85G',
+      victim: 'Srinivas Palnati (O- Blood)',
+      time: 'Just Now',
+      status: 'PENDING_ACCEPTANCE', // 'PENDING_ACCEPTANCE' | 'ACCEPTED_BY_HOSPITAL' | 'ACCEPTED_BY_RESCUE'
+      acceptedHospital: 'Government General Hospital (GGH Vijayawada)',
+      acceptedAmbulance: 'ALS-108 (AP-TRAUMA-99)',
+      acceptedBy: null
+    },
+    {
+      id: 'alt-blood-102',
+      type: 'BLOOD_SOS',
+      title: 'Urgent 2 Units O- Negative Blood Required',
+      severity: 'HIGH',
+      location: 'GGH Regional Trauma Center, Vijayawada',
+      victim: 'Trauma Emergency Patient #4401',
+      time: '2m ago',
+      status: 'PENDING_ACCEPTANCE',
+      acceptedBy: null
+    },
+    {
+      id: 'alt-snake-103',
+      type: 'SNAKEBITE',
+      title: 'Spectacled Cobra Envenomation — AVS Needed',
+      severity: 'CRITICAL',
+      location: 'Gunadala Agricultural Belt, Vijayawada',
+      victim: 'Farmer (Neurotoxic Symptoms)',
+      time: '5m ago',
+      status: 'PENDING_ACCEPTANCE',
+      acceptedBy: null
+    },
+    {
+      id: 'alt-vol-104',
+      type: 'VOLUNTEER_CPR',
+      title: 'CPR & High-Water First Responder Request',
+      severity: 'HIGH',
+      location: 'MG Road Junction, Vijayawada',
+      victim: 'Elderly Citizen (Cardiac Distress)',
+      time: '9m ago',
+      status: 'PENDING_ACCEPTANCE',
+      acceptedBy: null
+    }
+  ]);
+
+  const [acceptedHospital, setAcceptedHospital] = useState({
+    name: 'Government General Hospital (GGH Vijayawada)',
+    distance: '1.8 km',
+    eta: '3.5 Mins',
+    icuBed: 'Bay #4 Reserved',
+    ambulance: 'ALS-108 (AP-TRAUMA-99)'
+  });
+
+  const [activeRole, setActiveRole] = useState('user'); // 'user' | 'hospital' | 'rescue' | 'donor' | 'volunteer'
+
+  const acceptAlert = (alertId, role, details = {}) => {
+    setActiveAlerts((prev) =>
+      prev.map((alert) => {
+        if (alert.id === alertId) {
+          const updated = {
+            ...alert,
+            status: 'ACCEPTED',
+            acceptedBy: role,
+            acceptedAt: new Date().toLocaleTimeString(),
+            ...details
+          };
+          if (details.hospitalName) {
+            setAcceptedHospital((h) => ({
+              ...h,
+              name: details.hospitalName,
+              status: 'ACCEPTED & DISPATCHED'
+            }));
+          }
+          return updated;
+        }
+        return alert;
+      })
+    );
+  };
+
   return (
     <DemoContext.Provider value={{
       isDemoMode,
@@ -138,7 +224,14 @@ export const DemoProvider = ({ children }) => {
       syncQueueToSupabase,
       activeDispatch,
       setActiveDispatch,
-      PRESET_SCENARIOS
+      PRESET_SCENARIOS,
+      activeAlerts,
+      setActiveAlerts,
+      acceptedHospital,
+      setAcceptedHospital,
+      activeRole,
+      setActiveRole,
+      acceptAlert
     }}>
       {children}
     </DemoContext.Provider>

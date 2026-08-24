@@ -30,10 +30,11 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
   const [aiResult, setAiResult] = useState(null);
   const [reportSuccess, setReportSuccess] = useState(null);
 
+  const { language, t } = useLanguage();
+
   const handleToggleVoice = () => {
     if (!isListening) {
       if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        // Fallback demo simulation if browser doesn't have Web Speech API
         setIsListening(true);
         setTimeout(() => {
           const sampleVoices = [
@@ -51,7 +52,7 @@ export const EmergencyCopilotPage = ({ setActiveTab }) => {
 
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
+      recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : language === 'kn' ? 'kn-IN' : 'en-IN';
       recognition.continuous = false;
       recognition.interimResults = false;
 

@@ -158,14 +158,14 @@ function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospit
   );
 }
 
-export const SnakebitePage = () => {
+export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const { t, language } = useLanguage();
   const { queueOfflineReport } = useDemo();
 
   // Search & Triage State
   const [hasTriaged, setHasTriaged] = useState(false);
   const [showVisualPicker, setShowVisualPicker] = useState(false);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(initialQuery?.species || initialQuery?.query || '');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -182,6 +182,16 @@ export const SnakebitePage = () => {
       stopAllAudio();
     };
   }, []);
+
+  // Auto-run triage if query passed from Home
+  useEffect(() => {
+    if (initialQuery) {
+      const q = initialQuery.species || initialQuery.query || 'Spectacled Cobra';
+      setDescription(q);
+      handleRunAssessment(q, []);
+      if (onClearQuery) onClearQuery();
+    }
+  }, [initialQuery]);
 
   const symptomChecklist = [
     'Fang Puncture Marks',
@@ -273,7 +283,7 @@ export const SnakebitePage = () => {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : 'en-US';
+    recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : language === 'kn' ? 'kn-IN' : 'en-IN';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -706,37 +716,109 @@ export const SnakebitePage = () => {
               </div>
             </div>
 
-            {/* Crucial WHO First Aid Precautions with Voice Audio Announcement */}
-            <div className="bg-[#050A14] p-5 rounded-2xl border border-slate-800 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h4 className="text-xs font-black text-cyan-400 uppercase tracking-wider flex items-center space-x-1.5">
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Immediate Standard First Aid Precautions for {assessment.species.common_name}</span>
-                </h4>
-
+            {/* WHO & National Clinical First-Aid Precautions Protocol */}
+            <div className="bg-[#050A14] p-4 sm:p-5 rounded-2xl border border-cyan-500/40 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                  <h4 className="text-sm font-black text-cyan-400 uppercase tracking-wider flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>WHO & National Clinical First-Aid Protocol ({assessment.species.common_name})</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-400">Strict clinical guidelines to slow systemic envenomation before antivenom infusion</p>
+                </div>
+                
                 <button
                   onClick={handleSpeakFirstAidAloud}
-                  className="px-3.5 py-1.5 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto shadow-md"
+                  className="bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center space-x-1.5 shrink-0 cursor-pointer min-h-[38px]"
                   title="Read instructions aloud in spoken voice"
                 >
-                  <Volume2 className="w-4 h-4 text-cyan-400" />
+                  <Volume2 className="w-4 h-4 text-cyan-400 animate-pulse" />
                   <span>🔊 Read First-Aid Aloud</span>
                 </button>
               </div>
 
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
-                {(assessment.species.first_aid || [
-                  "Immobilize the bitten limb immediately with a splint below heart level.",
-                  "Do NOT cut, suck venom, or apply tight arterial tourniquets.",
-                  "Keep the victim completely calm and seated to slow venom circulation.",
-                  "Transport immediately to nearest antivenom hospital without wasting Golden Hour time."
-                ]).map((step, idx) => (
-                  <li key={idx} className="bg-[#0B1220] p-3 rounded-xl border border-slate-800 flex items-start space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span className="leading-relaxed">{step}</span>
-                  </li>
-                ))}
-              </ul>
+              {/* CRITICAL DO's */}
+              <div className="space-y-2">
+                <div className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>WHAT YOU MUST DO (LIFESAVING ACTIONS):</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
+                  <div className="bg-[#0B1220] p-3 rounded-xl border border-emerald-500/30 flex items-start space-x-2.5">
+                    <span className="text-emerald-400 font-mono font-black text-sm">01</span>
+                    <div>
+                      <strong className="text-white block font-bold">Immobilize Entire Limb with Splint</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed">Bandage and splint with a rigid stick/board like a fracture. Prevent all muscular movement to stop venom pumping.</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0B1220] p-3 rounded-xl border border-emerald-500/30 flex items-start space-x-2.5">
+                    <span className="text-emerald-400 font-mono font-black text-sm">02</span>
+                    <div>
+                      <strong className="text-white block font-bold">Keep Limb Below Heart Level</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed">Keep the bitten foot or hand lower than the heart to minimize venous circulation speed.</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0B1220] p-3 rounded-xl border border-emerald-500/30 flex items-start space-x-2.5">
+                    <span className="text-emerald-400 font-mono font-black text-sm">03</span>
+                    <div>
+                      <strong className="text-white block font-bold">Remove All Constricting Items</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed">Take off rings, watches, bangles, shoes, and tight clothing immediately before swelling traps blood supply.</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0B1220] p-3 rounded-xl border border-emerald-500/30 flex items-start space-x-2.5">
+                    <span className="text-emerald-400 font-mono font-black text-sm">04</span>
+                    <div>
+                      <strong className="text-white block font-bold">Reassure & Keep Victim Calm</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed">Panic increases heart rate (tachycardia) and triples venom absorption rate. Keep victim lying completely still.</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0B1220] p-3 rounded-xl border border-emerald-500/30 flex items-start space-x-2.5">
+                    <span className="text-emerald-400 font-mono font-black text-sm">05</span>
+                    <div>
+                      <strong className="text-white block font-bold">Mark Swelling Boundary with Pen</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed">Draw a line around the swelling with a pen and write the time every 15 minutes to help doctors track progression.</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0B1220] p-3 rounded-xl border border-emerald-500/30 flex items-start space-x-2.5">
+                    <span className="text-emerald-400 font-mono font-black text-sm">06</span>
+                    <div>
+                      <strong className="text-white block font-bold">Rush to AVS Hospital in Golden Hour</strong>
+                      <span className="text-slate-400 text-[11px] leading-relaxed">Reach designated Antivenom hospital within 60-90 minutes. Reserve vials using the direct button below.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CRITICAL DON'Ts (DEADLY MISTAKES TO AVOID) */}
+              <div className="space-y-2 pt-2 border-t border-slate-800">
+                <div className="text-xs font-black text-red-400 uppercase tracking-wider flex items-center space-x-1.5">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>WHAT YOU MUST NEVER DO (DEADLY MYTHS TO AVOID):</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
+                  <div className="bg-[#0B1220] p-2.5 rounded-xl border border-red-500/30 flex items-center space-x-2">
+                    <span className="text-red-400 font-black">❌</span>
+                    <span className="text-[11px]"><strong className="text-white">NO Tourniquets:</strong> Causes gangrene, severe ischemia, and limb amputation.</span>
+                  </div>
+                  <div className="bg-[#0B1220] p-2.5 rounded-xl border border-red-500/30 flex items-center space-x-2">
+                    <span className="text-red-400 font-black">❌</span>
+                    <span className="text-[11px]"><strong className="text-white">NO Cutting Wound:</strong> Causes massive blood loss and accelerates venom spread.</span>
+                  </div>
+                  <div className="bg-[#0B1220] p-2.5 rounded-xl border border-red-500/30 flex items-center space-x-2">
+                    <span className="text-red-400 font-black">❌</span>
+                    <span className="text-[11px]"><strong className="text-white">NO Sucking Venom:</strong> Spreads poison into mouth and introduces severe infection.</span>
+                  </div>
+                  <div className="bg-[#0B1220] p-2.5 rounded-xl border border-red-500/30 flex items-center space-x-2">
+                    <span className="text-red-400 font-black">❌</span>
+                    <span className="text-[11px]"><strong className="text-white">NO Ice or Herbal Pastes:</strong> Destroys skin tissue and delays critical antivenom treatment.</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Nearest Antivenom (AVS) Equipped Hospitals */}

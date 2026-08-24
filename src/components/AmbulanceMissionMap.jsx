@@ -49,6 +49,12 @@ function RealisticHospital({ isResponding = true }) {
         <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.4} roughness={0.1} />
       </mesh>
 
+      {/* Side windows */}
+      <mesh position={[0.76, 1.0, 0]} rotation={[0, Math.PI/2, 0]}>
+        <planeGeometry args={[1.3, 1.5]} />
+        <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.3} roughness={0.1} />
+      </mesh>
+
       {/* Emergency Department Entrance Canopy */}
       <mesh position={[0, 0.35, 1.0]}>
         <boxGeometry args={[1.7, 0.12, 0.7]} />
@@ -104,53 +110,137 @@ function RealisticHospital({ isResponding = true }) {
   );
 }
 
-// 2. Ultra-Realistic 3D ALS Ambulance Vehicle
-function RealisticAmbulance({ position, rotation, isEnRoute = true, speed = 74 }) {
+// 2. Ultra-Realistic 3D ALS Ambulance Vehicle with Smooth Animation
+function RealisticAmbulance({ targetPosition, targetRotation, isEnRoute = true, speed = 74, stateIndex = 3 }) {
+  const groupRef = useRef();
   const strobeRef = useRef();
   const wheelRefs = useRef([]);
+  const sirenRingsRef = useRef([]);
 
+  // Smooth lerp movement
   useFrame((state, delta) => {
+    if (groupRef.current) {
+      // Smoothly interpolate position
+      groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetPosition[0], delta * 2.5);
+      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetPosition[1], delta * 2.5);
+      groupRef.current.position.z = THREE.MathUtils.lerp(groupRef.current.position.z, targetPosition[2], delta * 2.5);
+      
+      // Smoothly interpolate rotation
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotation[1], delta * 3);
+      
+      // Add subtle road bounce when driving
+      if (isEnRoute) {
+        groupRef.current.position.y += Math.sin(state.clock.elapsedTime * 12) * 0.008;
+        groupRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 3) * 0.015;
+      }
+    }
+
     // Flashing Strobe Lights
     if (strobeRef.current && isEnRoute) {
       const t = state.clock.getElapsedTime() * 14;
-      strobeRef.current.intensity = Math.sin(t) > 0 ? 4.0 : 0.2;
+      strobeRef.current.intensity = Math.sin(t) > 0 ? 5.0 : 0.3;
     }
+    
     // Rotate wheels while driving
     if (isEnRoute) {
       wheelRefs.current.forEach((wheel) => {
-        if (wheel) wheel.rotation.x += delta * 15;
+        if (wheel) wheel.rotation.x += delta * 18;
       });
     }
+
+    // Siren pulse rings
+    sirenRingsRef.current.forEach((ring, i) => {
+      if (ring && isEnRoute) {
+        const phase = (state.clock.elapsedTime * 2 + i * 0.8) % 3;
+        const scale = 0.3 + phase * 0.8;
+        ring.scale.set(scale, scale, scale);
+        ring.material.opacity = Math.max(0, 0.6 - phase * 0.25);
+      }
+    });
   });
 
   return (
-    <group position={position} rotation={rotation}>
+    <group ref={groupRef} position={targetPosition} rotation={targetRotation}>
       {/* Ambulance Main Box Body */}
       <mesh position={[0, 0.38, -0.05]}>
         <boxGeometry args={[0.66, 0.52, 1.25]} />
-        <meshStandardMaterial color="#f8fafc" roughness={0.15} metalness={0.25} />
+        <meshPhysicalMaterial color="#f8fafc" roughness={0.12} metalness={0.2} clearcoat={0.6} />
       </mesh>
 
       {/* Ambulance Cab Slope Windshield Section */}
       <mesh position={[0, 0.32, 0.58]} rotation={[-0.35, 0, 0]}>
         <boxGeometry args={[0.64, 0.42, 0.38]} />
-        <meshStandardMaterial color="#f8fafc" roughness={0.2} />
+        <meshPhysicalMaterial color="#f8fafc" roughness={0.15} clearcoat={0.5} />
       </mesh>
 
       {/* Front Windshield Glass */}
       <mesh position={[0, 0.44, 0.64]} rotation={[-0.42, 0, 0]}>
         <planeGeometry args={[0.56, 0.28]} />
-        <meshStandardMaterial color="#0284c7" emissive="#0284c7" emissiveIntensity={0.4} roughness={0.1} />
+        <meshPhysicalMaterial color="#0284c7" emissive="#0284c7" emissiveIntensity={0.4} roughness={0.05} transparent opacity={0.7} />
       </mesh>
 
-      {/* Emergency Red & Cyan Side Stripes */}
+      {/* Emergency Red Stripe */}
       <mesh position={[0, 0.32, -0.05]}>
-        <boxGeometry args={[0.68, 0.12, 1.26]} />
+        <boxGeometry args={[0.68, 0.10, 1.26]} />
         <meshStandardMaterial color="#dc2626" roughness={0.3} />
       </mesh>
-      <mesh position={[0, 0.24, -0.05]}>
-        <boxGeometry args={[0.67, 0.04, 1.26]} />
-        <meshStandardMaterial color="#00D9FF" roughness={0.3} />
+      {/* Blue accent stripe */}
+      <mesh position={[0, 0.25, -0.05]}>
+        <boxGeometry args={[0.67, 0.03, 1.26]} />
+        <meshStandardMaterial color="#2563eb" roughness={0.3} />
+      </mesh>
+
+      {/* Medical Cross on sides */}
+      <mesh position={[-0.341, 0.42, -0.1]}>
+        <boxGeometry args={[0.01, 0.18, 0.06]} />
+        <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.8} />
+      </mesh>
+      <mesh position={[-0.341, 0.42, -0.1]}>
+        <boxGeometry args={[0.01, 0.06, 0.18]} />
+        <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.8} />
+      </mesh>
+      <mesh position={[0.341, 0.42, -0.1]}>
+        <boxGeometry args={[0.01, 0.18, 0.06]} />
+        <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.8} />
+      </mesh>
+      <mesh position={[0.341, 0.42, -0.1]}>
+        <boxGeometry args={[0.01, 0.06, 0.18]} />
+        <meshStandardMaterial color="#ef4444" emissive="#dc2626" emissiveIntensity={0.8} />
+      </mesh>
+
+      {/* Rear doors */}
+      <mesh position={[-0.15, 0.35, -0.64]}>
+        <boxGeometry args={[0.28, 0.40, 0.02]} />
+        <meshPhysicalMaterial color="#e2e8f0" roughness={0.2} />
+      </mesh>
+      <mesh position={[0.15, 0.35, -0.64]}>
+        <boxGeometry args={[0.28, 0.40, 0.02]} />
+        <meshPhysicalMaterial color="#e2e8f0" roughness={0.2} />
+      </mesh>
+      {/* Rear door handles */}
+      <mesh position={[-0.02, 0.35, -0.66]}>
+        <boxGeometry args={[0.04, 0.015, 0.02]} />
+        <meshPhysicalMaterial color="#94a3b8" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[0.02, 0.35, -0.66]}>
+        <boxGeometry args={[0.04, 0.015, 0.02]} />
+        <meshPhysicalMaterial color="#94a3b8" metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* Side mirrors */}
+      <mesh position={[-0.38, 0.42, 0.45]}>
+        <boxGeometry args={[0.08, 0.05, 0.04]} />
+        <meshPhysicalMaterial color="#1e293b" metalness={0.7} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.38, 0.42, 0.45]}>
+        <boxGeometry args={[0.08, 0.05, 0.04]} />
+        <meshPhysicalMaterial color="#1e293b" metalness={0.7} roughness={0.2} />
+      </mesh>
+
+      {/* Exhaust pipe */}
+      <mesh position={[0.25, 0.12, -0.62]} rotation={[0, 0, Math.PI/2]}>
+        <cylinderGeometry args={[0.02, 0.02, 0.06, 8]} />
+        <meshPhysicalMaterial color="#6b7280" metalness={0.9} roughness={0.2} />
       </mesh>
 
       {/* 4 Rubber Wheels with Chrome Metallic Hubs */}
@@ -166,14 +256,23 @@ function RealisticAmbulance({ position, rotation, isEnRoute = true, speed = 74 }
           rotation={[0, 0, Math.PI / 2]}
           ref={(el) => (wheelRefs.current[idx] = el)}
         >
+          {/* Tire */}
           <mesh>
-            <cylinderGeometry args={[0.14, 0.14, 0.09, 16]} />
+            <cylinderGeometry args={[0.14, 0.14, 0.09, 20]} />
             <meshStandardMaterial color="#0f172a" roughness={0.9} />
           </mesh>
+          {/* Chrome hub */}
           <mesh>
             <cylinderGeometry args={[0.07, 0.07, 0.1, 16]} />
-            <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
+            <meshPhysicalMaterial color="#cbd5e1" metalness={0.92} roughness={0.1} />
           </mesh>
+          {/* Spokes */}
+          {[0, 60, 120].map(deg => (
+            <mesh key={deg} rotation={[0, 0, deg * Math.PI / 180]}>
+              <boxGeometry args={[0.12, 0.015, 0.095]} />
+              <meshPhysicalMaterial color="#94a3b8" metalness={0.9} roughness={0.1} />
+            </mesh>
+          ))}
         </group>
       ))}
 
@@ -189,10 +288,15 @@ function RealisticAmbulance({ position, rotation, isEnRoute = true, speed = 74 }
           <boxGeometry args={[0.2, 0.08, 0.12]} />
           <meshStandardMaterial color="#3b82f6" emissive="#2563eb" emissiveIntensity={3.0} />
         </mesh>
+        {/* White center */}
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.06, 0.08, 0.12]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2.0} />
+        </mesh>
         <pointLight ref={strobeRef} color="#ef4444" intensity={2.5} distance={5} />
       </group>
 
-      {/* Front Headlights & Cones */}
+      {/* Front Headlights */}
       <group position={[0, 0.28, 0.76]}>
         <mesh position={[-0.22, 0, 0]}>
           <boxGeometry args={[0.12, 0.09, 0.02]} />
@@ -204,6 +308,19 @@ function RealisticAmbulance({ position, rotation, isEnRoute = true, speed = 74 }
         </mesh>
         <spotLight position={[0, 0, 0]} angle={0.5} penumbra={0.6} intensity={2.0} color="#fef08a" />
       </group>
+
+      {/* Siren Pulse Wave Rings */}
+      {isEnRoute && [0, 1, 2].map(i => (
+        <mesh
+          key={`siren-${i}`}
+          ref={el => (sirenRingsRef.current[i] = el)}
+          position={[0, 0.68, 0.15]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <ringGeometry args={[0.4, 0.45, 24]} />
+          <meshBasicMaterial color="#ef4444" transparent opacity={0.4} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
 
       {/* Floating 3D Tag */}
       <Html position={[0, 1.05, 0]} center distanceFactor={9}>
@@ -232,12 +349,24 @@ function RealisticIncidentSite() {
         <boxGeometry args={[0.85, 0.45, 1.3]} />
         <meshStandardMaterial color="#991b1b" roughness={0.7} metalness={0.4} />
       </mesh>
+      {/* Crushed hood */}
+      <mesh position={[0.15, 0.35, 0.5]} rotation={[0.3, 0.45, 0.15]}>
+        <boxGeometry args={[0.75, 0.08, 0.45]} />
+        <meshStandardMaterial color="#7f1d1d" roughness={0.8} metalness={0.3} />
+      </mesh>
+      {/* Shattered windshield */}
+      <mesh position={[0, 0.42, 0.35]} rotation={[-0.2, 0.45, 0.1]}>
+        <planeGeometry args={[0.65, 0.28]} />
+        <meshStandardMaterial color="#94a3b8" transparent opacity={0.3} roughness={0.1} />
+      </mesh>
 
       {/* Hazard Warning Cones with White Reflective Stripes */}
       {[
         [-0.75, 0, 0.7],
         [0.75, 0, 0.7],
-        [0, 0, -0.9]
+        [0, 0, -0.9],
+        [-1.1, 0, -0.2],
+        [1.1, 0, 0.2]
       ].map((pos, idx) => (
         <group key={idx} position={pos}>
           <mesh position={[0, 0.2, 0]}>
@@ -249,6 +378,14 @@ function RealisticIncidentSite() {
             <meshBasicMaterial color="#ffffff" />
           </mesh>
         </group>
+      ))}
+
+      {/* Debris scatter */}
+      {[[-0.4, 0.03, 0.5], [0.3, 0.03, -0.4], [0.6, 0.03, 0.2]].map((pos, i) => (
+        <mesh key={`debris-${i}`} position={pos} rotation={[Math.random(), Math.random(), 0]}>
+          <boxGeometry args={[0.12, 0.04, 0.08]} />
+          <meshStandardMaterial color="#475569" roughness={0.8} />
+        </mesh>
       ))}
 
       {/* Pulsing Emergency Radar Ground Ring */}
@@ -272,12 +409,22 @@ function RealisticIncidentSite() {
   );
 }
 
-// 4. Highway Road Corridor Environment
+// 4. Highway Road Corridor Environment with Trees & Buildings
 function HighwayEnvironment({ curvePoints }) {
   return (
     <group>
       {/* Ground Grid Terrain */}
       <gridHelper args={[15, 30, '#1e293b', '#0B1220']} position={[0, -0.01, 0]} />
+
+      {/* Green terrain patches */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-5, -0.005, 0]}>
+        <planeGeometry args={[4, 12]} />
+        <meshStandardMaterial color="#14532d" roughness={0.9} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, -0.005, 0]}>
+        <planeGeometry args={[4, 12]} />
+        <meshStandardMaterial color="#14532d" roughness={0.9} />
+      </mesh>
 
       {/* Asphalt Highway Mesh */}
       <Line
@@ -292,6 +439,41 @@ function HighwayEnvironment({ curvePoints }) {
         color="#00D9FF"
         lineWidth={4}
       />
+
+      {/* Simple Trees along road */}
+      {[[-4.5, 0, -2], [-4.2, 0, 2], [4.5, 0, -1], [4.8, 0, 1.5], [-4.5, 0, 0]].map((pos, idx) => (
+        <group key={`tree-${idx}`} position={pos}>
+          {/* Tree trunk */}
+          <mesh position={[0, 0.35, 0]}>
+            <cylinderGeometry args={[0.06, 0.08, 0.7, 8]} />
+            <meshStandardMaterial color="#78350f" roughness={0.8} />
+          </mesh>
+          {/* Tree canopy */}
+          <mesh position={[0, 0.85, 0]}>
+            <coneGeometry args={[0.35, 0.7, 8]} />
+            <meshStandardMaterial color="#166534" roughness={0.7} />
+          </mesh>
+          <mesh position={[0, 1.15, 0]}>
+            <coneGeometry args={[0.25, 0.5, 8]} />
+            <meshStandardMaterial color="#15803d" roughness={0.7} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Small buildings in background */}
+      {[[-5.5, 0, -2.5], [5.5, 0, 2]].map((pos, idx) => (
+        <group key={`bldg-${idx}`} position={pos}>
+          <mesh position={[0, 0.6, 0]}>
+            <boxGeometry args={[0.8, 1.2, 0.6]} />
+            <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.3} />
+          </mesh>
+          {/* Windows */}
+          <mesh position={[0, 0.7, 0.31]}>
+            <planeGeometry args={[0.6, 0.8]} />
+            <meshStandardMaterial color="#38bdf8" emissive="#0284c7" emissiveIntensity={0.2} />
+          </mesh>
+        </group>
+      ))}
 
       {/* Street Lamps along corridor */}
       {[-2.4, 0, 2.4].map((x, idx) => (
@@ -544,10 +726,11 @@ export function AmbulanceMissionMap({
           <RealisticHospital isResponding={internalStateIndex >= 1} />
           <RealisticIncidentSite />
           <RealisticAmbulance 
-            position={currentPos} 
-            rotation={currentRotation} 
+            targetPosition={currentPos} 
+            targetRotation={currentRotation} 
             isEnRoute={internalStateIndex >= 1 && internalStateIndex <= 4}
             speed={internalStateIndex === 3 ? 78 : 45}
+            stateIndex={internalStateIndex}
           />
           
           <OrbitControls 

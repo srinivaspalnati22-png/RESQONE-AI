@@ -23,15 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('resqone_user');
-    return saved ? JSON.parse(saved) : {
-      id: 'demo-user-001',
-      email: 'responder@resqone.ai',
-      name: 'Srinivas Palnati (Victim / User)',
-      phone: '+91-9876543210',
-      role: 'user',
-      blood_group: 'O-',
-      medical_notes: 'No known drug allergies. Universal O- recipient preferred.'
-    };
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [familyContacts, setFamilyContacts] = useState(() => {
@@ -41,6 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -67,10 +60,39 @@ export const AuthProvider = ({ children }) => {
       name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
       role: authUser.user_metadata?.role || 'user',
       blood_group: authUser.user_metadata?.blood_group || 'O-',
-      phone: authUser.user_metadata?.phone || '+91-9876543210'
+      phone: authUser.user_metadata?.phone || '+91-9876543210',
+      medical_notes: authUser.user_metadata?.medical_notes || ''
     };
     setUser(userObj);
     localStorage.setItem('resqone_user', JSON.stringify(userObj));
+  };
+
+  // Save user profile + family contacts to Supabase 'users' table
+  const saveUserToSupabase = async (profileData, contacts) => {
+    try {
+      const payload = {
+        id: profileData.id || session?.user?.id || `local-${Date.now()}`,
+        email: profileData.email,
+        name: profileData.name,
+        phone: profileData.phone,
+        blood_group: profileData.blood_group,
+        role: profileData.role || 'user',
+        medical_notes: profileData.medical_notes || '',
+        family_contacts: JSON.stringify(contacts || familyContacts),
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('users')
+        .upsert(payload, { onConflict: 'email' });
+
+      if (error) {
+        console.warn('Supabase users table upsert notice:', error.message);
+        // Silently fail — data is stored in localStorage as fallback
+      }
+    } catch (err) {
+      console.warn('Supabase save notice:', err);
+    }
   };
 
   const completeOnboarding = (customUser = null, contacts = null) => {
@@ -84,15 +106,23 @@ export const AuthProvider = ({ children }) => {
     }
     setIsOnboarded(true);
     localStorage.setItem('resqone_is_onboarded', 'true');
+    setAuthError(null);
+
+    // Persist to Supabase in background
+    if (customUser) {
+      saveUserToSupabase(customUser, contacts);
+    }
   };
 
   const login = async (email, password) => {
     setLoading(true);
+    setAuthError(null);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        // Fallback: allow local-only login for demo/offline mode
         const demoUser = {
-          id: 'demo-user-001',
+          id: `demo-${Date.now()}`,
           email,
           name: email.split('@')[0],
           role: 'user',
@@ -102,32 +132,65 @@ export const AuthProvider = ({ children }) => {
         setUser(demoUser);
         localStorage.setItem('resqone_user', JSON.stringify(demoUser));
         completeOnboarding(demoUser);
-        return { success: true, user: demoUser };
+        return { success: true, user: demoUser, isDemo: true };
       }
       syncProfile(data.user);
-      completeOnboarding(data.user);
+      completeOnboarding();
       return { success: true, user: data.user };
+    } catch (err) {
+      setAuthError(err.message || 'Login failed');
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
   };
 
-  const signup = async (email, password, name, role, blood_group, phone) => {
+  const signup = async (email, password, name, role, blood_group, phone, medical_notes) => {
     setLoading(true);
+    setAuthError(null);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { name, role, blood_group, phone }
+          data: { name, role, blood_group, phone, medical_notes }
         }
       });
-      if (error) throw error;
+      if (error) {
+        // If Supabase auth fails, still allow local registration for demo
+        const localUser = {
+          id: `local-${Date.now()}`,
+          email,
+          name,
+          role: role || 'user',
+          blood_group: blood_group || 'O-',
+          phone: phone || '',
+          medical_notes: medical_notes || ''
+        };
+        setUser(localUser);
+        localStorage.setItem('resqone_user', JSON.stringify(localUser));
+        completeOnboarding(localUser);
+        saveUserToSupabase(localUser, familyContacts);
+        return { success: true, user: localUser, isLocal: true };
+      }
       if (data.user) {
-        syncProfile(data.user);
-        completeOnboarding(data.user);
+        const userObj = {
+          id: data.user.id,
+          email: data.user.email,
+          name,
+          role: role || 'user',
+          blood_group: blood_group || 'O-',
+          phone: phone || '',
+          medical_notes: medical_notes || ''
+        };
+        setUser(userObj);
+        localStorage.setItem('resqone_user', JSON.stringify(userObj));
+        completeOnboarding(userObj);
       }
       return { success: true, user: data.user };
+    } catch (err) {
+      setAuthError(err.message || 'Registration failed');
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -138,19 +201,23 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setSession(null);
     setIsOnboarded(false);
+    setAuthError(null);
     localStorage.removeItem('resqone_user');
     localStorage.removeItem('resqone_is_onboarded');
+    localStorage.removeItem('resqone_family_contacts');
   };
 
   const updateProfile = (updatedData) => {
     const updated = { ...user, ...updatedData };
     setUser(updated);
     localStorage.setItem('resqone_user', JSON.stringify(updated));
+    saveUserToSupabase(updated, familyContacts);
   };
 
   const updateFamilyContacts = (contacts) => {
     setFamilyContacts(contacts);
     localStorage.setItem('resqone_family_contacts', JSON.stringify(contacts));
+    if (user) saveUserToSupabase(user, contacts);
   };
 
   const updateUserRole = (role) => {
@@ -178,7 +245,9 @@ export const AuthProvider = ({ children }) => {
       signup,
       logout,
       updateUserRole,
-      loginWithGoogle
+      loginWithGoogle,
+      authError,
+      setAuthError
     }}>
       {children}
     </AuthContext.Provider>

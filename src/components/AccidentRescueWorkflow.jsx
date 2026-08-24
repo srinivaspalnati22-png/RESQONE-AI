@@ -134,52 +134,100 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
     return { lat, lng, angle: angleDeg };
   };
 
-  // Compact & Realistic 3D Ambulance Map Marker with /images/aum.jpg
+  // High-Fidelity 3D Isometric Ambulance with Dual Flashing Strobe Lights & Shadow
   const create3DAmbulanceHTML = (angleDeg, isReturning) => {
     return `
-      <div style="position: relative; width: 44px; height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+      <div style="position: relative; width: 64px; height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
         
-        <!-- Rotating Compact Ambulance Body with /images/aum.jpg -->
+        <!-- Emergency Siren Pulse Rings on Road Asphalt -->
         <div style="
-          width: 38px; 
-          height: 38px; 
-          border-radius: 12px; 
-          background: #0f172a; 
-          border: 2px solid ${isReturning ? '#10b981' : '#ef4444'}; 
-          box-shadow: 0 0 15px ${isReturning ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)'}, 0 4px 10px rgba(0,0,0,0.8); 
-          overflow: hidden; 
+          position: absolute;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: radial-gradient(circle, ${isReturning ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'} 0%, rgba(59, 130, 246, 0.3) 50%, transparent 75%);
+          animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+          pointer-events: none;
+        "></div>
+
+        <!-- Realistic 3D Ambulance Vehicle Body (Rotates with Highway Direction) -->
+        <div style="
+          width: 28px; 
+          height: 52px; 
+          border-radius: 7px; 
+          background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 60%, #cbd5e1 100%);
+          border: 1.5px solid #64748b;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.85), 0 0 14px ${isReturning ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'};
           transform: rotate(${angleDeg}deg); 
-          transition: transform 0.15s ease-out;
+          transition: transform 0.1s linear;
+          position: relative;
           display: flex;
+          flex-direction: column;
           align-items: center;
-          justify-content: center;
+          overflow: hidden;
         ">
-          <img 
-            src="/images/aum.jpg" 
-            alt="Ambulance" 
-            style="width: 100%; height: 100%; object-fit: cover;" 
-            onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'%23ef4444\\'><path d=\\'M19 14h-1.16a3 3 0 0 0-5.68 0H10a3 3 0 0 0-5.68 0H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v2h2.59a2 2 0 0 1 1.41.59l2.41 2.41A2 2 0 0 1 24 12.41V13a1 1 0 0 1-1 1z\\'/></svg>';"
-          />
+          <!-- Front Bumper & Headlights -->
+          <div style="width: 100%; height: 6px; background: #334155; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; padding: 0 2px;">
+            <div style="width: 4px; height: 3px; background: #fef08a; border-radius: 1px; box-shadow: 0 0 4px #facc15;"></div>
+            <div style="width: 4px; height: 3px; background: #fef08a; border-radius: 1px; box-shadow: 0 0 4px #facc15;"></div>
+          </div>
+
+          <!-- Windshield (Dark Tinted Glass) -->
+          <div style="width: 22px; height: 10px; background: #0f172a; border-radius: 3px; margin-top: 1px; border: 1px solid #38bdf8; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 6px; height: 2px; background: #38bdf8; opacity: 0.6;"></div>
+          </div>
+
+          <!-- Roof Emergency LED Strobe Lightbar (Flashing Red / Blue) -->
+          <div style="
+            width: 18px; 
+            height: 5px; 
+            background: #020617; 
+            border-radius: 3px; 
+            margin-top: 2px; 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0 1px; 
+            border: 1px solid #475569;
+          ">
+            <div style="width: 7px; height: 3px; background: #ef4444; border-radius: 1px; box-shadow: 0 0 8px #ef4444; animation: pulse 0.5s infinite alternate;"></div>
+            <div style="width: 7px; height: 3px; background: #3b82f6; border-radius: 1px; box-shadow: 0 0 8px #3b82f6; animation: pulse 0.5s 0.25s infinite alternate;"></div>
+          </div>
+
+          <!-- Red Medical Cross Emblem on Roof -->
+          <div style="position: relative; width: 10px; height: 10px; margin-top: 4px; display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; width: 8px; height: 3px; background: #dc2626; border-radius: 1px;"></div>
+            <div style="position: absolute; width: 3px; height: 8px; background: #dc2626; border-radius: 1px;"></div>
+          </div>
+
+          <!-- Side Red Emergency Stripe -->
+          <div style="position: absolute; left: 0; top: 12px; bottom: 4px; width: 2px; background: #dc2626;"></div>
+          <div style="position: absolute; right: 0; top: 12px; bottom: 4px; width: 2px; background: #dc2626;"></div>
+
+          <!-- Rear Paramedic Doors & Taillights -->
+          <div style="position: absolute; bottom: 0; width: 100%; height: 4px; background: #1e293b; display: flex; justify-content: space-between; padding: 0 2px;">
+            <div style="width: 3px; height: 2px; background: #ef4444; box-shadow: 0 0 3px #ef4444;"></div>
+            <div style="width: 3px; height: 2px; background: #ef4444; box-shadow: 0 0 3px #ef4444;"></div>
+          </div>
         </div>
 
-        <!-- Floating Speed Tag -->
+        <!-- Floating High-Contrast Speed & Unit Tag -->
         <div style="
           position: absolute; 
-          bottom: -18px; 
+          bottom: -10px; 
           background: rgba(5, 10, 20, 0.95); 
-          color: ${isReturning ? '#34d399' : '#facc15'}; 
+          color: ${isReturning ? '#34d399' : '#f87171'}; 
           font-size: 8px; 
           font-family: monospace; 
           font-weight: 900; 
-          padding: 2px 5px; 
+          padding: 2px 6px; 
           border-radius: 6px; 
-          border: 1px solid ${isReturning ? '#10b981' : '#f59e0b'}; 
+          border: 1px solid ${isReturning ? '#10b981' : '#ef4444'}; 
           box-shadow: 0 4px 10px rgba(0,0,0,0.9);
           white-space: nowrap;
           pointer-events: none;
           z-index: 10;
         ">
-          ${isReturning ? '88 km/h 🚨' : '85 km/h 🚑'}
+          ${isReturning ? 'ALS-108 • 88 km/h 🚨' : 'ALS-108 • 85 km/h 🚑'}
         </div>
       </div>
     `;
@@ -378,7 +426,7 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
     }
   }, [ambulanceProgress, rescueStage]);
 
-  // Stage 1 -> 2: Notify Hospitals & Acknowledge GGH Acceptance
+  // Initialize Stage: Ambulance Moves Towards Crash Location smoothly
   useEffect(() => {
     const t1 = setTimeout(() => {
       setHospitals((prev) =>
@@ -387,23 +435,12 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
           status: h.isResponded ? 'ACCEPTED & DISPATCHED' : 'STANDBY BACKUP'
         }))
       );
-      setRescueStage('HOSPITAL_RESPONDED');
-      speakEmergencyInstruction("Government General Hospital Vijayawada accepted emergency SOS. ALS Ambulance 108 dispatched.");
-    }, 2000);
+      setRescueStage('AMBULANCE_EN_ROUTE_TO_VICTIM');
+      speakEmergencyInstruction("Ambulance is moving towards crash location on National Highway 16.");
+    }, 2800);
 
     return () => clearTimeout(t1);
   }, []);
-
-  // Stage 2 -> 3: Ambulance En Route to Victim
-  useEffect(() => {
-    if (rescueStage === 'HOSPITAL_RESPONDED') {
-      const t2 = setTimeout(() => {
-        setRescueStage('AMBULANCE_EN_ROUTE_TO_VICTIM');
-        speakEmergencyInstruction("Ambulance is moving towards crash location on National Highway 16.");
-      }, 1600);
-      return () => clearTimeout(t2);
-    }
-  }, [rescueStage]);
 
   // Ambulance Movement Simulation Loop (Hospital -> Victim -> Hospital)
   useEffect(() => {
@@ -418,15 +455,15 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             speakEmergencyInstruction("Ambulance arrived at crash scene. Paramedics stabilizing victim onto stretcher.");
             return 100;
           }
-          return prev + 4; // takes ~4.5 seconds smoothly
+          return prev + 1.2; // Smooth steady progression along NH-16 (~9.5 seconds)
         });
-      }, 180);
+      }, 110);
     } else if (rescueStage === 'PATIENT_PICKUP') {
       const tPickup = setTimeout(() => {
         setAmbulanceProgress(100);
         setRescueStage('AMBULANCE_RETURNING_TO_HOSPITAL');
         speakEmergencyInstruction("Victim secured in ALS unit. Transporting to hospital emergency trauma bay via green corridor.");
-      }, 3000);
+      }, 3500);
       return () => clearTimeout(tPickup);
     } else if (rescueStage === 'AMBULANCE_RETURNING_TO_HOSPITAL') {
       interval = setInterval(() => {
@@ -437,9 +474,9 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             speakEmergencyInstruction("Victim arrived safely at hospital trauma bay. Admitted to ICU. Patient is safe!");
             return 0;
           }
-          return prev - 4; // takes ~4.5 seconds smoothly
+          return prev - 1.2; // Smooth steady return via green corridor (~9.5 seconds)
         });
-      }, 180);
+      }, 110);
     }
 
     return () => {

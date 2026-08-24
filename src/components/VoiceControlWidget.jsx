@@ -9,6 +9,26 @@ export function VoiceControlWidget({ setActiveTab, onOpenSOS, floating = false }
   const [transcript, setTranscript] = useState('');
   const [feedbackResult, setFeedbackResult] = useState(null);
 
+  const getListeningText = () => {
+    switch (language) {
+      case 'te': return 'మాట్లాడండి...';
+      case 'hi': return 'कृपया बोलें...';
+      case 'ta': return 'பேசுங்கள்...';
+      case 'kn': return 'ಮಾತನಾಡಿ...';
+      default: return 'Speak now...';
+    }
+  };
+
+  const getVoiceTitle = () => {
+    switch (language) {
+      case 'te': return 'వాయిస్ AI';
+      case 'hi': return 'वॉयस AI';
+      case 'ta': return 'குரல் AI';
+      case 'kn': return 'ಧ್ವನಿ AI';
+      default: return 'Voice AI';
+    }
+  };
+
   const handleMicClick = () => {
     if (isListening) {
       setIsListening(false);
@@ -17,7 +37,7 @@ export function VoiceControlWidget({ setActiveTab, onOpenSOS, floating = false }
 
     setIsListening(true);
     setFeedbackResult(null);
-    setTranscript('Listening for voice command...');
+    setTranscript(getListeningText());
 
     startVoiceRecognition(
       language,
@@ -44,12 +64,12 @@ export function VoiceControlWidget({ setActiveTab, onOpenSOS, floating = false }
       {/* Mic Button */}
       <button
         onClick={handleMicClick}
-        className={`flex items-center gap-2 px-3.5 py-2.5 rounded-full font-extrabold text-xs transition-all duration-300 shadow-xl border ${
+        className={`flex items-center gap-2 px-3.5 py-2.5 rounded-full font-extrabold text-xs transition-all duration-300 shadow-xl border cursor-pointer ${
           isListening
             ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white border-red-400 animate-pulse shadow-red-600/60 scale-105'
             : 'bg-slate-900/90 hover:bg-slate-800 text-slate-100 border-slate-700 hover:border-red-500/50 shadow-slate-950/80 backdrop-blur-xl'
         }`}
-        title="Voice AI Assistant (Click to Speak Commands or Ask Q&A)"
+        title="Voice AI Assistant (Click to Speak in Selected Language)"
       >
         <div className="relative flex items-center justify-center">
           {isListening ? (
@@ -63,7 +83,7 @@ export function VoiceControlWidget({ setActiveTab, onOpenSOS, floating = false }
         </div>
         
         <span className="tracking-wide">
-          {isListening ? 'Listening...' : 'Voice AI'}
+          {isListening ? getListeningText() : getVoiceTitle()}
         </span>
 
         <Sparkles className={`w-3.5 h-3.5 ${isListening ? 'text-amber-300 animate-spin' : 'text-amber-400'}`} />
@@ -73,7 +93,7 @@ export function VoiceControlWidget({ setActiveTab, onOpenSOS, floating = false }
       {isListening && (
         <div className="absolute -top-10 right-0 bg-slate-950/95 border border-red-500/60 text-red-400 text-[11px] font-bold px-3 py-1 rounded-full shadow-lg whitespace-nowrap backdrop-blur-md flex items-center gap-1.5 animate-bounce">
           <Volume2 className="w-3 h-3 text-red-400 animate-pulse" />
-          <span>{transcript || 'Speak now...'}</span>
+          <span>{transcript || getListeningText()}</span>
         </div>
       )}
 

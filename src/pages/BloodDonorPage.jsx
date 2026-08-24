@@ -245,7 +245,7 @@ function BloodDonationMapComponent({ selectedGroup, donors }) {
   );
 }
 
-export const BloodDonorPage = () => {
+export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   const { t, language } = useLanguage();
   const { queueOfflineReport, isOnline } = useDemo();
 
@@ -262,11 +262,22 @@ export const BloodDonorPage = () => {
   }, []);
 
   // Form Parameters
-  const [selectedGroup, setSelectedGroup] = useState('O-');
+  const [selectedGroup, setSelectedGroup] = useState(initialQuery?.group || 'O-');
   const [patientName, setPatientName] = useState('');
   const [hospitalName, setHospitalName] = useState('Government General Hospital (GGH Vijayawada)');
   const [unitsNeeded, setUnitsNeeded] = useState(2);
   const [urgencyLevel, setUrgencyLevel] = useState('CRITICAL');
+
+  // Auto-trigger search if query passed from Home
+  useEffect(() => {
+    if (initialQuery) {
+      const grp = initialQuery.group || 'O-';
+      setSelectedGroup(grp);
+      if (initialQuery.query) setVoiceQuery(initialQuery.query);
+      handleRunCompatibilityMatch(grp, 2, initialQuery.query || '');
+      if (onClearQuery) onClearQuery();
+    }
+  }, [initialQuery]);
 
   // Results State
   const [loading, setLoading] = useState(false);
@@ -310,7 +321,7 @@ export const BloodDonorPage = () => {
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : 'en-US';
+    recognition.lang = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : language === 'kn' ? 'kn-IN' : 'en-IN';
     recognition.continuous = false;
     recognition.interimResults = false;
 

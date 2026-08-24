@@ -13,7 +13,6 @@
 | :--- | :--- |
 | **🚀 Production Web App** | **[https://resqone-ai-app.vercel.app](https://resqone-ai-app.vercel.app)** |
 | **📦 GitHub Repository** | **[https://github.com/srinivaspalnati22-png/RESQONE-AI](https://github.com/srinivaspalnati22-png/RESQONE-AI)** |
-| **📑 API Docs (Swagger UI)** | `http://localhost:8000/docs` |
 | **⚡ Local Dev / Preview Server** | `http://localhost:3000/` |
 
 ---
@@ -26,37 +25,37 @@
 
 ## 🌟 Flagship Features
 
-### 1. 🏎️ 3D Photorealistic Vehicle Crash Simulation & Real Humans
-- Real-time sensor fusion screening evaluating **Accelerometer G-Force spikes (4.85G)**, **3D Gyroscope angular rollover (68.4°)**, and **GPS speed drops (78 km/h → 0 km/h)**.
-- Ultra-realistic interactive 3D vehicle models (**High-Poly Sports Sedan, Superbike, ALS Ambulance**) with **animated forward spinning wheels** (alloy rims, ventilated brake discs, and Brembo calipers).
-- **3D Humans Inside Vehicles**: Driver & passenger in cockpit with realistic seatbelts and crash whiplash inertia, motorcycle racer in aerodynamic tuck, and paramedic crew in ambulance.
+### 1. 🛡️ AI Pre-Crash Proactive Safety Radar & 15s Decision Window
+- **Autonomous Sensor Fusion**: Continuously evaluates Accelerometer G-Force, 3D Gyroscope tilt, GPS speed, and MoRTH Highway Accident Blackspot corridors.
+- **Multilingual Spoken Audio Precautions**: Autodetects hazards (excessive speed $>110\text{ km/h}$, sharp curve blackspots on NH-16, sudden swerving) and provides immediate voice warnings in **English**, **తెలుగు (Telugu)**, **हिन्दी (Hindi)**, **தமிழ் (Tamil)**, and **ಕನ್ನಡ (Kannada)**.
+- **15-Second Interactive Decision Window**:
+  - 🛑 **User Listens**: Vehicle decelerates safely to $50\text{ km/h}$ with voice confirmation (*"Speed normalized. You are safe! Hazard avoided."*).
+  - ⚠️ **User Ignores / Timer Expires**: Simulates $4.85\text{G}$ catastrophic crash and immediately triggers the 25-second SOS countdown!
 
-### 2. 🗺️ 6-Stage Autonomous Multi-Agency Rescue Workflow
-- Auto-scrolls to live Leaflet radar map upon 25s crash countdown completion or manual dispatch.
-- **Hospital Acceptance**: GGH Vijayawada accepts case $\rightarrow$ **ALS-108 Ambulance drives along NH-16** with active rooftop beacon to Gollapudi crash scene $\rightarrow$ Paramedics stabilize patient $\rightarrow$ High-speed return via Green Corridor $\rightarrow$ Final **"Victim Arrived Safely at Hospital! 🎉"** celebration card with stable vitals ($120/80\text{ mmHg}$, $99\%\text{ SpO}_2$) and 5 family member SMS confirmation.
+### 2. ⏱️ 25-Second Emergency SOS Countdown & Multi-Stakeholder Broadcast
+- Ticks down second-by-second with a real-time circular glowing SVG progress ring.
+- Upon timer completion to $0\text{s}$ (or manual dispatch):
+  - 📱 Broadcasts live GPS coordinates to **5 Registered Family Members** via SMS.
+  - 🏥 Broadcasts telemetry to the **Regional Emergency Response Network (GGH Vijayawada)**.
+  - 🚑 Dispatches **ALS-108 Advanced Life Support Ambulance** with ICU Trauma Bay reservation.
 
-### 3. 🌐 First-Time Onboarding & Whole-App Language Switcher
-- New users first select their preferred language: **English**, **తెలుగు (Telugu)**, **हिन्दी (Hindi)**, **தமிழ் (Tamil)**, or **ಕನ್ನಡ (Kannada)**.
-- Choosing a language instantly translates all text, headings, buttons, and telemetry throughout the whole application.
-- Configurable **5 Priority Family SOS Contacts** transmitted during crash alerts.
+### 3. 🗺️ Live Highway GPS Map with Real 3D Moving Ambulance
+- **Animated 3D Ambulance**: Realistic 3D vehicle body with flashing red/blue LED strobe lightbars navigating along National Highway 16.
+- **Stabilization & Green Corridor Transit**: Paramedics stabilize the victim at the crash site and transport them via the green signal corridor to GGH ICU Trauma Bay with spoken voice updates.
 
-### 4. 🎙️ AI Multilingual Voice & Text Emergency Assistant
-- Directly on the Home Page hero section:
-  - **Voice Microphone Assistant**: Speaks & listens in Telugu (`te-IN`), English (`en-IN`), or Hindi (`hi-IN`).
-  - **Smart Voice/Text Directing**:
-    - 🩸 `"రక్తం కావాలి"` / `"Need Blood"` ➔ Directs to **Blood Donor Matcher**.
-    - 🐍 `"పాము కాటు"` / `"Snake Bite"` ➔ Directs to **Snakebite Antivenom Hub**.
-    - 🚨 `"వాహన ప్రమాదం"` / `"Car Crash"` ➔ Directs to **3D Crash Sensor Telemetry**.
-    - 🏥 `"సమీప ఆసుపత్రి"` / `"Nearest Hospital"` ➔ Directs to **Mission Control**.
+### 4. 🎛️ Universal Multi-Role Live Mission Dashboard
+Interactive live mission control supporting 5 dedicated stakeholder roles:
+- 👤 **Citizen / Victim (`user`)**: Live emergency tracking showing which hospital accepted and which ambulance is en route.
+- 🏥 **Hospital ER / ICU (`hospital`)**: `[ 🏥 ACCEPT PATIENT & RESERVE ICU BED ]` action button.
+- 🚑 **108 Rescue Team (`rescue`)**: `[ 🚨 ACCEPT RESCUE & DISPATCH AMBULANCE ]` action button.
+- 🩸 **Blood Donor (`donor`)**: `[ 🩸 ACCEPT BLOOD SOS & START COURIER ]` action button.
+- 🤝 **Volunteer First Responder (`volunteer`)**: `[ 🤝 ACCEPT VOLUNTEER DISPATCH ]` action button.
 
-### 5. 🔊 Authentic Telugu Audio Speech Output
-- Real-time voice guidance and audio announcements spoken aloud in authentic **Telugu** throughout all rescue steps, first-aid procedures, and emergency navigation.
-
-### 6. 🩸 Smart ABO/Rh Blood Donor & NHP Bank Registry
+### 5. 🩸 Smart ABO/Rh Blood Donor & NHP Bank Registry
 - Deterministic clinical ABO/Rh compatibility matching preventing lethal transfusion errors.
 - **Live Real GPS Map** plotting active community donors, National Health Portal (NHP) blood centers, and cold-chain cryo-courier transit corridors (4°C active temperature boxes).
 
-### 7. 🐍 Snakebite Clinical Toxicology & Antivenom (AVS) Locator
+### 6. 🐍 Snakebite Clinical Toxicology & Antivenom (AVS) Locator
 - **Authentic Scientific Photo Matrix** for India's "Big Four" venomous snakes (Spectacled Cobra, Russell's Viper, Common Krait, Saw-scaled Viper) + harmless lookalikes.
 - **Live GPS Victim-to-Hospital Radar Map** connecting victim coordinates to the nearest equipped AVS hospital with verified vial stocks and ICU ventilator beds.
 
@@ -78,8 +77,8 @@ npm run dev
 
 ---
 
-## 🚀 Deployment
+## 🚀 Continuous Deployment
 
-The app is configured for continuous deployment on **Vercel** connected directly to GitHub repository:
-- **Production URL**: [https://resqone-ai-app.vercel.app](https://resqone-ai-app.vercel.app)
-- **GitHub Repository**: [https://github.com/srinivaspalnati22-png/RESQONE-AI](https://github.com/srinivaspalnati22-png/RESQONE-AI)
+The application is deployed live on **Vercel** and automatically synchronizes with the `main` branch of this GitHub repository:
+- **Production URL**: **[https://resqone-ai-app.vercel.app](https://resqone-ai-app.vercel.app)**
+- **GitHub Repository**: **[https://github.com/srinivaspalnati22-png/RESQONE-AI](https://github.com/srinivaspalnati22-png/RESQONE-AI)**

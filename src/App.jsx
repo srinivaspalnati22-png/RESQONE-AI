@@ -16,7 +16,6 @@ import { stopAllAudio } from './services/audio_service';
 
 // Code-split heavy secondary pages for instant load across all platforms
 const AccidentPage = lazy(() => import('./pages/AccidentPage').then(m => ({ default: m.AccidentPage })));
-const EmergencyCopilotPage = lazy(() => import('./pages/EmergencyCopilotPage').then(m => ({ default: m.EmergencyCopilotPage })));
 const BloodDonorPage = lazy(() => import('./pages/BloodDonorPage').then(m => ({ default: m.BloodDonorPage })));
 const SnakebitePage = lazy(() => import('./pages/SnakebitePage').then(m => ({ default: m.SnakebitePage })));
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
@@ -95,8 +94,15 @@ function AppContent() {
     return () => accidentDetector.stopMonitoring();
   }, []);
 
+  const [sharedQuery, setSharedQuery] = useState(null);
+
+  const navigateWithQuery = (tab, queryData) => {
+    setSharedQuery(queryData);
+    setActiveTab(tab);
+  };
+
   const handleSimulateCrash = () => {
-    setActiveTab('accident');
+    navigateWithQuery('accident', { autoTrigger: true });
   };
 
   const renderTab = () => {
@@ -116,15 +122,10 @@ function AppContent() {
         return (
           <TabErrorBoundary>
             <Suspense fallback={<PageLoadingFallback />}>
-              <AccidentPage />
-            </Suspense>
-          </TabErrorBoundary>
-        );
-      case 'copilot':
-        return (
-          <TabErrorBoundary>
-            <Suspense fallback={<PageLoadingFallback />}>
-              <EmergencyCopilotPage setActiveTab={setActiveTab} />
+              <AccidentPage 
+                initialQuery={sharedQuery} 
+                onClearQuery={() => setSharedQuery(null)} 
+              />
             </Suspense>
           </TabErrorBoundary>
         );
@@ -132,7 +133,10 @@ function AppContent() {
         return (
           <TabErrorBoundary>
             <Suspense fallback={<PageLoadingFallback />}>
-              <BloodDonorPage />
+              <BloodDonorPage 
+                initialQuery={sharedQuery} 
+                onClearQuery={() => setSharedQuery(null)} 
+              />
             </Suspense>
           </TabErrorBoundary>
         );
@@ -140,7 +144,10 @@ function AppContent() {
         return (
           <TabErrorBoundary>
             <Suspense fallback={<PageLoadingFallback />}>
-              <SnakebitePage />
+              <SnakebitePage 
+                initialQuery={sharedQuery} 
+                onClearQuery={() => setSharedQuery(null)} 
+              />
             </Suspense>
           </TabErrorBoundary>
         );
@@ -148,7 +155,10 @@ function AppContent() {
         return (
           <TabErrorBoundary>
             <Suspense fallback={<PageLoadingFallback />}>
-              <DashboardPage />
+              <DashboardPage 
+                initialQuery={sharedQuery} 
+                onClearQuery={() => setSharedQuery(null)} 
+              />
             </Suspense>
           </TabErrorBoundary>
         );
@@ -164,7 +174,11 @@ function AppContent() {
       default:
         return (
           <TabErrorBoundary>
-            <LandingPage setActiveTab={setActiveTab} onSimulateCrash={handleSimulateCrash} />
+            <LandingPage 
+              setActiveTab={setActiveTab} 
+              navigateWithQuery={navigateWithQuery} 
+              onSimulateCrash={handleSimulateCrash} 
+            />
           </TabErrorBoundary>
         );
     }
