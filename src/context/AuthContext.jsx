@@ -18,17 +18,29 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isOnboarded, setIsOnboarded] = useState(() => {
-    return localStorage.getItem('resqone_is_onboarded') === 'true';
+    try {
+      return localStorage.getItem('resqone_is_onboarded') === 'true';
+    } catch {
+      return false;
+    }
   });
 
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('resqone_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('resqone_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
   const [familyContacts, setFamilyContacts] = useState(() => {
-    const saved = localStorage.getItem('resqone_family_contacts');
-    return saved ? JSON.parse(saved) : DEFAULT_FAMILY_CONTACTS;
+    try {
+      const saved = localStorage.getItem('resqone_family_contacts');
+      return saved ? JSON.parse(saved) : DEFAULT_FAMILY_CONTACTS;
+    } catch {
+      return DEFAULT_FAMILY_CONTACTS;
+    }
   });
 
   const [session, setSession] = useState(null);

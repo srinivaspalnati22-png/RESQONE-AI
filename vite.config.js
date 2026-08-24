@@ -27,27 +27,6 @@ export default defineConfig({
   build: {
     target: 'es2020',
     cssCodeSplit: true,
-    chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('three') || id.includes('@react-three')) {
-              return 'vendor-three';
-            }
-            if (id.includes('leaflet') || id.includes('react-leaflet') || id.includes('@react-google-maps')) {
-              return 'vendor-maps';
-            }
-            if (id.includes('framer-motion') || id.includes('lucide-react')) {
-              return 'vendor-ui';
-            }
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase';
-            }
-            return 'vendor-core';
-          }
-        }
-      }
-    }
+    chunkSizeWarningLimit: 1500
   }
 })
