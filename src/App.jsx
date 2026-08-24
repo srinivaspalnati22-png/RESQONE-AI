@@ -68,16 +68,10 @@ class TabErrorBoundary extends Component {
 
 function AppContent() {
   const { isOnboarded } = useAuth();
-  const [activeTab, setActiveTab] = useState(() => (isOnboarded ? 'home' : 'auth'));
+  // Always show Auth / Registration page first when opening the application
+  const [activeTab, setActiveTab] = useState('auth');
   const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
   const [accidentDetails, setAccidentDetails] = useState(null);
-
-  // Sync tab if onboarding status changes
-  useEffect(() => {
-    if (!isOnboarded && activeTab !== 'auth') {
-      setActiveTab('auth');
-    }
-  }, [isOnboarded]);
 
   // Stop any audio speech immediately whenever active tab is changed
   useEffect(() => {
