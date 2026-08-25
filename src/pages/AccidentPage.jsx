@@ -37,37 +37,37 @@ export const AccidentPage = () => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.25 }}
-      className="w-full pb-28 pt-4 px-3 sm:px-4 max-w-5xl mx-auto space-y-6"
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="w-full pb-28 pt-2 px-2 sm:px-4 space-y-4 font-sans"
     >
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 border border-red-500/40 text-white flex items-center justify-center shadow-lg shadow-red-950/60">
-            <AlertOctagon className="w-6 h-6 animate-pulse" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/[0.08] pb-3">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 border border-red-500/40 text-white flex items-center justify-center shadow-lg shadow-red-950/60 shrink-0">
+            <AlertOctagon className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-xl font-extrabold text-white">
-                {t('sim_title') || '3D Real-Time Vehicle Crash & Autonomous Multi-Agency Rescue'}
+            <div className="flex items-center space-x-1.5 flex-wrap">
+              <h2 className="text-xs sm:text-sm font-black text-white tracking-wide">
+                {t('sim_title') || '3D Real-Time Crash & Rescue'}
               </h2>
-              <span className="bg-red-600/20 text-red-400 border border-red-500/40 text-[10px] font-mono font-black px-2.5 py-0.5 rounded-full uppercase">
-                SENSOR FUSION LIVE
+              <span className="bg-red-600/20 text-red-400 border border-red-500/40 text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase">
+                LIVE
               </span>
             </div>
-            <p className="text-xs text-slate-300">
-              {t('sim_subtitle') || 'Live sensor fusion evaluating Accelerometer G-Force, 3D Gyroscope, and GPS Speed drop.'}
+            <p className="text-[10px] text-slate-400">
+              Sensor fusion evaluating Accelerometer G-Force, 3D Gyroscope & GPS
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs font-mono text-emerald-400 self-start sm:self-auto">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-          <span>MULTI-SENSOR ACTIVE</span>
+        <div className="flex items-center space-x-1.5 text-[10px] font-mono text-emerald-400 self-start sm:self-auto bg-[#050A14] px-2.5 py-1 rounded-xl border border-white/[0.06]">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>SENSORS ACTIVE</span>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDemo } from '../context/DemoContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { DemoToggle } from '../components/DemoToggle';
 import LiveLocationMap from '../components/LiveLocationMap';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';

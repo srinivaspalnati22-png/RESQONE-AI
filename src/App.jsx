@@ -1,7 +1,8 @@
-import React, { useState, useEffect, lazy, Suspense, Component } from 'react';
+import React, { useState, useEffect, lazy, Suspense, Component, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DemoProvider } from './context/DemoContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { ViewModeProvider, useViewMode } from './context/ViewModeContext';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -68,14 +69,21 @@ class TabErrorBoundary extends Component {
 
 function AppContent() {
   const { isOnboarded } = useAuth();
-  // Always show Auth / Registration page first when opening the application
+  const { viewMode, setViewMode } = useViewMode();
   const [activeTab, setActiveTab] = useState('auth');
   const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
   const [accidentDetails, setAccidentDetails] = useState(null);
 
-  // Stop any audio speech immediately whenever active tab is changed
+  // Stop audio when LEAVING a page (not when arriving), to avoid killing audio
+  // that a newly mounted page triggers right after navigation.
+  const prevTabRef = useRef(activeTab);
   useEffect(() => {
-    stopAllAudio();
+    const prevTab = prevTabRef.current;
+    // Only stop audio when leaving audio-producing tabs (not on the initial mount)
+    if (prevTab !== activeTab) {
+      stopAllAudio();
+    }
+    prevTabRef.current = activeTab;
   }, [activeTab]);
 
   useEffect(() => {
@@ -96,7 +104,16 @@ function AppContent() {
   };
 
   const handleSimulateCrash = () => {
-    navigateWithQuery('accident', { autoTrigger: true });
+    setAccidentDetails({
+      gForce: 4.85,
+      impactSpeed: 88,
+      lat: 16.5062,
+      lng: 80.6480,
+      timestamp: new Date().toLocaleTimeString(),
+      severity: 'CRITICAL',
+      location: 'NH-16 Corridor, Vijayawada'
+    });
+    setIsAccidentModalOpen(true);
   };
 
   const renderTab = () => {
@@ -105,7 +122,12 @@ function AppContent() {
       return (
         <TabErrorBoundary>
           <Suspense fallback={<PageLoadingFallback />}>
-            <AuthPage onOnboardingComplete={() => setActiveTab('home')} />
+            <AuthPage 
+              onOnboardingComplete={() => setActiveTab('home')} 
+              onBack={() => setActiveTab('home')}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+            />
           </Suspense>
         </TabErrorBoundary>
       );
@@ -150,8 +172,7 @@ function AppContent() {
           <TabErrorBoundary>
             <Suspense fallback={<PageLoadingFallback />}>
               <DashboardPage 
-                initialQuery={sharedQuery} 
-                onClearQuery={() => setSharedQuery(null)} 
+                setActiveTab={setActiveTab}
               />
             </Suspense>
           </TabErrorBoundary>
@@ -160,7 +181,12 @@ function AppContent() {
         return (
           <TabErrorBoundary>
             <Suspense fallback={<PageLoadingFallback />}>
-              <AuthPage onOnboardingComplete={() => setActiveTab('home')} />
+              <AuthPage 
+                onOnboardingComplete={() => setActiveTab('home')} 
+                onBack={() => setActiveTab('home')}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+              />
             </Suspense>
           </TabErrorBoundary>
         );
@@ -171,7 +197,8 @@ function AppContent() {
             <LandingPage 
               setActiveTab={setActiveTab} 
               navigateWithQuery={navigateWithQuery} 
-              onSimulateCrash={handleSimulateCrash} 
+              onSimulateCrash={handleSimulateCrash}
+              viewMode={viewMode}
             />
           </TabErrorBoundary>
         );
@@ -179,25 +206,31 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-dvh text-slate-100 flex flex-col font-sans relative selection:bg-red-600 selection:text-white bg-[#050A14]">
+    <div className="min-h-dvh text-slate-100 flex flex-col font-sans relative selection:bg-red-600 selection:text-white bg-[#03060B]">
       
-      {/* Fixed Ambient Glow Background (Zero Video Overhead) */}
+      {/* Fixed Ambient Glow Background */}
       <BackgroundVideo activeTab={activeTab} />
 
-      {/* Top Header Navbar with Language Switcher & SOS Trigger */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onSimulateCrash={handleSimulateCrash} />
+      {/* Top Header Navbar */}
+      <Navbar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onSimulateCrash={handleSimulateCrash}
+      />
       
       {/* Network / Offline Banner */}
       <OfflineIndicator />
 
-      {/* Main Viewport Container */}
-      <main className="flex-1 w-full relative z-10">
+      {/* Main Viewport Container dynamically adapting to Mobile View or Desktop View */}
+      <main className={`flex-1 w-full relative z-10 transition-all duration-300 ${
+        viewMode === 'mobile' ? 'max-w-md mx-auto' : 'max-w-6xl mx-auto px-4'
+      }`}>
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            key={`${activeTab}-${viewMode}`}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="w-full"
           >
@@ -206,7 +239,7 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Floating Navigation Bar (Mobile / Tablet) */}
+      {/* Bottom Floating Navigation Bar */}
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Automated Crash Modal Triggered by Physics Thresholds */}
@@ -228,7 +261,9 @@ export default function App() {
     <AuthProvider>
       <DemoProvider>
         <LanguageProvider>
-          <AppContent />
+          <ViewModeProvider>
+            <AppContent />
+          </ViewModeProvider>
         </LanguageProvider>
       </DemoProvider>
     </AuthProvider>

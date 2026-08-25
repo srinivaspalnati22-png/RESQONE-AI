@@ -345,25 +345,30 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.25 }}
-      className="w-full pb-28 pt-4 px-3 sm:px-4 max-w-5xl mx-auto space-y-6"
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="w-full pb-28 pt-2 px-2 sm:px-4 space-y-4 font-sans"
     >
       
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-500/40 text-slate-950 flex items-center justify-center shadow-lg shadow-cyan-950/50">
-            <Activity className="w-6 h-6 stroke-[2.5]" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-white/[0.08] pb-3">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-500/40 text-slate-950 flex items-center justify-center shadow-lg shadow-cyan-950/50 shrink-0">
+            <Activity className="w-5 h-5 stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white">
-              {t('snake_title') || 'Snakebite Clinical Triage & Antivenom Locator'}
-            </h2>
-            <p className="text-xs text-slate-300">
-              Voice-assisted toxin triage, live GPS victim-to-hospital map, and emergency WHO first-aid precautions
+            <div className="flex items-center space-x-1.5 flex-wrap">
+              <h2 className="text-xs sm:text-sm font-black text-white tracking-wide">
+                {t('snake_title') || 'Snakebite Triage & Antivenom Locator'}
+              </h2>
+              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase">
+                AVS LIVE
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              Voice-assisted toxin triage & hospital antivenom stock radar
             </p>
           </div>
         </div>
@@ -371,16 +376,16 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
         {hasTriaged && (
           <button
             onClick={handleReset}
-            className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-colors flex items-center space-x-1.5 self-start sm:self-auto cursor-pointer"
+            className="px-3 py-1.5 bg-[#050A14] hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-[10px] font-bold border border-white/[0.08] transition-colors flex items-center space-x-1 self-start sm:self-auto cursor-pointer"
           >
-            <XCircle className="w-4 h-4 text-cyan-400" />
-            <span>New Snakebite Triage</span>
+            <XCircle className="w-3.5 h-3.5 text-cyan-400" />
+            <span>New Triage</span>
           </button>
         )}
       </div>
 
       {/* 1. Voice & Text Incident Input Card */}
-      <div className="bg-[#0B1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-cyan-500/30 space-y-4 shadow-2xl">
+      <div className="bg-[#080E1C]/95 backdrop-blur-xl p-3.5 sm:p-5 rounded-3xl border border-cyan-500/30 space-y-3 shadow-2xl">
         <div className="flex items-center justify-between">
           <label className="text-xs font-extrabold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
             <Sparkles className="w-4 h-4 text-cyan-400" />
