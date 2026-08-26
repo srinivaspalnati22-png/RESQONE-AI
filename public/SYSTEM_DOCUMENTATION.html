@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESQONE AI+ — Complete System Architecture & Operational Manual</title>
+  <style>
+    :root {
+      --primary: #ef4444;
+      --primary-dark: #b91c1c;
+      --bg: #0b1220;
+      --card: #111d33;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #1e293b;
+      --accent: #00f0ff;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.7;
+      color: #334155;
+      background: #f8fafc;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      border: 1px solid #e2e8f0;
+    }
+    .header {
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      color: #0f172a;
+      font-size: 32px;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .links {
+      font-size: 14px;
+      color: #64748b;
+    }
+    .links a {
+      color: #0284c7;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    h2 {
+      color: #0f172a;
+      font-size: 22px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-top: 40px;
+    }
+    h3 {
+      color: #1e293b;
+      font-size: 18px;
+      margin-top: 24px;
+    }
+    p, li {
+      font-size: 15px;
+      color: #334155;
+    }
+    code {
+      background: #f1f5f9;
+      color: #dc2626;
+      font-family: monospace;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 20px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    blockquote {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+      padding: 12px 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      color: #991b1b;
+    }
+    .print-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+    .print-btn {
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .print-btn:hover {
+      background: #ef4444;
+    }
+    @media print {
+      body { background: #fff; }
+      .container { max-width: 100%; margin: 0; padding: 0; box-shadow: none; border: none; }
+      .print-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="print-bar">
+    <button class="print-btn" onclick="window.print()">🖨️ Save as PDF / Print Document</button>
+  </div>
+
+  <div class="header">
+    <h1>🛡️ RESQONE AI+ <span class="badge">SYSTEM MANUAL</span></h1>
+    <div class="links">
+      <strong>Live Application:</strong> <a href="https://resqone-ai-app.vercel.app" target="_blank">https://resqone-ai-app.vercel.app</a> &nbsp;|&nbsp;
+      <strong>GitHub Repository:</strong> <a href="https://github.com/srinivaspalnati22-png/RESQONE-AI" target="_blank">srinivaspalnati22-png/RESQONE-AI</a>
+    </div>
+  </div>
+
+  <h2>1. Executive Summary & Core Mission</h2>
+  <p><strong>RESQONE AI+</strong> is a unified, offline-first emergency intelligence and multimodal rescue coordination ecosystem. It bridges the critical "Golden Hour" gap during life-threatening crises by automating:</p>
+  <ul>
+    <li><strong>Zero-Touch Crash Detection:</strong> Continuous 3-axis accelerometer and gyroscope physics monitoring that triggers rescue even if victims are unconscious.</li>
+    <li><strong>Polyvalent Antivenom (AVS) Logistics:</strong> Image/symptom species classification linked with real-time vial inventory at nearby tertiary hospitals.</li>
+    <li><strong>Hyper-Local Blood Mesh:</strong> Cryo-courier temperature tracking and instant ABO/Rh match dispatch within a 15 km radius.</li>
+    <li><strong>Real-Time 108 CAD Integration:</strong> Automated green-corridor ambulance routing and ICU trauma bay bed reservations.</li>
+  </ul>
+
+  <h2>2. High-Level Architecture & Realtime Mesh</h2>
+  <pre><code>                     ┌──────────────────────────────────────────────┐
+                     │           RESQONE AI+ CLIENT LAYER          │
+                     │  (PWA Mobile / Desktop / Native Flutter App) │
+                     └──────────────────────┬───────────────────────┘
+                                            │
+               ┌────────────────────────────┼────────────────────────────┐
+               ▼                            ▼                            ▼
+  ┌─────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐
+  │  Offline Sensor Daemon  │  │  NLP Voice Triage & AI  │  │  PWA Service Worker &   │
+  │  (IMU 3-Axis / GPS CAD) │  │  (Multilingual Triage)  │  │  IndexedDB Offline Sync │
+  └────────────┬────────────┘  └────────────┬────────────┘  └────────────┬────────────┘
+               │                            │                            │
+               └────────────────────────────┼────────────────────────────┘
+                                            │
+                                            ▼
+                     ┌──────────────────────────────────────────────┐
+                     │          SUPABASE REALTIME MESH              │
+                     │  Channel: `resqone_emergency_mesh` (WebRTC)  │
+                     └──────────────────────┬───────────────────────┘
+                                            │
+         ┌───────────────────┬──────────────┴──────┬───────────────────┐
+         ▼                   ▼                     ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐  ┌───────────────────┐ ┌─────────────────┐
+│   Citizen SOS   │ │  Hospital ER    │  │  108 Rescue CAD   │ │  Blood Donors   │
+│ (GPS + SMS Out) │ │ (ICU Bay + AVS) │  │  (ALS Green Route)│ │ (ABO/Rh Match)  │
+└─────────────────┘ └─────────────────┘  └───────────────────┘ └─────────────────┘</code></pre>
+
+  <h2>3. Page-by-Page & Button-by-Button Documentation</h2>
+
+  <h3>🏠 Page 1: Home Command Hub (<code>LandingPage.jsx</code>)</h3>
+  <ul>
+    <li><strong>Microphone Button (<code>Mic</code>):</strong> Starts speech recognition in Telugu, Hindi, Tamil, Kannada, or English.</li>
+    <li><strong>NLP Emergency Search Bar:</strong> Evaluates natural-language typed or spoken emergencies and automatically navigates to the matching sector.</li>
+    <li><strong>Quick Action Chips (<code>🩸 O- Blood</code>, <code>🐍 Snake Bite AVS</code>, <code>🚗 108 Crash</code>):</strong> Instant 1-tap sector triggers.</li>
+    <li><strong>4 Department Navigation Cards:</strong> Instant entry to 3D Crash, Blood Donor, Snakebite AI, and Hospital ER modules.</li>
+  </ul>
+
+  <h3>🚗 Page 2: 3D Crash Detection & Accident Rescue (<code>AccidentPage.jsx</code>)</h3>
+  <ul>
+    <li><strong>3D Three.js Vehicle Canvas:</strong> Interactive chassis rotation, roll/pitch/yaw visualization, and crumple-zone inspection.</li>
+    <li><strong>Simulation Buttons (<code>Simulate 4.85G Crash</code> & <code>Simulate Side-Impact T-Bone</code>):</strong> Injects physics telemetry spikes to test automated workflows.</li>
+    <li><strong>"Dispatch ALS-108 Ambulance" Button:</strong> Generates green-corridor CAD navigation for ambulance <code>AP-TRAUMA-99</code>.</li>
+    <li><strong>"Reserve Trauma ICU Bed" Button:</strong> Reserves ICU Trauma Bay #4 at GGH Vijayawada.</li>
+    <li><strong>"Send SMS to 5 Family Contacts" Button:</strong> Sends SMS alerts with live GPS tracking links.</li>
+  </ul>
+
+  <h3>🩸 Page 3: Universal Blood Bank & Donor Mesh (<code>BloodDonorPage.jsx</code>)</h3>
+  <ul>
+    <li><strong>ABO/Rh Blood Group Filters (<code>O-</code>, <code>O+</code>, <code>A-</code>, <code>A+</code>, <code>B-</code>, <code>B+</code>, <code>AB-</code>, <code>AB+</code>):</strong> Queries live donor availability.</li>
+    <li><strong>"Request Immediate Blood Courier" Button:</strong> Dispatches a temperature-controlled (4°C) cryo-courier drone/bike.</li>
+    <li><strong>"Register as Voluntary Blood Donor" Button:</strong> Opens onboarding modal to register as an emergency donor.</li>
+    <li><strong>"Toggle Availability (🟢 Available / ⚪ Busy)" Button:</strong> Toggles donor active status in the matching pool.</li>
+  </ul>
+
+  <h3>🐍 Page 4: Snakebite AI & Antivenom Locator (<code>SnakebitePage.jsx</code>)</h3>
+  <ul>
+    <li><strong>"Take Photo / Upload Snake Image" Button:</strong> Runs computer vision species classification (Spectacled Cobra, Russell's Viper, Saw-scaled Viper, Common Krait).</li>
+    <li><strong>Symptom Triage Checklist:</strong> Toggles <em>Rapid Swelling, Ptosis, Bleeding, Respiratory Distress</em>.</li>
+    <li><strong>"Calculate Required AVS Dosage" Button:</strong> Computes initial pediatric/adult antivenom vial dosage.</li>
+    <li><strong>"Find Nearest AVS Stocked Hospital" Button:</strong> Maps tertiary hospitals with verified antivenom cold-storage.</li>
+    <li><strong>"Call Hospital Emergency Room Direct" Button:</strong> 1-touch telephone dialer to the ER on-duty toxicologist.</li>
+  </ul>
+
+  <h3>📊 Page 5: Role-Specific Mission Control Dashboard (<code>DashboardPage.jsx</code>)</h3>
+  <ul>
+    <li><strong>Citizen Mode:</strong> Personal SOS tracker, family SMS dispatch, assigned 108 ambulance ETA (Accept button hidden for safety).</li>
+    <li><strong>Hospital ER Mode:</strong> Trauma Bay ICU bed allocations (12 Available), Polyvalent AVS cold-storage (395 Vials), surgery suites with an <strong>"Admit Emergency Patient"</strong> button.</li>
+    <li><strong>108 Rescue Mode:</strong> Advanced Life Support unit telemetry with an <strong>"Activate Green Corridor"</strong> button.</li>
+    <li><strong>Blood Bank Mode:</strong> Regional ABO/Rh inventory with a <strong>"Dispatch Cryo-Courier"</strong> button.</li>
+    <li><strong>First Responder Mode:</strong> 3.5km local CAD emergency radius with an <strong>"Accept Volunteer Mission"</strong> button.</li>
+  </ul>
+
+  <h3>👤 Page 6: Authentication, Google OAuth & Profiles (<code>AuthPage.jsx</code>)</h3>
+  <ul>
+    <li><strong>Stakeholder Role Selector:</strong> Citizen, Hospital ER, 108 Rescue, Blood Donor, or Volunteer.</li>
+    <li><strong>"Continue with Google" Button:</strong> Supabase Google OAuth 2.0 with dynamic origin redirect.</li>
+    <li><strong>"1-Tap Quick Demo Access" Button:</strong> Instant guest authorization for evaluation.</li>
+    <li><strong>"Next: Setup 5 Family SOS Contacts" & "Complete Registration" Buttons:</strong> Responsive form submission with safe-area bottom clearance.</li>
+  </ul>
+
+  <h2>4. Summary of Core Pages & URLs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Page Name</th>
+        <th>Route / Active Tab</th>
+        <th>Primary Purpose</th>
+        <th>Key Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Home Hub</strong></td>
+        <td><code>home</code></td>
+        <td>NLP Voice Triage & System Overview</td>
+        <td>Multilingual Voice Emergency Router</td>
+      </tr>
+      <tr>
+        <td><strong>Crash 3D</strong></td>
+        <td><code>accident</code></td>
+        <td>3D Physics Crash Detection & 108 CAD</td>
+        <td>108 Ambulance & Trauma Bay Dispatch</td>
+      </tr>
+      <tr>
+        <td><strong>Blood Finder</strong></td>
+        <td><code>blood</code></td>
+        <td>Regional ABO/Rh Donor & Cryo-Courier</td>
+        <td>1-Tap 4°C Blood Transport Dispatch</td>
+      </tr>
+      <tr>
+        <td><strong>Snakebite AI</strong></td>
+        <td><code>snakebite</code></td>
+        <td>Species Vision AI & AVS Stock Finder</td>
+        <td>Antivenom Dosage Calculation & ER Call</td>
+      </tr>
+      <tr>
+        <td><strong>Missions</strong></td>
+        <td><code>dashboard</code></td>
+        <td>Multi-Stakeholder Role Command Center</td>
+        <td>Role-Specific Mission Acceptance & Triage</td>
+      </tr>
+      <tr>
+        <td><strong>Account</strong></td>
+        <td><code>auth</code></td>
+        <td>Google OAuth, Profile & 5 Family Contacts</td>
+        <td>Emergency Contacts Configuration</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <blockquote style="margin-top: 40px;">
+    <strong>Developed by:</strong> RESQONE AI+ Emergency Intelligence Team<br>
+    <em>Unified AI-Powered Offline Emergency Intelligence & Rescue Coordination Platform</em>
+  </blockquote>
+</div>
+
+</body>
+</html>
