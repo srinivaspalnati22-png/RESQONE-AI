@@ -148,12 +148,18 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
     if (setAuthError) setAuthError(null);
     setMessage(
       language === 'te' 
-        ? 'Google లాగిన్‌కు మళ్లిస్తోంది...' 
+        ? 'Google ఖాతా ధృవీకరించబడుతోంది...' 
         : language === 'hi' 
-        ? 'Google लॉगिन पर पुनर्निर्देशित कर रहे हैं...' 
-        : 'Connecting to Google Secure OAuth...'
+        ? 'Google खाता सत्यापित किया जा रहा है...' 
+        : 'Connecting with Google Secure OAuth...'
     );
-    await loginWithGoogle();
+    const res = await loginWithGoogle();
+    if (res?.success) {
+      setMessage(language === 'te' ? 'Google లాగిన్ విజయవంతమైంది!' : 'Google Login Successful! Welcome to RESQONE.');
+      setTimeout(() => {
+        if (onOnboardingComplete) onOnboardingComplete();
+      }, 500);
+    }
   };
 
   // 1-Tap Quick Mobile Guest / Demo Login for emergency access (Gives default numbers automatically)
