@@ -101,15 +101,22 @@ export const Navbar = ({ setActiveTab }) => {
         <button
           type="button"
           onClick={() => setActiveTab && setActiveTab('home')}
-          className="flex items-center space-x-2 cursor-pointer group"
+          className="flex items-center space-x-2.5 cursor-pointer group"
           aria-label="RESQONE AI Home"
         >
-          <span className="font-black text-xl tracking-tight text-white font-sans">
-            RESQ<span className="text-red-500">ONE</span>
-          </span>
-          <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded-md shadow-md shadow-amber-500/20 font-sans tracking-wide">
-            AI+
-          </span>
+          <img 
+            src="/resqone_logo.jpg" 
+            alt="RESQONE AI+ Logo" 
+            className="w-8 h-8 rounded-xl object-cover shadow-lg border border-red-500/40 group-hover:scale-105 transition-transform" 
+          />
+          <div className="flex items-center space-x-1.5">
+            <span className="font-black text-xl tracking-tight text-white font-sans">
+              RESQ<span className="text-red-500">ONE</span>
+            </span>
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-md shadow-amber-500/20 font-sans tracking-wide">
+              AI+
+            </span>
+          </div>
         </button>
 
         {/* Right: Notifications, View Mode, & Language */}

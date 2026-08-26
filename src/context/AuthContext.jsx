@@ -53,7 +53,6 @@ export const AuthProvider = ({ children }) => {
       setSession(session);
       if (session?.user) {
         syncProfile(session.user);
-        // Clean URL hash if tokens were passed
         if (window.location.hash && window.location.hash.includes('access_token')) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -262,12 +261,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('resqone_user', JSON.stringify(updated));
   };
 
-  // Google OAuth with live URL redirect & automatic window redirection
+  // Google OAuth with explicit production redirectTo
   const loginWithGoogle = async () => {
     setLoading(true);
     setAuthError(null);
     try {
-      const redirectUrl = typeof window !== 'undefined' ? window.location.origin : 'https://resqone-ai-app.vercel.app';
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      const redirectUrl = isLocal ? window.location.origin : 'https://resqone-ai-app.vercel.app';
+
       const { data, error } = await supabase.auth.signInWithOAuth({ 
         provider: 'google',
         options: {

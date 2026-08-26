@@ -324,8 +324,8 @@ export const LandingPage = ({ setActiveTab, navigateWithQuery, onSimulateCrash }
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-red-500 to-amber-500 flex items-center justify-center shadow-lg shrink-0">
-              <Shield className="w-3.5 h-3.5 text-white fill-white/20" />
+            <div className="w-8 h-8 rounded-xl overflow-hidden shadow-lg border border-red-500/40 shrink-0">
+              <img src="/resqone_logo.jpg" alt="RESQONE AI+ Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="flex items-center gap-1">
@@ -435,8 +435,8 @@ export const LandingPage = ({ setActiveTab, navigateWithQuery, onSimulateCrash }
 
         {/* Branding Header */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500 to-amber-500 flex items-center justify-center shadow-xl shadow-red-500/30 border border-red-400/40">
-            <Shield className="w-5 h-5 fill-white/20 text-white" />
+          <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-xl shadow-red-500/30 border border-red-400/40 shrink-0">
+            <img src="/resqone_logo.jpg" alt="RESQONE AI+ Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <div className="flex items-center gap-2">
