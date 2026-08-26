@@ -16,7 +16,9 @@ export function NotificationPermissionBanner() {
   useEffect(() => {
     // 1. Detect if running as installed standalone PWA
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    setIsInstalled(isStandalone);
+    const isSavedInstalled = localStorage.getItem('resqone_pwa_installed') === 'true';
+    const isInstalledApp = isStandalone || isSavedInstalled;
+    setIsInstalled(isInstalledApp);
 
     // 2. Detect iOS / Safari
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -24,6 +26,10 @@ export function NotificationPermissionBanner() {
     setIsIOS(isIosDevice);
 
     // 3. Check Notification Permission
+    const hasGrantedNotif = 'Notification' in window && Notification.permission === 'granted';
+    const isSavedNotif = localStorage.getItem('resqone_notif_enabled') === 'true';
+    const isNotifActive = hasGrantedNotif || isSavedNotif;
+
     if ('Notification' in window) {
       setNotifPermission(Notification.permission);
     }
@@ -35,19 +41,21 @@ export function NotificationPermissionBanner() {
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    // 5. Check if modal should open (after 1.5s on app launch)
-    const dismissedSession = sessionStorage.getItem('resqone_onboarding_popup_closed');
-    if (!dismissedSession) {
-      const timer = setTimeout(() => {
-        // Show if not granted notifications OR not in standalone mode
-        if (Notification?.permission !== 'granted' || !isStandalone) {
-          setShowModal(true);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
+    // 5. If user installed OR enabled notifications OR dismissed, NEVER show popup
+    const isDismissed = localStorage.getItem('resqone_popup_dismissed') === 'true';
+    if (isInstalledApp || isNotifActive || isDismissed) {
+      return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     }
 
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    // Show popup after 1.5s only for completely fresh users who haven't installed or enabled notifications
+    const timer = setTimeout(() => {
+      setShowModal(true);
+    }, 1500);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
   }, []);
 
   // 1-Tap Combined Action: Enable Notifications + Trigger App Install
@@ -59,6 +67,7 @@ export function NotificationPermissionBanner() {
         const permission = await Notification.requestPermission();
         setNotifPermission(permission);
         if (permission === 'granted') {
+          localStorage.setItem('resqone_notif_enabled', 'true');
           try {
             new Notification("🚨 RESQONE AI+ Alerts Activated", {
               body: "24/7 High-speed crash telemetry and blood crisis dispatches are now active on your device.",
@@ -70,6 +79,8 @@ export function NotificationPermissionBanner() {
       } catch (err) {
         console.warn("Notification error:", err);
       }
+    } else {
+      localStorage.setItem('resqone_notif_enabled', 'true');
     }
 
     // 2. Trigger PWA Install
@@ -79,28 +90,34 @@ export function NotificationPermissionBanner() {
         const choiceResult = await deferredPrompt.userChoice;
         if (choiceResult.outcome === 'accepted') {
           setIsInstalled(true);
+          localStorage.setItem('resqone_pwa_installed', 'true');
         }
         setDeferredPrompt(null);
       } catch (e) {
         console.warn("PWA install error:", e);
       }
+    } else {
+      localStorage.setItem('resqone_pwa_installed', 'true');
     }
 
+    localStorage.setItem('resqone_popup_dismissed', 'true');
     setIsEnabling(false);
     setShowModal(false);
-    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
   };
 
   // Only Notifications
   const handleEnableOnlyNotifications = async () => {
     if (!('Notification' in window)) {
       alert("Push notifications are not supported in this browser.");
+      localStorage.setItem('resqone_popup_dismissed', 'true');
+      setShowModal(false);
       return;
     }
     try {
       const permission = await Notification.requestPermission();
       setNotifPermission(permission);
       if (permission === 'granted') {
+        localStorage.setItem('resqone_notif_enabled', 'true');
         new Notification("🚨 RESQONE AI+ Alerts Activated", {
           body: "24/7 High-speed crash telemetry and blood crisis dispatches are active.",
           icon: "/resqone_logo.jpg"
@@ -108,29 +125,13 @@ export function NotificationPermissionBanner() {
         speakEmergencyInstruction("Emergency notifications enabled.", language);
       }
     } catch (e) {}
+    localStorage.setItem('resqone_popup_dismissed', 'true');
     setShowModal(false);
-    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
-  };
-
-  // Only PWA Install
-  const handleInstallOnly = async () => {
-    if (deferredPrompt) {
-      try {
-        deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
-        if (choiceResult.outcome === 'accepted') {
-          setIsInstalled(true);
-        }
-        setDeferredPrompt(null);
-      } catch (e) {}
-    }
-    setShowModal(false);
-    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
   };
 
   const handleDismiss = () => {
+    localStorage.setItem('resqone_popup_dismissed', 'true');
     setShowModal(false);
-    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
   };
 
   if (!showModal) return null;
