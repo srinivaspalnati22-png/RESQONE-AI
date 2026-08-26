@@ -320,7 +320,7 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
   // ================= SCENARIO 1: GOOGLE USER FIRST-TIME EMERGENCY SETUP =================
   if (user && !user.hasSetupEmergencyContacts) {
     return (
-      <div className="w-full min-h-[88vh] flex items-center justify-center px-3 sm:px-4 py-6 max-w-md mx-auto">
+      <div className="w-full min-h-dvh flex items-start justify-center px-3 sm:px-4 pt-4 pb-36 max-w-md mx-auto">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -764,7 +764,7 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
 
   // ================= SCENARIO 3: MAIN LOGIN & REGISTRATION SCREEN WITH ROLE PICKER =================
   return (
-    <div className="w-full min-h-[88vh] flex items-center justify-center px-3 sm:px-4 py-6 max-w-md mx-auto">
+    <div className="w-full min-h-dvh flex flex-col items-center justify-start px-3 sm:px-4 pt-3 pb-40 max-w-md mx-auto">
       <div className="w-full space-y-4">
 
         {/* Mobile Header & Logo */}
@@ -773,9 +773,9 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4, type: 'spring' }}
-            className="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-linear-to-br from-red-600 via-red-500 to-amber-500 border-2 border-red-400/40 text-white mx-auto flex items-center justify-center shadow-[0_0_35px_rgba(239,68,68,0.4)]"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl overflow-hidden border-2 border-red-400/50 mx-auto shadow-[0_0_35px_rgba(239,68,68,0.5)]"
           >
-            <HeartPulse className="w-8 h-8 sm:w-9 sm:h-9" />
+            <img src="/resqone_logo.jpg" alt="RESQONE AI+ Logo" className="w-full h-full object-cover" />
           </motion.div>
           
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
