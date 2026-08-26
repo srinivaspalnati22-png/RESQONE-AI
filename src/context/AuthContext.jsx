@@ -48,10 +48,15 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
+    // Check initial session & handle OAuth redirects
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
         syncProfile(session.user);
+        // Clean URL hash if tokens were passed
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       }
     });
 
@@ -59,6 +64,9 @@ export const AuthProvider = ({ children }) => {
       setSession(session);
       if (session?.user) {
         syncProfile(session.user);
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       }
     });
 
@@ -254,7 +262,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('resqone_user', JSON.stringify(updated));
   };
 
-  // Robust Google OAuth with dynamic redirect URL & fallback
+  // Google OAuth with live URL redirect & automatic window redirection
   const loginWithGoogle = async () => {
     setLoading(true);
     setAuthError(null);
@@ -263,9 +271,14 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signInWithOAuth({ 
         provider: 'google',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'select_account'
+          }
         }
       });
+      
       if (error) {
         console.warn("Supabase Google OAuth Notice:", error.message);
         // Instant Google Verified Session Fallback
@@ -284,6 +297,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('resqone_user', JSON.stringify(googleFallbackUser));
         completeOnboarding(googleFallbackUser);
         return { success: true, user: googleFallbackUser };
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
       }
       return { success: true, data };
     } catch (err) {
