@@ -1,116 +1,245 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, BellRing, ShieldAlert, CheckCircle2, X, Volume2 } from 'lucide-react';
+import { Bell, BellRing, ShieldAlert, Download, CheckCircle2, X, Sparkles, Smartphone, Share, PlusSquare } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { speakEmergencyInstruction } from '../services/audio_service';
 
 export function NotificationPermissionBanner() {
   const { language } = useLanguage();
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [permissionStatus, setPermissionStatus] = useState('default');
+  const [showModal, setShowModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [notifPermission, setNotifPermission] = useState('default');
+  const [isEnabling, setIsEnabling] = useState(false);
 
   useEffect(() => {
+    // 1. Detect if running as installed standalone PWA
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    setIsInstalled(isStandalone);
+
+    // 2. Detect iOS / Safari
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIosDevice);
+
+    // 3. Check Notification Permission
     if ('Notification' in window) {
-      setPermissionStatus(Notification.permission);
-      const dismissed = localStorage.getItem('resqone_notif_prompt_dismissed');
-      if (Notification.permission === 'default' && !dismissed) {
-        // Show after 2 seconds for smooth onboarding
-        const timer = setTimeout(() => setShowPrompt(true), 2000);
-        return () => clearTimeout(timer);
-      }
+      setNotifPermission(Notification.permission);
     }
+
+    // 4. Capture native PWA install prompt
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    // 5. Check if modal should open (after 1.5s on app launch)
+    const dismissedSession = sessionStorage.getItem('resqone_onboarding_popup_closed');
+    if (!dismissedSession) {
+      const timer = setTimeout(() => {
+        // Show if not granted notifications OR not in standalone mode
+        if (Notification?.permission !== 'granted' || !isStandalone) {
+          setShowModal(true);
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, []);
 
-  const handleEnableNotifications = async () => {
+  // 1-Tap Combined Action: Enable Notifications + Trigger App Install
+  const handleDualAction = async () => {
+    setIsEnabling(true);
+    // 1. Trigger Notification Request
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotifPermission(permission);
+        if (permission === 'granted') {
+          try {
+            new Notification("🚨 RESQONE AI+ Alerts Activated", {
+              body: "24/7 High-speed crash telemetry and blood crisis dispatches are now active on your device.",
+              icon: "/resqone_logo.jpg"
+            });
+          } catch {}
+          speakEmergencyInstruction("24/7 Emergency alert notifications activated.", language);
+        }
+      } catch (err) {
+        console.warn("Notification error:", err);
+      }
+    }
+
+    // 2. Trigger PWA Install
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          setIsInstalled(true);
+        }
+        setDeferredPrompt(null);
+      } catch (e) {
+        console.warn("PWA install error:", e);
+      }
+    }
+
+    setIsEnabling(false);
+    setShowModal(false);
+    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
+  };
+
+  // Only Notifications
+  const handleEnableOnlyNotifications = async () => {
     if (!('Notification' in window)) {
-      alert("This browser does not support desktop/push notifications.");
+      alert("Push notifications are not supported in this browser.");
       return;
     }
-
     try {
       const permission = await Notification.requestPermission();
-      setPermissionStatus(permission);
-      setShowPrompt(false);
-      localStorage.setItem('resqone_notif_prompt_dismissed', 'true');
-
+      setNotifPermission(permission);
       if (permission === 'granted') {
-        new Notification("🚨 RESQONE AI+ Emergency Alerts Enabled", {
-          body: "You will now receive instant push alerts for high-speed crashes, urgent blood crises, and family SOS broadcasts.",
-          icon: "/favicon.svg"
+        new Notification("🚨 RESQONE AI+ Alerts Activated", {
+          body: "24/7 High-speed crash telemetry and blood crisis dispatches are active.",
+          icon: "/resqone_logo.jpg"
         });
-        speakEmergencyInstruction("Critical emergency notifications enabled for all alerts and family broadcasts.", language);
+        speakEmergencyInstruction("Emergency notifications enabled.", language);
       }
-    } catch (err) {
-      console.warn("Notification permission error:", err);
-      setShowPrompt(false);
+    } catch (e) {}
+    setShowModal(false);
+    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
+  };
+
+  // Only PWA Install
+  const handleInstallOnly = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+          setIsInstalled(true);
+        }
+        setDeferredPrompt(null);
+      } catch (e) {}
     }
+    setShowModal(false);
+    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
   };
 
   const handleDismiss = () => {
-    setShowPrompt(false);
-    localStorage.setItem('resqone_notif_prompt_dismissed', 'true');
+    setShowModal(false);
+    sessionStorage.setItem('resqone_onboarding_popup_closed', 'true');
   };
 
-  if (!showPrompt || permissionStatus === 'granted') return null;
+  if (!showModal) return null;
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 50, scale: 0.95 }}
-        className="fixed bottom-20 sm:bottom-6 left-3 right-3 sm:left-auto sm:right-6 sm:max-w-md z-50 pointer-events-auto"
-      >
-        <div className="bg-[#080E1C]/98 backdrop-blur-2xl border-2 border-red-500/80 rounded-3xl p-4 sm:p-5 shadow-[0_20px_60px_rgba(239,68,68,0.35)] space-y-3 relative overflow-hidden">
-          
-          {/* Subtle Ambient Pulse */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/15 rounded-full blur-2xl pointer-events-none" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 20 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="w-full max-w-sm sm:max-w-md bg-[#080E1C] border-2 border-red-500/60 rounded-3xl p-5 sm:p-6 shadow-[0_25px_70px_rgba(239,68,68,0.4)] relative overflow-hidden"
+        >
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-0 right-0 w-40 h-40 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex items-start justify-between gap-2.5">
-            <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 text-white flex items-center justify-center shadow-lg shadow-red-950/80 shrink-0 mt-0.5">
-                <BellRing className="w-5 h-5 animate-bounce" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-black text-white leading-snug">
-                  {language === 'te' ? 'అత్యవసర నోటిఫికేషన్లను ప్రారంభించండి' : 'Enable Critical Emergency Notifications'}
-                </h4>
-                <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-                  {language === 'te' 
-                    ? 'ప్రమాదాలు, పాముకాటు, రక్త నిల్వలు మరియు కుటుంబ సభ్యుల SOS అలర్ట్‌లను తక్షణమే పొందండి.' 
-                    : 'Get real-time push & audible alerts for crashes, blood shortages, antivenom dispatches, and family SOS beacons.'}
-                </p>
-              </div>
+          {/* Close Button */}
+          <button
+            onClick={handleDismiss}
+            className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer z-10"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Header with App Logo */}
+          <div className="text-center space-y-2 relative z-0">
+            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-3xl overflow-hidden border-2 border-red-400/60 mx-auto shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+              <img src="/resqone_logo.jpg" alt="RESQONE AI+ Official Logo" className="w-full h-full object-cover" />
             </div>
 
-            <button
-              onClick={handleDismiss}
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
-              aria-label="Dismiss Notification Prompt"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-xl sm:text-2xl font-black text-white tracking-tight">RESQ<span className="text-red-500">ONE</span></span>
+                <span className="text-[10px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 px-2 py-0.5 rounded shadow">AI+</span>
+              </div>
+              <p className="text-xs text-cyan-300 font-bold mt-0.5">
+                {language === 'te' ? 'యాప్ ఇన్‌స్టాల్ & అత్యవసర హెచ్చరికలను ప్రారంభించండి' : language === 'hi' ? 'ऐप इंस्टॉल करें और आपातकालीन अलर्ट सक्षम करें' : 'Install App & Enable Emergency Alerts'}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2 pt-1">
-            <button
-              onClick={handleEnableNotifications}
-              className="flex-1 py-2.5 px-4 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 text-white font-black text-xs rounded-xl shadow-lg shadow-red-950 flex items-center justify-center space-x-1.5 cursor-pointer active:scale-95 transition-transform"
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>{language === 'te' ? 'నోటిఫికేషన్లను అనుమతించు' : 'Allow Emergency Alerts'}</span>
-            </button>
+          {/* Value Prop Bullet Points */}
+          <div className="space-y-2 bg-[#04070D]/90 p-3 rounded-2xl border border-slate-800/80 my-3.5 text-[11px] sm:text-xs">
+            <div className="flex items-center space-x-2.5 text-slate-200">
+              <div className="w-6 h-6 rounded-lg bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 shrink-0">
+                <BellRing className="w-3.5 h-3.5" />
+              </div>
+              <span>{language === 'te' ? '24/7 ప్రమాద మరియు రక్త కొరత తక్షణ నోటిఫికేషన్లు' : 'Instant 24/7 Crash & Blood Shortage Alerts'}</span>
+            </div>
 
-            <button
-              onClick={handleDismiss}
-              className="py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs rounded-xl border border-slate-700 cursor-pointer"
-            >
-              {language === 'te' ? 'తర్వాత' : 'Later'}
-            </button>
+            <div className="flex items-center space-x-2.5 text-slate-200">
+              <div className="w-6 h-6 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                <Smartphone className="w-3.5 h-3.5" />
+              </div>
+              <span>{language === 'te' ? 'మొబైల్ హోమ్ స్క్రీన్ నుండి 1-ట్యాప్ ఆఫ్‌లైన్ యాక్సెస్' : '1-Tap Fast Launch & Offline SOS Mode'}</span>
+            </div>
           </div>
 
-        </div>
-      </motion.div>
+          {/* iOS Safari Special Instructions if on iPhone */}
+          {isIOS && !isInstalled && (
+            <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/40 text-[10px] text-amber-300 mb-3 space-y-1">
+              <div className="font-bold flex items-center gap-1">
+                <Share className="w-3 h-3" /> iOS Installation:
+              </div>
+              <p>Tap Safari’s <strong>Share</strong> button below, then tap <strong>"Add to Home Screen"</strong> <PlusSquare className="inline w-3 h-3" />.</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="space-y-2 pt-1">
+            {/* Primary Dual Action Button */}
+            <button
+              onClick={handleDualAction}
+              disabled={isEnabling}
+              className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 text-white font-black py-3 px-4 rounded-2xl text-xs sm:text-sm shadow-xl shadow-red-950/80 flex items-center justify-center space-x-2 transition-all cursor-pointer active:scale-98 min-h-12 border border-red-400/40"
+            >
+              <Download className="w-4 h-4" />
+              <span>
+                {deferredPrompt 
+                  ? (language === 'te' ? 'ఇన్‌స్టాల్ చేసి అలర్ట్‌లను ప్రారంభించండి' : 'Install App & Enable Alerts') 
+                  : (language === 'te' ? 'నోటిఫికేషన్లను ప్రారంభించండి' : 'Enable Emergency Notifications')}
+              </span>
+            </button>
+
+            {/* Sub-actions */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleEnableOnlyNotifications}
+                className="py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-[11px] font-bold flex items-center justify-center space-x-1 cursor-pointer"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-400" />
+                <span>Alerts Only</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white text-[11px] font-bold flex items-center justify-center cursor-pointer"
+              >
+                Continue in Web
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 }
