@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { speakEmergencyInstruction } from '../services/audio_service';
 
@@ -46,14 +46,7 @@ export const DemoProvider = ({ children }) => {
     }
   });
 
-  const [activeDispatch, setActiveDispatch] = useState({
-    active: false,
-    ambulanceState: 'AVAILABLE',
-    hospitalCoords: { lat: 16.5167, lng: 80.6500 },
-    userCoords: { lat: 16.5180, lng: 80.6520 }
-  });
-
-  // Global Emergency Broadcast Notifications (Visible to all users, family, and agencies)
+  // Emergency Notifications Stream for Bell Icon & Global Broadcasts
   const [emergencyNotifications, setEmergencyNotifications] = useState([
     {
       id: 'notif-init-1',
@@ -216,17 +209,18 @@ export const DemoProvider = ({ children }) => {
   });
 
   const [activeRole, setActiveRole] = useState('user'); // 'user' | 'hospital' | 'rescue' | 'donor' | 'volunteer'
+  const realtimeChannelRef = useRef(null);
 
-  // Master Global SOS Broadcaster: Sends real-time notification to all agencies and family members
-  const broadcastEmergencySOS = (payload) => {
+  // Incoming Global Emergency Handler for ALL users who enabled notifications
+  const handleIncomingEmergencyAlert = useCallback((payload) => {
     const sosId = payload.id || `sos-alert-${Date.now()}`;
     const timestamp = 'Just Now';
-    const location = payload.location || payload.address || 'NH-16 Corridor, Vijayawada';
-    const victim = payload.victim || payload.patient_name || 'Emergency User';
+    const location = payload.location || payload.address || 'Corridor, Vijayawada';
+    const victim = payload.victim || payload.patient_name || 'Emergency Victim';
     const severity = payload.severity || 'CRITICAL';
-    const familyMembers = [
-      'Ramesh Varma (Father) • +91 9440123401',
-      'Lakshmi Varma (Mother) • +91 9440123402'
+    const familyMembers = payload.familyMembers || [
+      'Family Contact 1 (SMS Dispatched)',
+      'Family Contact 2 (Live GPS Shared)'
     ];
 
     const newAlert = {
@@ -246,12 +240,12 @@ export const DemoProvider = ({ children }) => {
       acceptedBy: null
     };
 
-    setActiveAlerts((prev) => [newAlert, ...prev]);
+    setActiveAlerts((prev) => [newAlert, ...prev.filter(a => a.id !== sosId)]);
 
     const newNotification = {
       id: `notif-${Date.now()}`,
       title: `🚨 EMERGENCY SOS BROADCAST: ${victim}`,
-      message: `Emergency SOS triggered at ${location}. 108 Ambulance, Trauma ICU, and 2 Family Members alerted with live GPS tracking.`,
+      message: `Emergency reported at ${location}. 108 Rescue, Trauma ICU & Family Members alerted.`,
       severity: 'CRITICAL',
       timestamp,
       read: false,
@@ -261,90 +255,220 @@ export const DemoProvider = ({ children }) => {
 
     setEmergencyNotifications((prev) => [newNotification, ...prev]);
 
-    // Fire real browser notification if supported and granted
+    // Push browser / phone notification to everyone who enabled notifications
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        new Notification(`🚨 RESQONE EMERGENCY ALERT: ${victim}`, {
-          body: `Emergency at ${location}. 108 Rescue CAD & Trauma ICU Bay alerted. Family SMS dispatched.`,
-          icon: '/favicon.svg',
-          tag: 'resqone-emergency-broadcast'
+        const notif = new Notification(`🚨 LIVE EMERGENCY ALERT: ${victim}`, {
+          body: `Emergency at ${location}! 108 Ambulance CAD & Trauma ICU Bay alerted. Tap to view rescue coordinates.`,
+          icon: '/resqone_logo.jpg',
+          badge: '/resqone_logo.jpg',
+          tag: `emergency-${sosId}`,
+          requireInteraction: true
         });
+        notif.onclick = () => {
+          window.focus();
+        };
       } catch (e) {
-        console.warn('[Notification Error]', e);
+        console.warn('[Notification Notice]', e);
       }
     }
 
-    // Show Global Live Banner
+    // Audio Voice Alert in current language
+    speakEmergencyInstruction(`Emergency SOS Alert: ${victim} at ${location}. Emergency assistance mobilized.`, 'en');
+
+    // Show Global Live Flashing Banner on everyone's screen
     setGlobalSOSBanner({
       id: sosId,
-      title: `🚨 EMERGENCY SOS BROADCASTED TO ALL AGENCIES & FAMILY`,
+      title: `🚨 EMERGENCY SOS BROADCASTED TO ALL USERS & 108 CAD`,
       victim,
       location,
-      familyCount: familyMembers.length
+      hospital: 'Government General Hospital (GGH)',
+      ambulance: 'ALS-108 (AP-TRAUMA-99)',
+      timestamp
     });
+  }, []);
 
-    setTimeout(() => {
-      setGlobalSOSBanner(null);
-    }, 10000);
+  // Subscribe to Supabase Realtime Channel & BroadcastChannel across all connected users
+  useEffect(() => {
+    // 1. Supabase Realtime Channel
+    if (supabase) {
+      try {
+        const channel = supabase.channel('resqone_emergency_mesh', {
+          config: { broadcast: { self: false } }
+        });
 
-    return newAlert;
+        channel
+          .on('broadcast', { event: 'emergency_sos' }, (event) => {
+            if (event?.payload) {
+              handleIncomingEmergencyAlert(event.payload);
+            }
+          })
+          .subscribe((status) => {
+            console.log('[Supabase Realtime Mesh Status]:', status);
+          });
+
+        realtimeChannelRef.current = channel;
+      } catch (err) {
+        console.warn('[Realtime Setup Notice]:', err);
+      }
+    }
+
+    // 2. BroadcastChannel for instant cross-tab / PWA background sync
+    let bc = null;
+    try {
+      if ('BroadcastChannel' in window) {
+        bc = new BroadcastChannel('resqone_live_emergency_mesh');
+        bc.onmessage = (event) => {
+          if (event?.data?.type === 'emergency_sos' && event?.data?.payload) {
+            handleIncomingEmergencyAlert(event.data.payload);
+          }
+        };
+      }
+    } catch {}
+
+    return () => {
+      if (realtimeChannelRef.current) {
+        try {
+          supabase.removeChannel(realtimeChannelRef.current);
+        } catch {}
+      }
+      if (bc) {
+        try { bc.close(); } catch {}
+      }
+    };
+  }, [handleIncomingEmergencyAlert]);
+
+  // Master Global SOS Broadcaster: Sends real-time notification to all connected users, agencies and family members
+  const broadcastEmergencySOS = async (payload) => {
+    const sosId = payload.id || `sos-alert-${Date.now()}`;
+    const timestamp = 'Just Now';
+    const location = payload.location || payload.address || 'NH-16 Corridor, Vijayawada';
+    const victim = payload.victim || payload.patient_name || 'Emergency User';
+    const severity = payload.severity || 'CRITICAL';
+    const familyMembers = [
+      'Father: Ramesh Varma • +91 9440123401',
+      'Mother: Lakshmi Varma • +91 9440123402'
+    ];
+
+    const emergencyPayload = {
+      id: sosId,
+      type: payload.type || 'ACCIDENT_RESCUE',
+      title: payload.title || `🚨 EMERGENCY SOS: ${victim} needs immediate rescue!`,
+      severity,
+      location,
+      gForce: payload.gForce || '4.85',
+      victim,
+      phone: payload.phone || '+91-9440123401',
+      timestamp,
+      familyMembers
+    };
+
+    // 1. Process locally on the current user's client
+    handleIncomingEmergencyAlert(emergencyPayload);
+
+    // 2. Broadcast globally over Supabase Realtime to ALL other connected users
+    if (realtimeChannelRef.current) {
+      try {
+        await realtimeChannelRef.current.send({
+          type: 'broadcast',
+          event: 'emergency_sos',
+          payload: emergencyPayload
+        });
+      } catch (err) {
+        console.warn('[Supabase Broadcast Notice]:', err);
+      }
+    }
+
+    // 3. Broadcast across all browser tabs / PWA windows
+    try {
+      if ('BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('resqone_live_emergency_mesh');
+        bc.postMessage({ type: 'emergency_sos', payload: emergencyPayload });
+        bc.close();
+      }
+    } catch {}
+
+    // 4. Save to Supabase 'emergency_reports' table
+    try {
+      if (supabase) {
+        await supabase.from('emergency_reports').insert([{
+          id: sosId,
+          type: payload.type || 'ACCIDENT_RESCUE',
+          severity,
+          ai_explanation: `${victim} triggered emergency SOS at ${location}. 108 Ambulance and Trauma Bay dispatched.`,
+          status: 'DISPATCHED',
+          created_at: new Date().toISOString()
+        }]);
+      }
+    } catch (e) {
+      console.warn('[Supabase Insert Notice]:', e);
+    }
   };
 
-  const acceptAlert = (alertId, role, details = {}) => {
+  const acceptAlert = (alertId, agencyType = '108 Rescue') => {
     setActiveAlerts((prev) =>
-      prev.map((alert) => {
-        if (alert.id === alertId) {
-          const updated = {
-            ...alert,
-            status: 'ACCEPTED',
-            acceptedBy: role,
-            acceptedAt: new Date().toLocaleTimeString(),
-            ...details
-          };
-          if (details.hospitalName) {
-            setAcceptedHospital((h) => ({
-              ...h,
-              name: details.hospitalName,
-              status: 'ACCEPTED & DISPATCHED'
-            }));
-          }
-          return updated;
-        }
-        return alert;
-      })
+      prev.map((alt) =>
+        alt.id === alertId
+          ? {
+              ...alt,
+              status: 'ACCEPTED_EN_ROUTE',
+              acceptedBy: agencyType,
+              time: 'En Route (ETA: 4 Mins)'
+            }
+          : alt
+      )
     );
+
+    const alertItem = activeAlerts.find(a => a.id === alertId);
+    if (alertItem) {
+      setEmergencyNotifications(prev => [
+        {
+          id: `notif-acc-${Date.now()}`,
+          title: `✅ Mission Accepted: ${alertItem.title}`,
+          message: `${agencyType} accepted the mission and is en route to ${alertItem.location}.`,
+          severity: 'HIGH',
+          timestamp: 'Just Now',
+          read: false,
+          location: alertItem.location
+        },
+        ...prev
+      ]);
+    }
   };
 
   return (
-    <DemoContext.Provider value={{
-      isDemoMode,
-      toggleDemoMode,
-      isOnline,
-      isSyncing,
-      syncFeedback,
-      offlineQueue,
-      queueOfflineReport,
-      clearOfflineQueue,
-      syncQueueToSupabase,
-      activeDispatch,
-      setActiveDispatch,
-      PRESET_SCENARIOS,
-      activeAlerts,
-      setActiveAlerts,
-      acceptedHospital,
-      setAcceptedHospital,
-      activeRole,
-      setActiveRole,
-      acceptAlert,
-      emergencyNotifications,
-      setEmergencyNotifications,
-      globalSOSBanner,
-      setGlobalSOSBanner,
-      broadcastEmergencySOS
-    }}>
+    <DemoContext.Provider
+      value={{
+        isDemoMode,
+        toggleDemoMode,
+        isOnline,
+        isSyncing,
+        syncFeedback,
+        offlineQueue,
+        queueOfflineReport,
+        clearOfflineQueue,
+        activeAlerts,
+        acceptedHospital,
+        setAcceptedHospital,
+        activeRole,
+        setActiveRole,
+        emergencyNotifications,
+        setEmergencyNotifications,
+        broadcastEmergencySOS,
+        acceptAlert,
+        globalSOSBanner,
+        setGlobalSOSBanner
+      }}
+    >
       {children}
     </DemoContext.Provider>
   );
 };
 
-export const useDemo = () => useContext(DemoContext);
+export const useDemo = () => {
+  const context = useContext(DemoContext);
+  if (!context) {
+    throw new Error('useDemo must be used within a DemoProvider');
+  }
+  return context;
+};
