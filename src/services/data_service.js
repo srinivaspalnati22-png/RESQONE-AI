@@ -233,5 +233,133 @@ export const DataService = {
       return records.filter(r => r.district.toLowerCase() === district.toLowerCase());
     }
     return records;
+  },
+
+  // Fetch verified community donors from Supabase with fallback
+  async getDonors(userLat = 16.5167, userLng = 80.6500) {
+    let donors = [];
+    try {
+      if (supabase) {
+        const { data, error } = await supabase.from('blood_donors').select('*');
+        if (!error && data && data.length > 0) {
+          donors = data;
+        }
+      }
+    } catch (err) {
+      console.warn('[DataService] Supabase blood_donors query notice:', err);
+    }
+    return donors;
+  },
+
+  // Register or upsert a new blood donor into Supabase 'blood_donors'
+  async registerBloodDonor(donorData) {
+    const payload = {
+      id: donorData.id || `dnr-${Date.now()}`,
+      profile_id: donorData.profile_id || donorData.id || `prof-${Date.now()}`,
+      name: donorData.name,
+      blood_group: donorData.blood_group || donorData.bloodGroup,
+      phone: donorData.phone,
+      location_lat: donorData.location_lat || donorData.lat || 16.5167,
+      location_lng: donorData.location_lng || donorData.lng || 80.6500,
+      availability: donorData.availability !== undefined ? donorData.availability : true,
+      distance_km: donorData.distance_km || 1.5,
+      compatibility_score: 95.0,
+      last_donation_date: donorData.last_donation_date || 'Eligible Now',
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('blood_donors')
+          .upsert(payload, { onConflict: 'id' })
+          .select();
+        if (error) console.warn('[DataService] blood_donors upsert notice:', error.message);
+        return { success: !error, data: data?.[0] || payload };
+      }
+    } catch (e) {
+      console.warn('[DataService] registerBloodDonor error:', e);
+    }
+    return { success: true, data: payload, isLocal: true };
+  },
+
+  // Update donor availability (e.g. toggle Available / Unavailable)
+  async updateDonorAvailability(donorId, isAvailable) {
+    try {
+      if (supabase) {
+        const { error } = await supabase
+          .from('blood_donors')
+          .update({ availability: isAvailable })
+          .eq('id', donorId);
+        if (error) console.warn('[DataService] updateDonorAvailability notice:', error.message);
+      }
+    } catch (e) {
+      console.warn('[DataService] updateDonorAvailability error:', e);
+    }
+  },
+
+  // Register or upsert a hospital into Supabase 'hospitals'
+  async registerHospital(hospData) {
+    const payload = {
+      id: hospData.id || `hosp-${Date.now()}`,
+      name: hospData.name,
+      address: hospData.address || hospData.city || 'Emergency Trauma Center',
+      phone: hospData.phone,
+      location_lat: hospData.location_lat || hospData.lat || 16.5167,
+      location_lng: hospData.location_lng || hospData.lng || 80.6500,
+      icu_available: parseInt(hospData.icu_available || 10),
+      icu_capacity: parseInt(hospData.icu_capacity || 20),
+      antivenom_stock: parseInt(hospData.antivenom_stock || 15),
+      oxygen_status: hospData.oxygen_status || 'Adequate',
+      blood_stock: hospData.blood_stock || { 'O-': 8, 'O+': 15, 'A+': 12, 'B+': 10, 'AB+': 6 },
+      antivenom_available: hospData.antivenom_available !== undefined ? hospData.antivenom_available : true,
+      trauma_center: hospData.trauma_center !== undefined ? hospData.trauma_center : true,
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('hospitals')
+          .upsert(payload, { onConflict: 'id' })
+          .select();
+        if (error) console.warn('[DataService] hospitals upsert notice:', error.message);
+        return { success: !error, data: data?.[0] || payload };
+      }
+    } catch (e) {
+      console.warn('[DataService] registerHospital error:', e);
+    }
+    return { success: true, data: payload, isLocal: true };
+  },
+
+  // Register or upsert a volunteer / first-responder into Supabase 'volunteers'
+  async registerVolunteer(volData) {
+    const payload = {
+      id: volData.id || `vol-${Date.now()}`,
+      profile_id: volData.profile_id || volData.id || `prof-${Date.now()}`,
+      name: volData.name,
+      phone: volData.phone,
+      skills: Array.isArray(volData.skills) ? volData.skills : [volData.skills || 'CPR Certified'],
+      location_lat: volData.location_lat || volData.lat || 16.5167,
+      location_lng: volData.location_lng || volData.lng || 80.6500,
+      distance_km: volData.distance_km || 1.2,
+      trust_score: volData.trust_score || 98.0,
+      is_active: volData.is_active !== undefined ? volData.is_active : true,
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('volunteers')
+          .upsert(payload, { onConflict: 'id' })
+          .select();
+        if (error) console.warn('[DataService] volunteers upsert notice:', error.message);
+        return { success: !error, data: data?.[0] || payload };
+      }
+    } catch (e) {
+      console.warn('[DataService] registerVolunteer error:', e);
+    }
+    return { success: true, data: payload, isLocal: true };
   }
 };

@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, PhoneCall, X, CheckCircle, AlertTriangle, MessageSquare, Check, Radio } from 'lucide-react';
+import { ShieldAlert, PhoneCall, X, CheckCircle, AlertTriangle, MessageSquare, Check, Radio, Users } from 'lucide-react';
 import { triggerEmergencySOS, checkLocationPermission } from '../services/sos_service';
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
+import { speakEmergencyInstruction } from '../services/audio_service';
 
 export function SOSModal({ isOpen, onClose }) {
-  const { t } = useLanguage();
-  const { setActiveDispatch } = useDemo();
+  const { t, language } = useLanguage();
+  const { setActiveDispatch, broadcastEmergencySOS } = useDemo();
   const [countdown, setCountdown] = useState(5);
   const [isActivated, setIsActivated] = useState(false);
   const [sosResult, setSosResult] = useState(null);
@@ -20,10 +21,8 @@ export function SOSModal({ isOpen, onClose }) {
       setCountdown(5);
       setStageProgress([]);
 
-      // Verify location permission on modal open
       checkLocationPermission().then((perm) => {
         setPermGranted(perm.granted);
-        console.log(`[SOS Debug 1] Modal Opened. Location Permission: ${perm.granted ? 'GRANTED' : 'DENIED'}`);
       });
 
       timerRef.current = setInterval(() => {
@@ -45,14 +44,25 @@ export function SOSModal({ isOpen, onClose }) {
 
   const handleConfirmSOS = async () => {
     setIsActivated(true);
-    console.log('[SOS Debug 2] Confirm SOS Executed.');
 
-    // Trigger ambulance 3D mapping dispatch animation
     setActiveDispatch({
       active: true,
-      hospitalCoords: { lat: 16.5167, lng: 80.6500 }, // GGH Vijayawada
-      userCoords: { lat: 16.5180, lng: 80.6520 } // Live User Position
+      hospitalCoords: { lat: 16.5167, lng: 80.6500 },
+      userCoords: { lat: 16.5180, lng: 80.6520 }
     });
+
+    // Broadcast to all active agencies, dashboard, and family contacts
+    if (broadcastEmergencySOS) {
+      broadcastEmergencySOS({
+        type: 'ACCIDENT_RESCUE',
+        title: '🚨 CRITICAL EMERGENCY SOS: User Triggered Beacon',
+        location: 'Prakasam Barrage / NH-16, Vijayawada',
+        victim: 'Emergency Citizen (O- Blood)',
+        severity: 'CRITICAL'
+      });
+    }
+
+    speakEmergencyInstruction("Emergency SOS Beacon broadcasted to all rescue agencies and family members.", language);
 
     const result = await triggerEmergencySOS(16.5167, 80.6500, 'Prakasam Barrage, Vijayawada', (progress) => {
       setStageProgress(prev => [...prev, progress.label]);
@@ -62,7 +72,6 @@ export function SOSModal({ isOpen, onClose }) {
   };
 
   const handleCancel = () => {
-    console.log('[SOS Debug] Modal Cancelled / Closed.');
     if (timerRef.current) clearInterval(timerRef.current);
     setIsActivated(false);
     setSosResult(null);
@@ -93,7 +102,7 @@ export function SOSModal({ isOpen, onClose }) {
           <div className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
             <div className="flex items-center gap-3 text-red-500 font-bold text-xl">
               <ShieldAlert className="w-7 h-7 animate-pulse" />
-              <span>{t('sos_countdown_title')}</span>
+              <span>{t('sos_countdown_title') || 'EMERGENCY SOS BEACON'}</span>
             </div>
             <button
               onClick={handleCancel}
@@ -113,7 +122,7 @@ export function SOSModal({ isOpen, onClose }) {
           {!isActivated ? (
             <div>
               <p className="text-slate-300 text-base mb-6">
-                {t('sos_countdown_subtitle')}
+                {t('sos_countdown_subtitle') || 'Broadcasting distress coordinates to 108 CAD, Trauma ICU, and Family SMS'}
               </p>
 
               {/* Countdown Circular Ring */}
@@ -131,9 +140,9 @@ export function SOSModal({ isOpen, onClose }) {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleCancel}
-                  className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-lg min-h-[52px] border border-slate-700 transition-colors"
+                  className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-lg min-h-[52px] border border-slate-700 transition-colors cursor-pointer"
                 >
-                  {t('cancel_sos')}
+                  {t('cancel_sos') || 'Cancel SOS'}
                 </button>
               </div>
             </div>
@@ -148,7 +157,7 @@ export function SOSModal({ isOpen, onClose }) {
               </motion.div>
 
               <h3 className="text-2xl font-bold text-white mb-2">
-                Emergency SOS Active
+                Emergency SOS Broadcast Active
               </h3>
               
               {/* Visible Stage Progress Checklist */}
@@ -165,19 +174,31 @@ export function SOSModal({ isOpen, onClose }) {
                 ))}
               </div>
 
+              {/* Family Alert Confirmation */}
+              <div className="bg-[#050A14] p-3 rounded-xl border border-emerald-500/30 text-left text-xs text-slate-200 mb-4 space-y-1">
+                <div className="flex items-center space-x-1.5 text-emerald-400 font-bold">
+                  <Users className="w-4 h-4" />
+                  <span>Family Contacts Notified via Real-time SMS:</span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  ✓ Ramesh Varma (Father) • +91 9440123401<br />
+                  ✓ Lakshmi Varma (Mother) • +91 9440123402
+                </p>
+              </div>
+
               {sosResult?.nativeSmsUri && (
                 <a
                   href={sosResult.nativeSmsUri}
-                  className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-lg flex items-center justify-center gap-2 mb-3 shadow-lg shadow-red-600/30 min-h-[52px]"
+                  className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-base flex items-center justify-center gap-2 mb-3 shadow-lg shadow-red-600/30 min-h-[52px]"
                 >
                   <MessageSquare className="w-5 h-5" />
-                  <span>Dispatch SMS to Relatives ({sosResult.notifiedCount})</span>
+                  <span>Resend Direct SMS to Relatives</span>
                 </a>
               )}
 
               <button
                 onClick={handleCancel}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm min-h-[44px]"
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-sm min-h-[44px] cursor-pointer"
               >
                 Close Window
               </button>

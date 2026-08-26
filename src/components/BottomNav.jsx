@@ -4,17 +4,36 @@ import { useLanguage } from '../context/LanguageContext';
 import { SOSModal } from './SOSModal';
 
 export const BottomNav = ({ activeTab, setActiveTab }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isSOSOpen, setIsSOSOpen] = useState(false);
 
+  const getTabLabel = (id) => {
+    switch (id) {
+      case 'home':
+        return t('nav_home') || (language === 'te' ? 'హోమ్' : language === 'hi' ? 'होम' : 'Home');
+      case 'accident':
+        return t('nav_crash') || (language === 'te' ? '3D ప్రమాదం' : language === 'hi' ? '3D क्रैश' : 'Crash 3D');
+      case 'blood':
+        return t('nav_blood') || (language === 'te' ? 'రక్తం' : language === 'hi' ? 'रक्त' : 'Blood');
+      case 'snakebite':
+        return t('nav_snakebite') || (language === 'te' ? 'పాము AI' : language === 'hi' ? 'सांप AI' : 'Snake AI');
+      case 'dashboard':
+        return t('nav_dashboard') || (language === 'te' ? 'కమాండ్' : language === 'hi' ? 'कमांड' : 'Command');
+      case 'auth':
+        return t('nav_profile') || (language === 'te' ? 'ప్రొఫైల్' : language === 'hi' ? 'प्रोफ़ाइल' : 'Profile');
+      default:
+        return id;
+    }
+  };
+
   const tabs = [
-    { id: 'home', label: t('nav_home') || 'Home', icon: Home },
-    { id: 'accident', label: 'Crash 3D', icon: Car },
-    { id: 'blood', label: t('nav_blood') || 'Blood', icon: Droplet },
+    { id: 'home', label: getTabLabel('home'), icon: Home },
+    { id: 'accident', label: getTabLabel('accident'), icon: Car },
+    { id: 'blood', label: getTabLabel('blood'), icon: Droplet },
     { id: 'sos', label: 'SOS', icon: ShieldAlert, isSOSAnchor: true },
-    { id: 'snakebite', label: 'Snake AI', icon: Activity },
-    { id: 'dashboard', label: 'Command', icon: LayoutDashboard },
-    { id: 'auth', label: 'Profile', icon: User },
+    { id: 'snakebite', label: getTabLabel('snakebite'), icon: Activity },
+    { id: 'dashboard', label: getTabLabel('dashboard'), icon: LayoutDashboard },
+    { id: 'auth', label: getTabLabel('auth'), icon: User },
   ];
 
   return (
@@ -31,13 +50,13 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
                 <button
                   key={tab.id}
                   onClick={() => setIsSOSOpen(true)}
-                  className="relative -top-3.5 flex flex-col items-center group min-w-[54px] justify-center cursor-pointer active:scale-90 transition-transform"
+                  className="relative -top-3.5 flex flex-col items-center group min-w-[50px] justify-center cursor-pointer active:scale-90 transition-transform"
                   aria-label="Emergency SOS Beacon"
                 >
-                  <div className="w-13 h-13 rounded-2xl flex items-center justify-center text-white shadow-2xl bg-gradient-to-tr from-red-600 via-red-500 to-amber-500 ring-4 ring-[#04070D] shadow-red-900/90 border border-red-400/40">
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-2xl bg-gradient-to-tr from-red-600 via-red-500 to-amber-500 ring-4 ring-[#04070D] shadow-red-900/90 border border-red-400/40">
                     <ShieldAlert className="w-6 h-6 stroke-[2.5] fill-white/15" />
                   </div>
-                  <span className="text-[9px] font-telemetry font-bold text-red-400 mt-1 uppercase tracking-wider">
+                  <span className="text-[9px] font-mono font-bold text-red-400 mt-1 uppercase tracking-wider">
                     SOS
                   </span>
                 </button>
@@ -61,7 +80,7 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
                   }`}
                 />
                 <span
-                  className={`text-[9px] font-semibold leading-tight truncate max-w-[48px] ${
+                  className={`text-[8px] sm:text-[9px] font-semibold leading-tight truncate max-w-[50px] ${
                     isActive ? 'text-cyan-300 font-bold' : 'text-slate-400'
                   }`}
                 >
@@ -78,5 +97,3 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
     </>
   );
 };
-
-

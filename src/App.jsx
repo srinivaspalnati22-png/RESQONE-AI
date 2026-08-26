@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense, Component, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { DemoProvider } from './context/DemoContext';
+import { DemoProvider, useDemo } from './context/DemoContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ViewModeProvider, useViewMode } from './context/ViewModeContext';
 import { Navbar } from './components/Navbar';
@@ -8,10 +8,11 @@ import { BottomNav } from './components/BottomNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { BackgroundVideo } from './components/BackgroundVideo';
 import { AccidentAlertModal } from './components/AccidentAlertModal';
+import { NotificationPermissionBanner } from './components/NotificationPermissionBanner';
 import { accidentDetector } from './services/AccidentDetectionService';
 import { LandingPage } from './pages/LandingPage';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, RotateCcw } from 'lucide-react';
+import { RefreshCw, RotateCcw, ArrowRight, X } from 'lucide-react';
 import { VoiceControlWidget } from './components/VoiceControlWidget';
 import { stopAllAudio } from './services/audio_service';
 
@@ -70,16 +71,15 @@ class TabErrorBoundary extends Component {
 function AppContent() {
   const { isOnboarded } = useAuth();
   const { viewMode, setViewMode } = useViewMode();
+  const { globalSOSBanner, setGlobalSOSBanner, broadcastEmergencySOS } = useDemo();
   const [activeTab, setActiveTab] = useState('auth');
   const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
   const [accidentDetails, setAccidentDetails] = useState(null);
 
   // Stop audio when LEAVING a page (not when arriving), to avoid killing audio
-  // that a newly mounted page triggers right after navigation.
   const prevTabRef = useRef(activeTab);
   useEffect(() => {
     const prevTab = prevTabRef.current;
-    // Only stop audio when leaving audio-producing tabs (not on the initial mount)
     if (prevTab !== activeTab) {
       stopAllAudio();
     }
@@ -91,10 +91,20 @@ function AppContent() {
     accidentDetector.startMonitoring((details) => {
       setAccidentDetails(details);
       setIsAccidentModalOpen(true);
+      if (broadcastEmergencySOS) {
+        broadcastEmergencySOS({
+          type: 'ACCIDENT_RESCUE',
+          title: '🚨 CRITICAL: High-Speed Crash Detected!',
+          location: details.location || 'NH-16 Corridor, Vijayawada',
+          victim: 'Srinivas Palnati (O- Blood)',
+          gForce: details.gForce || 4.85,
+          severity: 'CRITICAL'
+        });
+      }
     });
 
     return () => accidentDetector.stopMonitoring();
-  }, []);
+  }, [broadcastEmergencySOS]);
 
   const [sharedQuery, setSharedQuery] = useState(null);
 
@@ -114,6 +124,16 @@ function AppContent() {
       location: 'NH-16 Corridor, Vijayawada'
     });
     setIsAccidentModalOpen(true);
+    if (broadcastEmergencySOS) {
+      broadcastEmergencySOS({
+        type: 'ACCIDENT_RESCUE',
+        title: '🚨 CRITICAL: High-Speed 4.85G Crash on NH-16',
+        location: 'NH-16 Corridor, Vijayawada',
+        victim: 'Srinivas Palnati (O- Blood)',
+        gForce: 4.85,
+        severity: 'CRITICAL'
+      });
+    }
   };
 
   const renderTab = () => {
@@ -194,12 +214,14 @@ function AppContent() {
       default:
         return (
           <TabErrorBoundary>
-            <LandingPage 
-              setActiveTab={setActiveTab} 
-              navigateWithQuery={navigateWithQuery} 
-              onSimulateCrash={handleSimulateCrash}
-              viewMode={viewMode}
-            />
+            <Suspense fallback={<PageLoadingFallback />}>
+              <LandingPage 
+                setActiveTab={setActiveTab} 
+                navigateWithQuery={navigateWithQuery} 
+                onSimulateCrash={handleSimulateCrash}
+                viewMode={viewMode}
+              />
+            </Suspense>
           </TabErrorBoundary>
         );
     }
@@ -217,6 +239,52 @@ function AppContent() {
         setActiveTab={setActiveTab} 
         onSimulateCrash={handleSimulateCrash}
       />
+
+      {/* Global Emergency SOS Broadcast Banner */}
+      <AnimatePresence>
+        {globalSOSBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="sticky top-[68px] z-50 w-full max-w-6xl mx-auto px-4 py-2"
+          >
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 border border-red-400 text-white shadow-2xl shadow-red-950 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0 animate-bounce">
+                  <span className="text-lg">🚨</span>
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs sm:text-sm font-black tracking-wide leading-tight truncate">
+                    {globalSOSBanner.title}
+                  </h4>
+                  <p className="text-[11px] text-red-100 mt-0.5 truncate">
+                    📍 Location: <strong className="text-white">{globalSOSBanner.location}</strong> • SMS & WhatsApp dispatched to <strong className="text-white font-mono">{globalSOSBanner.familyCount} Family Relatives</strong>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 self-end sm:self-auto shrink-0">
+                <button
+                  onClick={() => {
+                    setActiveTab('dashboard');
+                    if (setGlobalSOSBanner) setGlobalSOSBanner(null);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs shadow-md cursor-pointer flex items-center space-x-1"
+                >
+                  <span>View in Missions</span>
+                  <ArrowRight className="w-3 h-3 text-red-400" />
+                </button>
+                <button
+                  onClick={() => setGlobalSOSBanner && setGlobalSOSBanner(null)}
+                  className="p-1.5 rounded-lg bg-black/20 hover:bg-black/40 text-white/80 hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Network / Offline Banner */}
       <OfflineIndicator />
@@ -239,6 +307,9 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
+      {/* Persistent Notification Permission Banner Prompt for All Users */}
+      <NotificationPermissionBanner />
+
       {/* Bottom Floating Navigation Bar */}
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -258,14 +329,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <DemoProvider>
-        <LanguageProvider>
-          <ViewModeProvider>
+    <LanguageProvider>
+      <ViewModeProvider>
+        <AuthProvider>
+          <DemoProvider>
             <AppContent />
-          </ViewModeProvider>
-        </LanguageProvider>
-      </DemoProvider>
-    </AuthProvider>
+          </DemoProvider>
+        </AuthProvider>
+      </ViewModeProvider>
+    </LanguageProvider>
   );
 }

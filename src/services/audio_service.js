@@ -11,8 +11,6 @@ let speechTimeout = null;
 const TELUGU_AUDIO_MAP = {
   "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
     "తీవ్రమైన వాహన ప్రమాదం గుర్తించబడింది. అత్యవసర ఎమర్జెన్సీ కౌంట్‌డౌన్ ప్రారంభమైంది. 10 సెకన్లలో స్వయంచాలక రెస్క్యూ బయలుదేరుతుంది.",
-  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 25 seconds.":
-    "తీవ్రమైన వాహన ప్రమాదం గుర్తించబడింది. అత్యవసర ఎమర్జెన్సీ కౌంట్‌డౌన్ ప్రారంభమైంది. 10 సెకన్లలో స్వయంచాలక రెస్క్యూ బయలుదేరుతుంది.",
   "Emergency SOS Confirmed. GGH Vijayawada accepted case. Ambulance ALS 108 dispatched.":
     "ఎమర్జెన్సీ కన్ఫర్మ్ అయింది. ప్రభుత్వ జనరల్ ఆసుపత్రి విజయవాడ కేసును అంగీకరించింది. ఏఎల్ఎస్ 108 ఆంబులెన్స్ బయలుదేరింది.",
   "Government General Hospital Vijayawada accepted emergency SOS. ALS Ambulance 108 dispatched.":
@@ -33,14 +31,10 @@ const TELUGU_AUDIO_MAP = {
     "3D వాహన ప్రమాద రెస్క్యూ పేజీకి మళ్లించబడుతోంది.",
   "Navigating to Hospital Mission Control.":
     "ఆసుపత్రి మిషన్ కంట్రోల్ పేజీకి మళ్లించబడుతోంది.",
-  "Directing to emergency blood search.":
-    "అత్యవసర రక్త శోధనకు మళ్లించబడుతోంది.",
-  "Directing to snakebite emergency.":
-    "పాము కాటు అత్యవసర చికిత్సకు మళ్లించబడుతోంది.",
-  "Directing to accident crash rescue.":
-    "ప్రమాద రెస్క్యూ విభాగానికి మళ్లించబడుతోంది.",
+  "Please select which snake matches what you encountered from the visual gallery below.":
+    "ఏ పాము కాటు వేసిందో గుర్తించడానికి క్రింది ఫోటోల నుండి సరైన పామును ఎంచుకోండి.",
   "Unknown snake bite reported. Please tap which snake matches what you encountered from the visual gallery.":
-    "గుర్తుతెలియని పాము కాటు నమోదైంది. దయచేసి గ్యాలరీ నుండి మీరు చూసిన పామును ఎంచుకోండి.",
+    "ఏ పాము కాటు వేసిందో గుర్తించడానికి క్రింది ఫోటోల నుండి సరైన పామును ఎంచుకోండి.",
   "Warning! High speed detected. You are exceeding the safe limit. Please slow down immediately.":
     "హెచ్చరిక! మీరు అతివేగంగా వెళ్తున్నారు. ఇది ప్రమాదకరం, దయచేసి వెంటనే వేగాన్ని తగ్గించండి.",
   "Caution! High-accident risk zone ahead on NH-16 highway. Sharp curve detected, drive slowly.":
@@ -48,12 +42,14 @@ const TELUGU_AUDIO_MAP = {
   "Caution! Sudden lane swerving detected. Please maintain vehicle stability.":
     "జాగ్రత్త! వాహనం అస్థిరంగా మలుపులు తిరుగుతోంది. దయచేసి లేన్ నియంత్రణ పాటించండి.",
   "Speed normalized. You are safe! Hazard avoided.":
-    "వేగం సురక్షిత స్థాయికి తగ్గింది. మీరు ఇప్పుడు సురక్షితంగా ఉన్నారు! ప్రమాదం తప్పింది."
+    "వేగం సురక్షిత స్థాయికి తగ్గింది. మీరు ఇప్పుడు సురక్షితంగా ఉన్నారు! ప్రమాదం తప్పింది.",
+  "SOS Cancelled. Stay safe.":
+    "అత్యవసర SOS రద్దు చేయబడింది. సురక్షితంగా ఉండండి."
 };
 
 const HINDI_AUDIO_MAP = {
-  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 25 seconds.":
-    "गंभीर वाहन दुर्घटना का पता चला है। 25 सेकंड में स्वचालित बचाव दल रवाना होगा।",
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
+    "गंभीर वाहन दुर्घटना का पता चला है। 10 सेकंड में स्वचालित बचाव दल रवाना होगा।",
   "Emergency SOS Confirmed. GGH Vijayawada accepted case. Ambulance ALS 108 dispatched.":
     "आपातकालीन SOS की पुष्टि हुई। जीजीएच अस्पताल ने केस स्वीकार किया। एम्बुलेंस रवाना हुई।",
   "Victim arrived safely at hospital trauma bay. Admitted to ICU. Patient is safe!":
@@ -62,16 +58,36 @@ const HINDI_AUDIO_MAP = {
     "रक्त दाता खोज पेज पर ले जाया जा रहा है।",
   "Navigating to Snakebite First Aid and Antivenom.":
     "सर्पदंश प्राथमिक चिकित्सा पेज पर ले जाया जा रहा है।",
+  "Please select which snake matches what you encountered from the visual gallery below.":
+    "सांप की पहचान करने के लिए नीचे दी गई तस्वीरों में से सही सांप चुनें।",
   "Unknown snake bite reported. Please tap which snake matches what you encountered from the visual gallery.":
-    "अज्ञात सर्पदंश की सूचना मिली है। कृपया गैलरी से उस सांप का चयन करें जिसे आपने देखा था।",
+    "सांप की पहचान करने के लिए नीचे दी गई तस्वीरों में से सही सांप चुनें।",
   "Warning! High speed detected. You are exceeding the safe limit. Please slow down immediately.":
-    "चेतावनी! आप अत्यधिक गति से जा रहे हैं। यह असुरक्षित है, कृपया तुरंत गति धीमी करें।",
+    "चेतावनी! आप अत्यधिक गति से जा रहे हैं। कृपया तुरंत गति धीमी करें।",
   "Caution! High-accident risk zone ahead on NH-16 highway. Sharp curve detected, drive slowly.":
     "सावधानी! आगे राष्ट्रीय राजमार्ग 16 पर अत्यधिक दुर्घटना संभावित क्षेत्र है। कृपया वाहन धीरे चलाएं।",
-  "Caution! Sudden lane swerving detected. Please maintain vehicle stability.":
-    "सावधानी! वाहन का असंतुलन देखा गया है। कृपया नियंत्रण बनाए रखें।",
   "Speed normalized. You are safe! Hazard avoided.":
-    "गति सामान्य हो गई है। आप अब सुरक्षित हैं! खतरा टल गया है।"
+    "गति सामान्य हो गई है। आप अब सुरक्षित हैं! खतरा टल गया है।",
+  "SOS Cancelled. Stay safe.":
+    "आपातकालीन SOS रद्द कर दिया गया है। सुरक्षित रहें।"
+};
+
+const TAMIL_AUDIO_MAP = {
+  "Please select which snake matches what you encountered from the visual gallery below.":
+    "பாம்பை அடையாளம் காண கீழே உள்ள படங்களில் இருந்து சரியான பாம்பை தேர்வு செய்யவும்.",
+  "Unknown snake bite reported. Please tap which snake matches what you encountered from the visual gallery.":
+    "பாம்பை அடையாளம் காண கீழே உள்ள படங்களில் இருந்து சரியான பாம்பை தேர்வு செய்யவும்.",
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
+    "விபத்து கண்டறியப்பட்டது. 10 வினாடிகளில் மீட்புக்குழு புறப்படும்."
+};
+
+const KANNADA_AUDIO_MAP = {
+  "Please select which snake matches what you encountered from the visual gallery below.":
+    "ಹಾವನ್ನು ಗುರುತಿಸಲು ಕೆಳಗಿನ ಚಿತ್ರಗಳಿಂದ ಸರಿಯಾದ ಹಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  "Unknown snake bite reported. Please tap which snake matches what you encountered from the visual gallery.":
+    "ಹಾವನ್ನು ಗುರುತಿಸಲು ಕೆಳಗಿನ ಚಿತ್ರಗಳಿಂದ ಸರಿಯಾದ ಹಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
+    "ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ. 10 ಸೆಕೆಂಡುಗಳಲ್ಲಿ ರಕ್ಷಣಾ ಪಡೆ ಹೊರಡಲಿದೆ."
 };
 
 /**
@@ -82,26 +98,26 @@ function translateToTeluguDynamic(text) {
 
   const lower = text.toLowerCase();
 
-  // Blood Finder dynamic matching
+  if (lower.includes('which snake') || lower.includes('visual gallery') || lower.includes('select')) {
+    return "ఏ పాము కాటు వేసిందో గుర్తించడానికి క్రింది ఫోటోల నుండి సరైన పామును ఎంచుకోండి.";
+  }
   if (lower.includes('found verified blood banks') || lower.includes('compatible donors')) {
-    return "విజయవాడలో సరిపోలే రక్త నిల్వలు మరియు రక్త దాతలు విజయవంతంగా కనుగొనబడ్డాయి.";
+    return "సరిపోలే రక్త నిల్వలు మరియు రక్త దాతలు విజయవంతంగా కనుగొనబడ్డాయి.";
   }
   if (lower.includes('blood sos sent to') || lower.includes('cold chain courier')) {
     return "అత్యవసర రక్త అభ్యర్థన పంపబడింది. కోల్డ్ చైన్ కొరియర్ తక్షణమే కేటాయించబడింది.";
   }
-
-  // Snakebite dynamic matching
-  if (lower.includes('antivenom vials reserved at') || lower.includes('trauma bay alerted')) {
-    return "ఆసుపత్రిలో పాలీవాలెంట్ యాంటీవెనమ్ ఇంజెక్షన్లు రిజర్వ్ చేయబడ్డాయి. అత్యవసర విభాగానికి సమాచారం అందించబడింది.";
+  if (lower.includes('antivenom') && (lower.includes('reserved') || lower.includes('hospital'))) {
+    return "ఆసుపత్రిలో పాలీవాలెంట్ యాంటీవెనమ్ ఇంజెక్షన్లు రిజర్వ్ చేయబడ్డాయి. అత్యవసర ఆంబులెన్స్ బయలుదేరింది.";
   }
   if (lower.includes('first aid precautions for') || lower.includes('first aid')) {
     return "WHO ప్రథమ చికిత్స మార్గదర్శకాలు: బాధితుడిని కదల్చకుండా ప్రశాంతంగా ఉంచండి. కాటు వేసిన భాగాన్ని గుండె కంటే కిందకు ఉంచి వెంటనే ఆసుపత్రికి తరలించండి.";
   }
-  if (lower.includes('critical') && lower.includes('snakebite')) {
-    return "తీవ్రమైన పాము కాటు అత్యవసర పరిస్థితి గుర్తించబడింది. యాంటీవెనమ్ ఉన్న సమీప ఆసుపత్రికి మార్గం సిద్ధమైంది.";
+  if (lower.includes('route') && lower.includes('hospital')) {
+    return "ఆసుపత్రికి వేగవంతమైన రహదారి మార్గం మ్యాప్‌లో చూపించబడింది.";
   }
-  if (lower.includes('critical') && lower.includes('emergency')) {
-    return "తీవ్రమైన అత్యవసర పరిస్థితి గుర్తించబడింది. సమీప ఆసుపత్రికి సమాచారం పంపబడింది.";
+  if (lower.includes('starting drive') || lower.includes('live drive')) {
+    return "డ్రైవింగ్ ప్రారంభమైంది. లైవ్ సెన్సార్లు మరియు స్పీడోమీటర్ పర్యవేక్షణ ఆన్‌లో ఉంది.";
   }
 
   return text;
@@ -115,17 +131,23 @@ function translateToHindiDynamic(text) {
 
   const lower = text.toLowerCase();
 
+  if (lower.includes('which snake') || lower.includes('visual gallery') || lower.includes('select')) {
+    return "सांप की पहचान करने के लिए नीचे दी गई तस्वीरों में से सही सांप चुनें।";
+  }
   if (lower.includes('found verified blood banks') || lower.includes('compatible donors')) {
-    return "सत्यापित रक्त बैंक और संगत रक्त दाता सफलतापूर्वक मिल गए हैं।";
+    return "रक्त बैंक और संगत रक्त दाता सफलतापूर्वक मिल गए हैं।";
   }
   if (lower.includes('blood sos sent to') || lower.includes('cold chain courier')) {
-    return "आपातकालीन रक्त अनुरोध भेजा गया। कोल्ड चेन कूरियर रवाना कर दिया गया है।";
+    return "आपातकालीन रक्त अनुरोध भेजा गया। कोल्ड-चेन कूरियर रवाना हो गया है।";
   }
-  if (lower.includes('antivenom vials reserved at') || lower.includes('trauma bay alerted')) {
-    return "अस्पताल में एंटीवेनम शीशियां आरक्षित कर ली गई हैं। आपातकालीन कक्ष सतर्क है।";
+  if (lower.includes('antivenom') && (lower.includes('reserved') || lower.includes('hospital'))) {
+    return "अस्पताल में एंटीवेनम आरक्षित किया गया। आपातकालीन एम्बुलेंस रवाना हुई।";
   }
-  if (lower.includes('first aid precautions for') || lower.includes('first aid')) {
-    return "डब्ल्यूएचओ प्राथमिक उपचार: मरीज को शांत रखें, काटे गए अंग को स्थिर रखें और तुरंत अस्पताल ले जाएं।";
+  if (lower.includes('first aid')) {
+    return "डब्ल्यूएचओ प्राथमिक उपचार: पीड़ित को स्थिर रखें और तुरंत नजदीकी अस्पताल ले जाएं।";
+  }
+  if (lower.includes('route') && lower.includes('hospital')) {
+    return "अस्पताल के लिए सड़क मार्ग मानचित्र पर दिखाया गया है।";
   }
 
   return text;
@@ -153,15 +175,12 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
   try {
-    // Immediately stop previous audio to prevent overlapping collision
     stopAllAudio();
 
     if (!text || typeof text !== 'string') return;
 
-    // Detect user's selected language
     const selectedLang = forcedLang || localStorage.getItem('resqone_language') || 'en';
     
-    // Choose appropriate localized text
     let spokenText = text;
     let targetLocale = 'en-IN';
 
@@ -173,18 +192,18 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
       spokenText = translateToHindiDynamic(text);
     } else if (selectedLang === 'ta') {
       targetLocale = 'ta-IN';
+      spokenText = TAMIL_AUDIO_MAP[text] || text;
     } else if (selectedLang === 'kn') {
       targetLocale = 'kn-IN';
+      spokenText = KANNADA_AUDIO_MAP[text] || text;
     }
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = targetLocale;
-    // Set a calm, clear, highly intelligible pace (0.85) to avoid rushed slurring
     utterance.rate = selectedLang === 'te' ? 0.84 : selectedLang === 'hi' ? 0.86 : 0.88;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Chrome/Edge Bugfix: Keep global reference so browser garbage collector does not break audio mid-sentence
     window._resqone_active_utterance = utterance;
 
     utterance.onend = () => {
@@ -192,7 +211,6 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
     };
 
     utterance.onerror = (e) => {
-      console.warn('[AudioService] Utterance finished/interrupted:', e?.error);
       window._resqone_active_utterance = null;
     };
 
@@ -206,7 +224,6 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
       }
     }
 
-    // Delay 90ms after cancel() to let browser hardware audio buffer clear cleanly
     speechTimeout = setTimeout(() => {
       try {
         if (window.speechSynthesis.paused) {
@@ -222,7 +239,7 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
   }
 };
 
-// Global lifecycle hooks: Stop speaking when tab closes, changes, or window is backgrounded
+// Global lifecycle hooks
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', stopAllAudio);
   window.addEventListener('pagehide', stopAllAudio);

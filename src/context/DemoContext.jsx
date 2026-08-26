@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { speakEmergencyInstruction } from '../services/audio_service';
 
 const DemoContext = createContext();
 
@@ -31,7 +32,7 @@ export const PRESET_SCENARIOS = {
 };
 
 export const DemoProvider = ({ children }) => {
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState(null);
@@ -51,6 +52,32 @@ export const DemoProvider = ({ children }) => {
     hospitalCoords: { lat: 16.5167, lng: 80.6500 },
     userCoords: { lat: 16.5180, lng: 80.6520 }
   });
+
+  // Global Emergency Broadcast Notifications (Visible to all users, family, and agencies)
+  const [emergencyNotifications, setEmergencyNotifications] = useState([
+    {
+      id: 'notif-init-1',
+      title: '🚨 CRITICAL: High-Speed Crash on NH-16 Corridor',
+      message: 'Multi-vehicle collision detected. 108 ALS unit dispatched. 2 Family members alerted via SMS.',
+      severity: 'CRITICAL',
+      timestamp: '2 mins ago',
+      read: false,
+      location: 'NH-16 Corridor, Vijayawada',
+      familyNotified: ['Ramesh Varma (Father)', 'Lakshmi Varma (Mother)']
+    },
+    {
+      id: 'notif-init-2',
+      title: '🩸 Urgent O- Blood Courier En Route',
+      message: 'Cold-chain blood courier dispatched from Red Cross to GGH Trauma ICU.',
+      severity: 'HIGH',
+      timestamp: '6 mins ago',
+      read: false,
+      location: 'Hanumanpet, Vijayawada',
+      familyNotified: []
+    }
+  ]);
+
+  const [globalSOSBanner, setGlobalSOSBanner] = useState(null);
 
   // Sync queued items to Supabase
   const syncQueueToSupabase = useCallback(async () => {
@@ -78,7 +105,6 @@ export const DemoProvider = ({ children }) => {
       }
     }
 
-    // Clear queue after sync attempt
     setOfflineQueue([]);
     localStorage.removeItem('resqone_offline_queue');
     setIsSyncing(false);
@@ -86,11 +112,9 @@ export const DemoProvider = ({ children }) => {
     setTimeout(() => setSyncFeedback(null), 5000);
   }, []);
 
-  // Listen for online / offline events
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
-      // Auto-sync on connection restoration
       syncQueueToSupabase();
     };
 
@@ -114,7 +138,6 @@ export const DemoProvider = ({ children }) => {
     setOfflineQueue(updated);
     localStorage.setItem('resqone_offline_queue', JSON.stringify(updated));
 
-    // If online, attempt immediate sync in background
     if (navigator.onLine) {
       setTimeout(() => syncQueueToSupabase(), 800);
     }
@@ -125,7 +148,7 @@ export const DemoProvider = ({ children }) => {
     localStorage.removeItem('resqone_offline_queue');
   };
 
-  // Multi-Role Global Alerts Feed
+  // Multi-Role Global Alerts Feed for Missions
   const [activeAlerts, setActiveAlerts] = useState([
     {
       id: 'alt-crash-101',
@@ -135,10 +158,12 @@ export const DemoProvider = ({ children }) => {
       location: 'NH-16 Bypass, Vijayawada',
       gForce: '4.85G',
       victim: 'Srinivas Palnati (O- Blood)',
+      phone: '+91-9440123401',
       time: 'Just Now',
-      status: 'PENDING_ACCEPTANCE', // 'PENDING_ACCEPTANCE' | 'ACCEPTED_BY_HOSPITAL' | 'ACCEPTED_BY_RESCUE'
+      status: 'PENDING_ACCEPTANCE',
       acceptedHospital: 'Government General Hospital (GGH Vijayawada)',
       acceptedAmbulance: 'ALS-108 (AP-TRAUMA-99)',
+      familyAlerted: ['Father: Ramesh Varma (+91 9440123401)', 'Mother: Lakshmi Varma (+91 9440123402)'],
       acceptedBy: null
     },
     {
@@ -148,8 +173,10 @@ export const DemoProvider = ({ children }) => {
       severity: 'HIGH',
       location: 'GGH Regional Trauma Center, Vijayawada',
       victim: 'Trauma Emergency Patient #4401',
+      phone: '+91-866-2472777',
       time: '2m ago',
       status: 'PENDING_ACCEPTANCE',
+      familyAlerted: ['Emergency Guardian (+91 9440123403)'],
       acceptedBy: null
     },
     {
@@ -159,8 +186,10 @@ export const DemoProvider = ({ children }) => {
       severity: 'CRITICAL',
       location: 'Gunadala Agricultural Belt, Vijayawada',
       victim: 'Farmer (Neurotoxic Symptoms)',
+      phone: '+91-9440555002',
       time: '5m ago',
       status: 'PENDING_ACCEPTANCE',
+      familyAlerted: ['Family Relative (+91 9440123404)'],
       acceptedBy: null
     },
     {
@@ -170,8 +199,10 @@ export const DemoProvider = ({ children }) => {
       severity: 'HIGH',
       location: 'MG Road Junction, Vijayawada',
       victim: 'Elderly Citizen (Cardiac Distress)',
+      phone: '+91-9440555001',
       time: '9m ago',
       status: 'PENDING_ACCEPTANCE',
+      familyAlerted: ['Spouse (+91 9440123405)'],
       acceptedBy: null
     }
   ]);
@@ -185,6 +216,79 @@ export const DemoProvider = ({ children }) => {
   });
 
   const [activeRole, setActiveRole] = useState('user'); // 'user' | 'hospital' | 'rescue' | 'donor' | 'volunteer'
+
+  // Master Global SOS Broadcaster: Sends real-time notification to all agencies and family members
+  const broadcastEmergencySOS = (payload) => {
+    const sosId = payload.id || `sos-alert-${Date.now()}`;
+    const timestamp = 'Just Now';
+    const location = payload.location || payload.address || 'NH-16 Corridor, Vijayawada';
+    const victim = payload.victim || payload.patient_name || 'Emergency User';
+    const severity = payload.severity || 'CRITICAL';
+    const familyMembers = [
+      'Ramesh Varma (Father) • +91 9440123401',
+      'Lakshmi Varma (Mother) • +91 9440123402'
+    ];
+
+    const newAlert = {
+      id: sosId,
+      type: payload.type || 'ACCIDENT_RESCUE',
+      title: payload.title || `🚨 EMERGENCY SOS: ${victim} needs immediate rescue!`,
+      severity,
+      location,
+      gForce: payload.gForce ? `${payload.gForce}G` : '4.85G',
+      victim,
+      phone: payload.phone || '+91-9440123401',
+      time: timestamp,
+      status: 'PENDING_ACCEPTANCE',
+      acceptedHospital: 'Government General Hospital (GGH Vijayawada)',
+      acceptedAmbulance: 'ALS-108 (AP-TRAUMA-99)',
+      familyAlerted: familyMembers,
+      acceptedBy: null
+    };
+
+    setActiveAlerts((prev) => [newAlert, ...prev]);
+
+    const newNotification = {
+      id: `notif-${Date.now()}`,
+      title: `🚨 EMERGENCY SOS BROADCAST: ${victim}`,
+      message: `Emergency SOS triggered at ${location}. 108 Ambulance, Trauma ICU, and 2 Family Members alerted with live GPS tracking.`,
+      severity: 'CRITICAL',
+      timestamp,
+      read: false,
+      location,
+      familyNotified: familyMembers
+    };
+
+    setEmergencyNotifications((prev) => [newNotification, ...prev]);
+
+    // Fire real browser notification if supported and granted
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(`🚨 RESQONE EMERGENCY ALERT: ${victim}`, {
+          body: `Emergency at ${location}. 108 Rescue CAD & Trauma ICU Bay alerted. Family SMS dispatched.`,
+          icon: '/favicon.svg',
+          tag: 'resqone-emergency-broadcast'
+        });
+      } catch (e) {
+        console.warn('[Notification Error]', e);
+      }
+    }
+
+    // Show Global Live Banner
+    setGlobalSOSBanner({
+      id: sosId,
+      title: `🚨 EMERGENCY SOS BROADCASTED TO ALL AGENCIES & FAMILY`,
+      victim,
+      location,
+      familyCount: familyMembers.length
+    });
+
+    setTimeout(() => {
+      setGlobalSOSBanner(null);
+    }, 10000);
+
+    return newAlert;
+  };
 
   const acceptAlert = (alertId, role, details = {}) => {
     setActiveAlerts((prev) =>
@@ -231,7 +335,12 @@ export const DemoProvider = ({ children }) => {
       setAcceptedHospital,
       activeRole,
       setActiveRole,
-      acceptAlert
+      acceptAlert,
+      emergencyNotifications,
+      setEmergencyNotifications,
+      globalSOSBanner,
+      setGlobalSOSBanner,
+      broadcastEmergencySOS
     }}>
       {children}
     </DemoContext.Provider>

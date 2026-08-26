@@ -66,17 +66,30 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const syncProfile = (authUser) => {
+    let existingUser = null;
+    try {
+      const saved = localStorage.getItem('resqone_user');
+      if (saved) existingUser = JSON.parse(saved);
+    } catch {}
+
+    const hasContactsConfigured = existingUser?.hasSetupEmergencyContacts || authUser.user_metadata?.has_setup_contacts || false;
+
     const userObj = {
       id: authUser.id,
       email: authUser.email,
-      name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
-      role: authUser.user_metadata?.role || 'user',
-      blood_group: authUser.user_metadata?.blood_group || 'O-',
-      phone: authUser.user_metadata?.phone || '+91-9876543210',
-      medical_notes: authUser.user_metadata?.medical_notes || ''
+      name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || existingUser?.name || authUser.email?.split('@')[0] || 'User',
+      role: authUser.user_metadata?.role || existingUser?.role || 'user',
+      blood_group: authUser.user_metadata?.blood_group || existingUser?.blood_group || 'O-',
+      phone: authUser.user_metadata?.phone || authUser.phone || existingUser?.phone || '+91-9876543210',
+      medical_notes: authUser.user_metadata?.medical_notes || existingUser?.medical_notes || '',
+      avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || existingUser?.avatar_url || null,
+      auth_provider: authUser.app_metadata?.provider || 'email',
+      hasSetupEmergencyContacts: hasContactsConfigured
     };
     setUser(userObj);
     localStorage.setItem('resqone_user', JSON.stringify(userObj));
+    setIsOnboarded(true);
+    localStorage.setItem('resqone_is_onboarded', 'true');
   };
 
   // Save user profile + family contacts to Supabase 'users' table

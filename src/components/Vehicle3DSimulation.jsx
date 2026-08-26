@@ -1016,10 +1016,10 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
               {/* Option A: User Listens -> Safe */}
               <button
                 onClick={handleUserListensSlowDown}
-                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-emerald-950/90 active:scale-95 ring-2 ring-emerald-400/50"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-emerald-950/90 active:scale-95 ring-2 ring-emerald-400/50"
               >
                 <CheckCircle2 className="w-5 h-5 fill-slate-950 text-emerald-400" />
-                <span>🛑 SLOW DOWN (I WILL LISTEN)</span>
+                <span>{language === 'te' ? '🛑 వేగాన్ని తగ్గించండి (నేను నెమ్మదిగా వెళ్తాను)' : language === 'hi' ? '🛑 गति धीमी करें (मैं सुनूंगा)' : '🛑 SLOW DOWN (I WILL LISTEN)'}</span>
               </button>
 
               {/* Option B: User Doesn't Listen -> Crash & Rescue */}
@@ -1028,7 +1028,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
                 className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-red-950/90 active:scale-95 ring-2 ring-red-500/50"
               >
                 <AlertOctagon className="w-5 h-5 animate-pulse text-white" />
-                <span>⚠️ IGNORE / SPEED UP (TRIGGER CRASH)</span>
+                <span>{language === 'te' ? '⚠️ హెచ్చరికను పట్టించుకోకండి (ప్రమాదాన్ని అనుకరించండి)' : language === 'hi' ? '⚠️ अनसुना करें (दुर्घटना सिमुलेट करें)' : '⚠️ IGNORE / SPEED UP (TRIGGER CRASH)'}</span>
               </button>
             </div>
 
@@ -1042,7 +1042,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
             className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs px-4 sm:px-6 py-3 rounded-2xl shadow-xl shadow-red-950/80 flex items-center space-x-2 transition-all cursor-pointer hover:scale-105"
           >
             <AlertOctagon className="w-4 h-4 animate-pulse" />
-            <span>TRIGGER 3D ACCIDENT (4.85G)</span>
+            <span>{language === 'te' ? 'ప్రమాదాన్ని అనుకరించండి (4.85G క్రాష్)' : language === 'hi' ? 'दुर्घटना सिमुलेट करें (4.85G)' : 'TRIGGER 3D ACCIDENT (4.85G)'}</span>
           </button>
         )}
       </div>
@@ -1186,10 +1186,14 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
 
               <div className="space-y-1">
                 <h3 className="text-xl sm:text-2xl font-black text-white">
-                  ARE YOU INJURED OR NEED RESCUE?
+                  {language === 'te' ? 'ప్రమాదం జరిగింది! మీరు గాయపడ్డారా లేదా రెస్క్యూ కావాలా?' : language === 'hi' ? 'दुर्घटना दर्ज! क्या आप घायल हैं या मदद चाहिए?' : 'ARE YOU INJURED OR NEED RESCUE?'}
                 </h3>
                 <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
-                  Autonomous telemetry is broadcasting live GPS coordinates (<strong className="text-cyan-400">16.5412° N, 80.5843° E</strong>) to <strong className="text-white">5 Registered Family Members</strong> and <strong className="text-white">Government General Hospital (GGH Vijayawada)</strong>.
+                  {language === 'te' 
+                    ? 'ఆటోమేటిక్ టెలిమెట్రీ ద్వారా 5 కుటుంబ సభ్యులకు మరియు సమీప ఆసుపత్రికి లైవ్ GPS లొకేషన్ పంపుతున్నాం.' 
+                    : language === 'hi' 
+                    ? 'स्वचालित टेलीमेट्री द्वारा परिजनों और अस्पतालों को जीपीएस लोकेशन भेजी जा रही है।' 
+                    : 'Autonomous telemetry is broadcasting live GPS coordinates to 5 Registered Family Members and Government General Hospital.'}
                 </p>
               </div>
             </div>
@@ -1220,14 +1224,14 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
                 className="flex-1 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-black py-4 px-6 rounded-2xl text-sm shadow-[0_0_30px_rgba(239,68,68,0.7)] flex items-center justify-center space-x-2.5 transition-all cursor-pointer hover:scale-[1.02]"
               >
                 <Siren className="w-5 h-5 animate-bounce" />
-                <span>DISPATCH EMERGENCY RESCUE NOW</span>
+                <span>{language === 'te' ? 'అత్యవసర రెస్క్యూ వెంటనే పంపండి' : language === 'hi' ? 'तुरंत बचाव दल रवाना करें' : 'DISPATCH EMERGENCY RESCUE NOW'}</span>
               </button>
 
               <button
                 onClick={handleReset}
                 className="px-6 py-4 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 rounded-2xl text-sm font-bold transition-all cursor-pointer"
               >
-                I AM SAFE (CANCEL SOS)
+                {language === 'te' ? 'నేను క్షేమంగా ఉన్నాను (రద్దు చేయండి)' : language === 'hi' ? 'मैं सुरक्षित हूँ (रद्द करें)' : 'I AM SAFE (CANCEL SOS)'}
               </button>
             </div>
 

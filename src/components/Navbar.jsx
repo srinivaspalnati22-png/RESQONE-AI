@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
-import { Menu, Bell, Globe, ChevronDown, CheckCircle2, Car, Droplet, Activity, X, ArrowRight, Smartphone, Monitor } from 'lucide-react';
+import { Menu, Bell, Globe, ChevronDown, CheckCircle2, Car, Droplet, Activity, X, ArrowRight, Smartphone, Monitor, ShieldAlert, PhoneCall } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useViewMode } from '../context/ViewModeContext';
+import { useDemo } from '../context/DemoContext';
 import { speakEmergencyInstruction } from '../services/audio_service';
 
 const LANGUAGES = [
   { code: 'en', label: 'EN', name: 'English' },
-  { code: 'te', label: 'తె', name: 'Telugu' },
-  { code: 'hi', label: 'हि', name: 'Hindi' },
+  { code: 'te', label: 'తె', name: 'Telugu (తెలుగు)' },
+  { code: 'hi', label: 'हि', name: 'Hindi (हिन्दी)' },
+  { code: 'ta', label: 'த', name: 'Tamil (தமிழ்)' },
+  { code: 'kn', label: 'ಕ', name: 'Kannada (ಕನ್ನಡ)' },
 ];
 
 export const Navbar = ({ setActiveTab }) => {
   const { language, setLanguage } = useLanguage();
   const { viewMode, setViewMode } = useViewMode();
+  const { emergencyNotifications, setEmergencyNotifications } = useDemo();
   const [langOpen, setLangOpen] = useState(false);
-
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
+
+  const defaultNotifications = [
     {
       id: 'n1',
       title: 'ALS-108 Ambulance Dispatched',
@@ -50,18 +54,33 @@ export const Navbar = ({ setActiveTab }) => {
       badge: 'AVS READY',
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
     }
-  ]);
+  ];
+
+  const dynamicNotifs = (emergencyNotifications || []).map(n => ({
+    id: n.id,
+    title: n.title,
+    desc: n.message,
+    time: n.timestamp,
+    type: 'dashboard',
+    icon: ShieldAlert,
+    color: 'text-red-500',
+    badge: 'SOS BROADCAST',
+    badgeColor: 'bg-red-500/20 text-red-400 border-red-500/40',
+    familyNotified: n.familyNotified
+  }));
+
+  const allNotifications = [...dynamicNotifs, ...defaultNotifications];
 
   const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
 
   const handleNotificationClick = (notif) => {
     setNotifOpen(false);
     speakEmergencyInstruction(`Opening ${notif.title}`, language);
-    if (setActiveTab) setActiveTab(notif.type);
+    if (setActiveTab) setActiveTab(notif.type || 'dashboard');
   };
 
   const handleClearAll = () => {
-    setNotifications([]);
+    if (setEmergencyNotifications) setEmergencyNotifications([]);
   };
 
   return (
@@ -128,9 +147,9 @@ export const Navbar = ({ setActiveTab }) => {
             aria-label="Active Notifications"
           >
             <Bell className="w-5 h-5" />
-            {notifications.length > 0 && (
+            {allNotifications.length > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white font-bold text-[10px] flex items-center justify-center shadow-lg shadow-red-500/50 animate-pulse">
-                {notifications.length}
+                {allNotifications.length}
               </span>
             )}
           </button>
@@ -177,12 +196,12 @@ export const Navbar = ({ setActiveTab }) => {
               <div className="flex items-center justify-between border-b border-white/[0.08] pb-2.5">
                 <div className="flex items-center space-x-2">
                   <Bell className="w-4 h-4 text-red-400" />
-                  <span className="text-xs font-black text-white">Emergency Alerts</span>
+                  <span className="text-xs font-black text-white">Emergency Alerts & Family Broadcasts</span>
                   <span className="text-[10px] font-bold text-red-400 bg-red-500/15 px-2 py-0.5 rounded-full border border-red-500/30">
-                    {notifications.length} LIVE
+                    {allNotifications.length} LIVE
                   </span>
                 </div>
-                {notifications.length > 0 && (
+                {allNotifications.length > 0 && (
                   <button
                     onClick={handleClearAll}
                     className="text-[10px] text-slate-400 hover:text-white font-medium cursor-pointer"
@@ -192,7 +211,7 @@ export const Navbar = ({ setActiveTab }) => {
                 )}
               </div>
 
-              {notifications.length === 0 ? (
+              {allNotifications.length === 0 ? (
                 <div className="text-center py-6 space-y-1">
                   <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto opacity-70" />
                   <p className="text-xs font-bold text-white">All Clear</p>
@@ -200,7 +219,7 @@ export const Navbar = ({ setActiveTab }) => {
                 </div>
               ) : (
                 <div className="space-y-2 max-h-72 overflow-y-auto thin-scrollbar pr-0.5">
-                  {notifications.map((notif) => {
+                  {allNotifications.map((notif) => {
                     const Icon = notif.icon;
                     return (
                       <button
@@ -218,34 +237,43 @@ export const Navbar = ({ setActiveTab }) => {
                             </span>
                             <span className="text-[9px] font-mono text-slate-500">{notif.time}</span>
                           </div>
-                          <h4 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors leading-tight">
+                          <h5 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors truncate">
                             {notif.title}
-                          </h4>
-                          <p className="text-[10px] text-slate-400 leading-snug line-clamp-2">
+                          </h5>
+                          <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
                             {notif.desc}
                           </p>
+                          {notif.familyNotified && notif.familyNotified.length > 0 && (
+                            <div className="text-[9px] text-emerald-400 font-mono flex items-center gap-1 pt-0.5">
+                              <PhoneCall className="w-3 h-3" />
+                              <span>2 Family Contacts SMS Sent</span>
+                            </div>
+                          )}
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-transform group-hover:translate-x-0.5 shrink-0 self-center" />
                       </button>
                     );
                   })}
                 </div>
               )}
 
+              <div className="pt-1 border-t border-white/[0.06]">
+                <button
+                  onClick={() => {
+                    setNotifOpen(false);
+                    if (setActiveTab) setActiveTab('dashboard');
+                  }}
+                  className="w-full py-2 bg-gradient-to-r from-red-600/30 to-amber-600/30 hover:from-red-600/50 hover:to-amber-600/50 border border-red-500/30 rounded-xl text-center text-xs font-bold text-white transition-all flex items-center justify-center space-x-1 cursor-pointer"
+                >
+                  <span>Open Missions CAD Command Center</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
+                </button>
+              </div>
+
             </div>
           )}
 
         </div>
-
       </div>
-
-      {(langOpen || notifOpen) && (
-        <div 
-          className="fixed inset-0 z-30 bg-transparent" 
-          onClick={() => { setLangOpen(false); setNotifOpen(false); }} 
-        />
-      )}
     </header>
   );
 };
-

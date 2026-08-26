@@ -10,9 +10,11 @@ import {
 } from 'lucide-react';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export function AccidentRescueWorkflow({ crashDetails, onReset }) {
   const { user, familyContacts } = useAuth();
+  const { language, t } = useLanguage();
   
   // Rescue Stages:
   // 1. 'NOTIFYING_HOSPITALS' (Radar broadcast to 4 regional hospitals)
@@ -500,17 +502,17 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             </div>
             <div>
               <span className="text-[10px] font-mono font-black text-emerald-400 uppercase tracking-wider">
-                AUTONOMOUS MULTI-AGENCY RESCUE ACTIVE
+                {language === 'te' ? 'స్వయంచాలక రెస్క్యూ మిషన్ సక్రియం' : language === 'hi' ? 'स्वचालित बहु-एजेंसी बचाव मिशन सक्रिय' : 'AUTONOMOUS MULTI-AGENCY RESCUE ACTIVE'}
               </span>
               <h3 className="text-lg font-black text-white">
-                Live 3D Ambulance Mission & Trauma Hospital Telemetry
+                {language === 'te' ? 'ప్రత్యక్ష 3D ఆంబులెన్స్ మిషన్ & హాస్పిటల్ టెలిమెట్రీ' : language === 'hi' ? 'लाइव 3D एम्बुलेंस मिशन एवं अस्पताल टेलीमेट्री' : 'Live 3D Ambulance Mission & Trauma Hospital Telemetry'}
               </h3>
             </div>
           </div>
 
           <div className="flex items-center space-x-2 text-xs font-mono font-bold text-emerald-400 self-start sm:self-auto">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>REAL-TIME SATELLITE GPS ACTIVE</span>
+            <span>{language === 'te' ? 'లైవ్ GPS ట్రాకింగ్' : language === 'hi' ? 'लाइव जीपीएस ट्रैकिंग' : 'REAL-TIME SATELLITE GPS ACTIVE'}</span>
           </div>
         </div>
 
