@@ -20,7 +20,25 @@ class AppTheme {
   static const Color textSecondary = Color(0xFF94A3B8);
   static const Color textMuted = Color(0xFF64748B);
 
+  // Typography Styles
+  static TextStyle displayHero({Color color = textPrimary}) =>
+      GoogleFonts.plusJakartaSans(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -0.8, color: color);
+
+  static TextStyle titleSection({Color color = textPrimary}) =>
+      GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.4, color: color);
+
+  static TextStyle subHeader({Color color = textSecondary}) =>
+      GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: -0.1, color: color);
+
+  static TextStyle bodyText({Color color = textPrimary}) =>
+      GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: color);
+
+  static TextStyle telemetryMono({Color color = primaryCyan, double size = 14, FontWeight weight = FontWeight.w600}) =>
+      GoogleFonts.jetBrainsMono(fontSize: size, fontWeight: weight, letterSpacing: 0.5, color: color);
+
   static ThemeData get darkTheme {
+    final baseTextTheme = GoogleFonts.interTextTheme(ThemeData.dark().textTheme);
+    
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -33,22 +51,69 @@ class AppTheme {
         background: background,
         error: emergencyRed,
       ),
-      textTheme: GoogleFonts.interTextTheme(
-        ThemeData.dark().textTheme,
-      ).apply(
-        bodyColor: textPrimary,
-        displayColor: textPrimary,
+      textTheme: baseTextTheme.copyWith(
+        displayLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.8,
+          color: textPrimary,
+        ),
+        displayMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.5,
+          color: textPrimary,
+        ),
+        headlineLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.4,
+          color: textPrimary,
+        ),
+        headlineMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
+          color: textPrimary,
+        ),
+        titleLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+          color: textPrimary,
+        ),
+        titleMedium: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+          color: textPrimary,
+        ),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: textSecondary,
+        ),
+        labelLarge: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.2,
+          color: textPrimary,
+        ),
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: surfaceDark,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: primaryCyan),
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: primaryCyan),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
           color: textPrimary,
           fontSize: 18,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
         ),
       ),
       cardTheme: CardTheme(
@@ -68,20 +133,20 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w800,
             fontSize: 14,
-            letterSpacing: 0.5,
+            letterSpacing: 0.2,
           ),
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: surfaceDark,
         selectedItemColor: primaryCyan,
         unselectedItemColor: textMuted,
         type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 11),
+        selectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 11),
+        unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 11),
         elevation: 10,
       ),
     );
