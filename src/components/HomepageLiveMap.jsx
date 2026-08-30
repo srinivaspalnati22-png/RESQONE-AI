@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { X, Maximize2, Radio, ChevronRight } from 'lucide-react';
+import { LiveLocationMap } from './LiveLocationMap';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // OFFICIAL SURVEY OF INDIA HIGH-FIDELITY VECTOR OUTLINE
@@ -105,20 +107,289 @@ const Marker = ({ type, pulse, you, r = 7 }) => {
 };
 
 // ── Main Map Component ────────────────────────────────────────────────────────
-export const HomepageLiveMap = ({ compact = false }) => {
+export const HomepageLiveMap = ({ compact = false, setActiveTab = null }) => {
   const { t, language } = useLanguage();
   const [filter, setFilter] = useState('all');
+  const [isFullMapModalOpen, setIsFullMapModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('vector'); // 'vector' | 'gps'
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   const filters = [
     { key: 'all',       label: language === 'te' ? 'అన్నీ' : language === 'hi' ? 'सभी' : 'All',       color: '#3B82F6' },
     { key: 'accident',  label: language === 'te' ? 'ప్రమాదం' : language === 'hi' ? 'दुर्घटना' : 'Accident',  color: '#FF2244', emoji: '🚗' },
-    { key: 'blood',     label: language === 'te' ? 'రక్తం' : language === 'hi' ? 'रक्त' : 'Blood',     color: '#CC1133', emoji: '🩸' },
+    { key: 'blood',     label: language === 'te' ? 'రక్తం' : language === 'hi' ? 'రక్తం' : 'Blood',     color: '#CC1133', emoji: '🩸' },
     { key: 'snakebite', label: language === 'te' ? 'పాము కాటు' : language === 'hi' ? 'सर्पदंश' : 'Snakebite', color: '#008855', emoji: '🐍' },
     { key: 'medical',   label: language === 'te' ? 'వైద్యం' : language === 'hi' ? 'चिकित्सा' : 'Medical',   color: '#6D28D9', emoji: '🏥' },
   ];
 
   const visCities = filter === 'all' ? CITIES : CITIES.filter(c => c.type === filter || c.you);
   const visInc    = filter === 'all' ? INCIDENTS : INCIDENTS.filter(i => i.type === filter);
+
+  // Dynamic SVG ViewBox calculation for smooth zoom & pan
+  const baseW = 640;
+  const baseH = 700;
+  const currentW = baseW / zoomLevel;
+  const currentH = baseH / zoomLevel;
+  const centerX = selectedNode ? toSVG(selectedNode.lon, selectedNode.lat).x : 320;
+  const centerY = selectedNode ? toSVG(selectedNode.lon, selectedNode.lat).y : 350;
+  const minX = Math.max(0, Math.min(baseW - currentW, centerX - currentW / 2));
+  const minY = Math.max(0, Math.min(baseH - currentH, centerY - currentH / 2));
+  const viewBoxStr = `${minX.toFixed(1)} ${minY.toFixed(1)} ${currentW.toFixed(1)} ${currentH.toFixed(1)}`;
+
+  const handleZoomIn = (e) => {
+    e?.stopPropagation();
+    setZoomLevel(z => Math.min(z + 0.4, 2.6));
+  };
+
+  const handleZoomOut = (e) => {
+    e?.stopPropagation();
+    setZoomLevel(z => Math.max(z - 0.4, 1));
+  };
+
+  const handleZoomReset = (e) => {
+    e?.stopPropagation();
+    setZoomLevel(1);
+    setSelectedNode(null);
+  };
+
+  const renderSvgMap = (isExpanded = false) => (
+    <div className="relative flex-1 w-full h-full min-h-[340px]" style={{ background: 'radial-gradient(ellipse 80% 70% at 45% 40%, #061228 0%, #020817 100%)' }}>
+      {/* Subtle star matrix */}
+      <div className="absolute inset-0 pointer-events-none opacity-30"
+        style={{ backgroundImage: 'radial-gradient(rgba(180,210,255,0.9) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+      {/* Compass rose */}
+      <div className="absolute top-2 left-2 opacity-75 z-10" style={{ width: 36, height: 36 }}>
+        <svg viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="18" stroke="#1E3A60" strokeWidth="1.5" fill="#030C1E" />
+          <polygon points="20,4 22.5,17 20,15 17.5,17" fill="#FF4444" />
+          <polygon points="20,36 22.5,23 20,25 17.5,23" fill="#5a7a9a" />
+          <polygon points="4,20 17,17.5 15,20 17,22.5" fill="#5a7a9a" />
+          <polygon points="36,20 23,17.5 25,20 23,22.5" fill="#5a7a9a" />
+          <circle cx="20" cy="20" r="3" fill="#1E3A60" stroke="#3B82F6" strokeWidth="1" />
+          <text x="20" y="9" textAnchor="middle" fontSize="5" fontWeight="900" fill="#FF4444">N</text>
+        </svg>
+      </div>
+
+      {/* Interactive Zoom controls */}
+      <div className="absolute top-2 right-2 flex flex-col gap-1 z-20">
+        <button
+          onClick={handleZoomIn}
+          title="Zoom In"
+          className="w-7 h-7 rounded-lg bg-[#0A1628]/95 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center justify-center hover:bg-cyan-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
+        >
+          +
+        </button>
+        <button
+          onClick={handleZoomOut}
+          title="Zoom Out"
+          className="w-7 h-7 rounded-lg bg-[#0A1628]/95 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center justify-center hover:bg-cyan-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
+        >
+          −
+        </button>
+        <button
+          onClick={handleZoomReset}
+          title="Reset View"
+          className="w-7 h-7 rounded-lg bg-[#0A1628]/95 border border-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center justify-center hover:bg-cyan-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
+        >
+          ◎
+        </button>
+      </div>
+
+      {/* Selected City / Node Telemetry Card Overlay */}
+      {selectedNode && (
+        <motion.div
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+          className="absolute bottom-10 left-3 right-3 sm:right-auto sm:w-72 z-30 p-3 rounded-2xl bg-[#071124]/95 border border-cyan-500/40 shadow-2xl backdrop-blur-md"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white text-sm font-bold ${
+                selectedNode.type === 'accident' ? 'bg-red-600' :
+                selectedNode.type === 'blood' ? 'bg-rose-600' :
+                selectedNode.type === 'snakebite' ? 'bg-emerald-600' :
+                selectedNode.type === 'hospital' ? 'bg-blue-600' : 'bg-cyan-600'
+              }`}>
+                {selectedNode.type === 'accident' ? '🚗' :
+                 selectedNode.type === 'blood' ? '🩸' :
+                 selectedNode.type === 'snakebite' ? '🐍' :
+                 selectedNode.type === 'hospital' ? '🏥' : '📍'}
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-white">{selectedNode.name || 'Emergency Incident Hub'}</h4>
+                <p className="text-[9px] font-mono text-cyan-300">{selectedNode.lat.toFixed(2)}°N, {selectedNode.lon.toFixed(2)}°E</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedNode(null)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="mt-2 text-[10px] text-slate-300 flex items-center justify-between border-t border-white/10 pt-1.5">
+            <span>Status: <strong className="text-emerald-400">Live Monitored</strong></span>
+            {setActiveTab && (
+              <button
+                onClick={() => {
+                  setIsFullMapModalOpen(false);
+                  if (selectedNode.type === 'accident') setActiveTab('accident');
+                  else if (selectedNode.type === 'blood') setActiveTab('blood');
+                  else if (selectedNode.type === 'snakebite') setActiveTab('snakebite');
+                  else setActiveTab('dashboard');
+                }}
+                className="px-2 py-0.5 rounded-md bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-[9px] flex items-center gap-1 cursor-pointer"
+              >
+                <span>Open Hub</span>
+                <ChevronRight className="w-2.5 h-2.5" />
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* The High-Precision SVG Map */}
+      <svg
+        viewBox={viewBoxStr}
+        className="w-full h-full transition-all duration-300"
+        style={{ display: 'block', padding: '6px' }}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <defs>
+          <filter id="glowIndia" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <radialGradient id="indiaMapGrad" cx="45%" cy="36%" r="65%">
+            <stop offset="0%" stopColor="#0E2550" />
+            <stop offset="50%" stopColor="#081A38" />
+            <stop offset="100%" stopColor="#040D1C" />
+          </radialGradient>
+          <linearGradient id="routeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0055FF" stopOpacity="0.15" />
+          </linearGradient>
+        </defs>
+
+        {/* Ambient Background Grid lines */}
+        <g opacity="0.1" stroke="#00D9FF" strokeWidth="0.5">
+          <line x1="40" y1="150" x2="600" y2="150" strokeDasharray="3 6" />
+          <line x1="40" y1="300" x2="600" y2="300" strokeDasharray="3 6" />
+          <line x1="40" y1="450" x2="600" y2="450" strokeDasharray="3 6" />
+          <line x1="40" y1="600" x2="600" y2="600" strokeDasharray="3 6" />
+          <line x1="160" y1="30" x2="160" y2="680" strokeDasharray="3 6" />
+          <line x1="320" y1="30" x2="320" y2="680" strokeDasharray="3 6" />
+          <line x1="480" y1="30" x2="480" y2="680" strokeDasharray="3 6" />
+        </g>
+
+        {/* India Territory Base & Glow Border */}
+        <path
+          d={INDIA_PATH}
+          fill="url(#indiaMapGrad)"
+          stroke="#2563EB"
+          strokeWidth="1.8"
+          filter="url(#glowIndia)"
+        />
+        {/* Neon Border Pulse */}
+        <path
+          d={INDIA_PATH}
+          fill="none"
+          stroke="rgba(56, 189, 248, 0.55)"
+          strokeWidth="1"
+          strokeDasharray="6 3"
+        />
+
+        {/* Route network lines */}
+        {ROUTES.map((route, ri) => {
+          const pts = route.map(([lon, lat]) => {
+            const p = toSVG(lon, lat);
+            return `${p.x.toFixed(0)},${p.y.toFixed(0)}`;
+          }).join(' ');
+          return (
+            <polyline key={ri} points={pts}
+              fill="none"
+              stroke="url(#routeGlow)"
+              strokeWidth="1.2"
+              strokeDasharray="4 4"
+              strokeLinecap="round"
+            />
+          );
+        })}
+
+        {/* Extra incident markers */}
+        {visInc.map((inc, i) => {
+          const p = toSVG(inc.lon, inc.lat);
+          return (
+            <g
+              key={`inc-${i}`}
+              transform={`translate(${p.x.toFixed(0)},${p.y.toFixed(0)})`}
+              onClick={() => setSelectedNode(inc)}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <Marker type={inc.type} r={5} />
+            </g>
+          );
+        })}
+
+        {/* City markers with exact geographical placement */}
+        {visCities.map((city) => {
+          const p = toSVG(city.lon, city.lat);
+          const x = p.x.toFixed(0);
+          const y = p.y.toFixed(0);
+          const labelLeft = city.lon > 84;
+          const isSelected = selectedNode?.name === city.name;
+          return (
+            <g
+              key={city.name}
+              transform={`translate(${x},${y})`}
+              onClick={() => setSelectedNode(city)}
+              className="cursor-pointer"
+            >
+              {isSelected && (
+                <circle r={14} fill="none" stroke="#00F0FF" strokeWidth="2" strokeDasharray="3 3" className="animate-spin" />
+              )}
+              <Marker type={city.type} pulse={city.pulse} you={city.you} r={city.you ? 8 : 6.5} />
+              <text
+                x={labelLeft ? -9 : 9}
+                y="2.5"
+                fontSize="7"
+                fontWeight="700"
+                fill={isSelected ? "#00F0FF" : "rgba(215, 235, 255, 0.95)"}
+                textAnchor={labelLeft ? 'end' : 'start'}
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                {city.name}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Dynamic radar scan beam */}
+        <rect x="0" y="0" width="80" height="700" fill="url(#scanBeam)" opacity="0.08">
+          <animateTransform attributeName="transform" type="translate"
+            from="-80 0" to="650 0" dur="4.5s" repeatCount="indefinite" />
+        </rect>
+        <defs>
+          <linearGradient id="scanBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#00F0FF" stopOpacity="0" />
+            <stop offset="50%" stopColor="#00F0FF" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* Timestamp */}
+      <div className="absolute bottom-1.5 left-2 flex items-center gap-1.5 text-[7px] text-slate-500">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        {language === 'te' ? 'నవీకరించబడింది: ఇప్పుడే' : language === 'hi' ? 'अपडेट किया गया: अभी' : 'Last updated: Just now'}
+        <span onClick={handleZoomReset} className="cursor-pointer hover:text-slate-400 ml-1">↺ Reset</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="w-full rounded-2xl overflow-hidden bg-[#020817] border border-cyan-500/20 shadow-2xl flex flex-col"
@@ -132,8 +403,12 @@ export const HomepageLiveMap = ({ compact = false }) => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE
           </span>
         </div>
-        <button className="text-[8px] font-bold text-cyan-400 border border-cyan-500/25 px-2 py-0.5 rounded-lg hover:bg-cyan-500/10 transition-colors flex items-center gap-1 cursor-pointer">
-          {language === 'te' ? 'పూర్తి మ్యాప్ ↗' : language === 'hi' ? 'पूरा नक्शा ↗' : 'View Full Map ↗'}
+        <button
+          onClick={() => setIsFullMapModalOpen(true)}
+          className="text-[8px] font-bold text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded-lg hover:bg-cyan-500/15 hover:border-cyan-400 transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
+        >
+          <Maximize2 className="w-2.5 h-2.5" />
+          <span>{language === 'te' ? 'పూర్తి మ్యాప్ ↗' : language === 'hi' ? 'पूरा नक्शा ↗' : 'View Full Map ↗'}</span>
         </button>
       </div>
 
@@ -152,158 +427,11 @@ export const HomepageLiveMap = ({ compact = false }) => {
 
       {/* Map + Sidebar row */}
       <div className="flex flex-1 min-h-0">
-
-        {/* ── SVG India Map ── */}
-        <div className="relative flex-1" style={{ background: 'radial-gradient(ellipse 80% 70% at 45% 40%, #061228 0%, #020817 100%)' }}>
-          {/* Subtle star matrix */}
-          <div className="absolute inset-0 pointer-events-none opacity-30"
-            style={{ backgroundImage: 'radial-gradient(rgba(180,210,255,0.9) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-          {/* Compass rose */}
-          <div className="absolute top-2 left-2 opacity-75 z-10" style={{ width: 36, height: 36 }}>
-            <svg viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="18" stroke="#1E3A60" strokeWidth="1.5" fill="#030C1E" />
-              <polygon points="20,4 22.5,17 20,15 17.5,17" fill="#FF4444" />
-              <polygon points="20,36 22.5,23 20,25 17.5,23" fill="#5a7a9a" />
-              <polygon points="4,20 17,17.5 15,20 17,22.5" fill="#5a7a9a" />
-              <polygon points="36,20 23,17.5 25,20 23,22.5" fill="#5a7a9a" />
-              <circle cx="20" cy="20" r="3" fill="#1E3A60" stroke="#3B82F6" strokeWidth="1" />
-              <text x="20" y="9" textAnchor="middle" fontSize="5" fontWeight="900" fill="#FF4444">N</text>
-            </svg>
-          </div>
-
-          {/* Zoom controls */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
-            {['+', '−', '◎'].map((s, i) => (
-              <button key={i} className="w-6 h-6 rounded-md bg-[#0A1628]/90 border border-white/10 text-slate-300 text-[10px] font-bold flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">{s}</button>
-            ))}
-          </div>
-
-          {/* The High-Precision SVG Map */}
-          <svg
-            viewBox="0 0 640 700"
-            className="w-full h-full"
-            style={{ display: 'block', padding: '6px' }}
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <defs>
-              <filter id="glowIndia" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3.5" result="blur" />
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <radialGradient id="indiaMapGrad" cx="45%" cy="36%" r="65%">
-                <stop offset="0%" stopColor="#0E2550" />
-                <stop offset="50%" stopColor="#081A38" />
-                <stop offset="100%" stopColor="#040D1C" />
-              </radialGradient>
-              <linearGradient id="routeGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00E5FF" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#0055FF" stopOpacity="0.15" />
-              </linearGradient>
-            </defs>
-
-            {/* Ambient Background Grid lines */}
-            <g opacity="0.1" stroke="#00D9FF" strokeWidth="0.5">
-              <line x1="40" y1="150" x2="600" y2="150" strokeDasharray="3 6" />
-              <line x1="40" y1="300" x2="600" y2="300" strokeDasharray="3 6" />
-              <line x1="40" y1="450" x2="600" y2="450" strokeDasharray="3 6" />
-              <line x1="40" y1="600" x2="600" y2="600" strokeDasharray="3 6" />
-              <line x1="160" y1="30" x2="160" y2="680" strokeDasharray="3 6" />
-              <line x1="320" y1="30" x2="320" y2="680" strokeDasharray="3 6" />
-              <line x1="480" y1="30" x2="480" y2="680" strokeDasharray="3 6" />
-            </g>
-
-            {/* India Territory Base & Glow Border */}
-            <path
-              d={INDIA_PATH}
-              fill="url(#indiaMapGrad)"
-              stroke="#2563EB"
-              strokeWidth="1.8"
-              filter="url(#glowIndia)"
-            />
-            {/* Neon Border Pulse */}
-            <path
-              d={INDIA_PATH}
-              fill="none"
-              stroke="rgba(56, 189, 248, 0.55)"
-              strokeWidth="1"
-              strokeDasharray="6 3"
-            />
-
-            {/* Route network lines */}
-            {ROUTES.map((route, ri) => {
-              const pts = route.map(([lon, lat]) => {
-                const p = toSVG(lon, lat);
-                return `${p.x.toFixed(0)},${p.y.toFixed(0)}`;
-              }).join(' ');
-              return (
-                <polyline key={ri} points={pts}
-                  fill="none"
-                  stroke="url(#routeGlow)"
-                  strokeWidth="1.2"
-                  strokeDasharray="4 4"
-                  strokeLinecap="round"
-                />
-              );
-            })}
-
-            {/* Extra incident markers */}
-            {visInc.map((inc, i) => {
-              const p = toSVG(inc.lon, inc.lat);
-              return (
-                <g key={`inc-${i}`} transform={`translate(${p.x.toFixed(0)},${p.y.toFixed(0)})`}>
-                  <Marker type={inc.type} r={5} />
-                </g>
-              );
-            })}
-
-            {/* City markers with exact geographical placement */}
-            {visCities.map((city) => {
-              const p = toSVG(city.lon, city.lat);
-              const x = p.x.toFixed(0);
-              const y = p.y.toFixed(0);
-              const labelLeft = city.lon > 84;
-              return (
-                <g key={city.name} transform={`translate(${x},${y})`}>
-                  <Marker type={city.type} pulse={city.pulse} you={city.you} r={city.you ? 8 : 6.5} />
-                  <text
-                    x={labelLeft ? -9 : 9}
-                    y="2.5"
-                    fontSize="7"
-                    fontWeight="700"
-                    fill="rgba(215, 235, 255, 0.95)"
-                    textAnchor={labelLeft ? 'end' : 'start'}
-                    style={{ pointerEvents: 'none', userSelect: 'none' }}
-                  >{city.name}</text>
-                </g>
-              );
-            })}
-
-            {/* Dynamic radar scan beam */}
-            <rect x="0" y="0" width="80" height="700" fill="url(#scanBeam)" opacity="0.08">
-              <animateTransform attributeName="transform" type="translate"
-                from="-80 0" to="650 0" dur="4.5s" repeatCount="indefinite" />
-            </rect>
-            <defs>
-              <linearGradient id="scanBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#00F0FF" stopOpacity="0" />
-                <stop offset="50%" stopColor="#00F0FF" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          {/* Timestamp */}
-          <div className="absolute bottom-1.5 left-2 flex items-center gap-1.5 text-[7px] text-slate-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {language === 'te' ? 'నవీకరించబడింది: ఇప్పుడే' : language === 'hi' ? 'अपडेट किया गया: अभी' : 'Last updated: Just now'}
-            <span className="cursor-pointer hover:text-slate-400">↺</span>
-          </div>
-        </div>
+        {/* SVG Map */}
+        {renderSvgMap(false)}
 
         {/* ── Right Sidebar ── */}
         <div className="w-32 shrink-0 border-l border-white/5 bg-[#030C1E]/60 flex flex-col overflow-y-auto no-scrollbar">
-
           {/* Live Overview */}
           <div className="p-2 border-b border-white/5">
             <div className="text-[7.5px] font-black text-cyan-400 tracking-wider uppercase mb-1.5">{t('live_overview') || 'Live Overview'}</div>
@@ -311,7 +439,7 @@ export const HomepageLiveMap = ({ compact = false }) => {
               { emoji: '🚨', val: 24,     label: language === 'te' ? 'ప్రమాదాలు' : language === 'hi' ? 'सक्रिय घटनाएं' : 'Active Incidents' },
               { emoji: '🚑', val: 108,    label: language === 'te' ? '108 యూనిట్లు' : language === 'hi' ? 'बचाव दल' : 'Rescue Units' },
               { emoji: '🏥', val: 254,    label: language === 'te' ? 'ఆసుపత్రులు' : language === 'hi' ? 'अस्पताल' : 'Hospitals' },
-              { emoji: '🩸', val: 395,    label: language === 'te' ? 'రక్త దాతలు' : language === 'hi' ? 'रक्त दाता' : 'Blood Donors' },
+              { emoji: '🩸', val: 395,    label: language === 'te' ? 'రక్త దాతలు' : language === 'hi' ? 'రక్త दाता' : 'Blood Donors' },
               { emoji: '👥', val: '12.8K',label: language === 'te' ? 'సేవకులు' : language === 'hi' ? 'स्वयंसेवक' : 'Volunteers' },
             ].map((row, i) => (
               <motion.div key={i}
@@ -333,7 +461,7 @@ export const HomepageLiveMap = ({ compact = false }) => {
             <div className="text-[7.5px] font-black text-cyan-400 tracking-wider uppercase mb-1.5">{t('legend_title') || 'Legend'}</div>
             {[
               { emoji: '🔴', label: language === 'te' ? 'ప్రమాదం' : language === 'hi' ? 'दुर्घटना' : 'Accident' },
-              { emoji: '🩸', label: language === 'te' ? 'రక్త దాత' : language === 'hi' ? 'रक्त दाता' : 'Blood / Donor' },
+              { emoji: '🩸', label: language === 'te' ? 'రక్త దాత' : language === 'hi' ? 'రక్త दाता' : 'Blood / Donor' },
               { emoji: '🐍', label: language === 'te' ? 'పాము కాటు' : language === 'hi' ? 'सर्पदंश' : 'Snakebite' },
               { emoji: '🟣', label: language === 'te' ? 'వైద్య అత్యవసరం' : language === 'hi' ? 'चिकित्सा' : 'Medical' },
               { emoji: '🔵', label: language === 'te' ? 'ఆసుపత్రి' : language === 'hi' ? 'अस्पताल' : 'Hospital' },
@@ -348,6 +476,155 @@ export const HomepageLiveMap = ({ compact = false }) => {
           </div>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          FULLSCREEN HIGH-TECH MODAL (VIEW FULL MAP)
+          ══════════════════════════════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {isFullMapModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 20 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full max-w-5xl h-[92vh] max-h-[850px] rounded-3xl bg-[#030914] border border-cyan-500/40 shadow-2xl shadow-cyan-950/60 flex flex-col overflow-hidden"
+            >
+              {/* Modal Topbar */}
+              <div className="flex items-center justify-between px-4 py-3 bg-[#061124] border-b border-cyan-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                    <Radio className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black text-white tracking-wide uppercase flex items-center gap-2">
+                      <span>🇮🇳 National Emergency Live Radar</span>
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        LIVE TELEMETRY
+                      </span>
+                    </h3>
+                    <p className="text-[10px] text-slate-400">
+                      Multi-agency autonomous triage, hospital capacity & 108 CAD ambulance mesh
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* View Mode Toggle */}
+                  <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                    <button
+                      onClick={() => setModalMode('vector')}
+                      className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                        modalMode === 'vector' ? 'bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      🗺️ National Macro Radar
+                    </button>
+                    <button
+                      onClick={() => setModalMode('gps')}
+                      className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                        modalMode === 'gps' ? 'bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      🛰️ Live GPS Leaflet Radar
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setIsFullMapModalOpen(false)}
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-all cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile View Mode Switcher */}
+              <div className="flex sm:hidden items-center justify-center gap-1 p-2 bg-[#040D1E] border-b border-white/5">
+                <button
+                  onClick={() => setModalMode('vector')}
+                  className={`flex-1 py-1 text-[10px] font-bold rounded-lg cursor-pointer ${
+                    modalMode === 'vector' ? 'bg-cyan-500 text-black' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  🗺️ National Macro
+                </button>
+                <button
+                  onClick={() => setModalMode('gps')}
+                  className={`flex-1 py-1 text-[10px] font-bold rounded-lg cursor-pointer ${
+                    modalMode === 'gps' ? 'bg-cyan-500 text-black' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  🛰️ GPS Leaflet
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 min-h-0 relative flex flex-col">
+                {modalMode === 'vector' ? (
+                  <div className="flex-1 flex flex-col sm:flex-row min-h-0">
+                    <div className="flex-1 relative">
+                      {renderSvgMap(true)}
+                    </div>
+                    {/* Expanded telemetry panel on side */}
+                    <div className="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-white/10 bg-[#020712] p-3 overflow-y-auto space-y-3">
+                      <div className="text-[10px] font-black text-cyan-400 tracking-wider uppercase">
+                        Quick Agency Dispatch
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
+                        {[
+                          { tab: 'accident', title: 'Accident & 108 SOS', icon: '🚨', color: 'border-red-500/40 bg-red-950/30 text-red-400' },
+                          { tab: 'blood', title: 'Universal Blood Mesh', icon: '🩸', color: 'border-rose-500/40 bg-rose-950/30 text-rose-400' },
+                          { tab: 'snakebite', title: 'Snakebite AVS AI', icon: '🐍', color: 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400' },
+                          { tab: 'dashboard', title: 'Hospital ER & Beds', icon: '🏥', color: 'border-blue-500/40 bg-blue-950/30 text-blue-400' },
+                        ].map((btn, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setIsFullMapModalOpen(false);
+                              if (setActiveTab) setActiveTab(btn.tab);
+                            }}
+                            className={`p-2.5 rounded-xl border text-left flex items-center justify-between hover:scale-[1.02] active:scale-98 transition-all cursor-pointer ${btn.color}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{btn.icon}</span>
+                              <span className="text-[11px] font-bold text-white leading-tight">{btn.title}</span>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 space-y-1.5 text-[10px]">
+                        <div className="font-bold text-slate-200">Active Network Status</div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Live 108 CAD Feeds:</span>
+                          <span className="font-mono text-emerald-400 font-bold">ONLINE</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>NHP Blood Stock Sync:</span>
+                          <span className="font-mono text-cyan-400 font-bold">100% VERIFIED</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>ICU Trauma Telemetry:</span>
+                          <span className="font-mono text-cyan-400 font-bold">254 ERs</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 w-full h-full relative">
+                    <LiveLocationMap mode="all" onEmergencyClick={() => {
+                      setIsFullMapModalOpen(false);
+                      if (setActiveTab) setActiveTab('accident');
+                    }} />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

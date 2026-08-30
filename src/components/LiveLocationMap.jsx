@@ -73,7 +73,7 @@ function MapRecenter({ center }) {
   return null;
 }
 
-export default function LiveLocationMap() {
+export function LiveLocationMap() {
   const { t } = useLanguage();
   const { 
     coords, 
@@ -455,3 +455,5 @@ export default function LiveLocationMap() {
     </div>
   );
 }
+
+export default LiveLocationMap;

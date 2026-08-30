@@ -377,7 +377,7 @@ export const LandingPage = ({ setActiveTab, navigateWithQuery, onSimulateCrash }
       </div>
 
       {/* Live Map */}
-      <HomepageLiveMap compact />
+      <HomepageLiveMap compact setActiveTab={setActiveTab} />
 
       {/* Interactive Emergency Voice & NLP Input Assistant */}
       <div className="card-voice-assistant p-3.5 rounded-3xl space-y-2.5 bg-[#080E1C]/95 border border-cyan-500/40 shadow-xl">
@@ -521,7 +521,7 @@ export const LandingPage = ({ setActiveTab, navigateWithQuery, onSimulateCrash }
 
         {/* Live Emergency Map */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-          <HomepageLiveMap compact />
+          <HomepageLiveMap compact setActiveTab={setActiveTab} />
         </motion.div>
 
         {/* Voice Assistant */}
