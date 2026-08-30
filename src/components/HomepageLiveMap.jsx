@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
-import { X, Maximize2, Radio, ChevronRight } from 'lucide-react';
+import { X, Maximize2, Radio, ChevronRight, Layers, Compass, Navigation, Phone, ExternalLink } from 'lucide-react';
 import { LiveLocationMap } from './LiveLocationMap';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -404,10 +405,16 @@ export const HomepageLiveMap = ({ compact = false, setActiveTab = null }) => {
           </span>
         </div>
         <button
-          onClick={() => setIsFullMapModalOpen(true)}
-          className="text-[8px] font-bold text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded-lg hover:bg-cyan-500/15 hover:border-cyan-400 transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
+          type="button"
+          id="view-full-emergency-map-btn"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsFullMapModalOpen(true);
+          }}
+          className="text-[9px] font-bold text-cyan-300 bg-cyan-950/50 border border-cyan-500/40 px-2.5 py-1 rounded-lg hover:bg-cyan-500/25 hover:border-cyan-400 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-md"
         >
-          <Maximize2 className="w-2.5 h-2.5" />
+          <Maximize2 className="w-3 h-3 text-cyan-400" />
           <span>{language === 'te' ? 'పూర్తి మ్యాప్ ↗' : language === 'hi' ? 'पूरा नक्शा ↗' : 'View Full Map ↗'}</span>
         </button>
       </div>
@@ -478,153 +485,163 @@ export const HomepageLiveMap = ({ compact = false, setActiveTab = null }) => {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════════
-          FULLSCREEN HIGH-TECH MODAL (VIEW FULL MAP)
+          FULLSCREEN HIGH-TECH MODAL (VIEW FULL MAP) - RENDERED VIA PORTAL
           ══════════════════════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {isFullMapModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xl">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 20 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="w-full max-w-5xl h-[92vh] max-h-[850px] rounded-3xl bg-[#030914] border border-cyan-500/40 shadow-2xl shadow-cyan-950/60 flex flex-col overflow-hidden"
-            >
-              {/* Modal Topbar */}
-              <div className="flex items-center justify-between px-4 py-3 bg-[#061124] border-b border-cyan-500/20">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                    <Radio className="w-4 h-4 animate-pulse" />
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isFullMapModalOpen && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-2xl">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="w-full max-w-5xl h-[92vh] max-h-[850px] rounded-3xl bg-[#030914] border border-cyan-500/50 shadow-2xl shadow-cyan-950/80 flex flex-col overflow-hidden"
+              >
+                {/* Modal Topbar */}
+                <div className="flex items-center justify-between px-4 py-3 bg-[#061124] border-b border-cyan-500/30 shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                      <Radio className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-base font-black text-white tracking-wide uppercase flex items-center gap-2 truncate">
+                        <span>🇮🇳 National Emergency Live Radar</span>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                          LIVE TELEMETRY
+                        </span>
+                      </h3>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        Multi-agency autonomous triage, hospital capacity & 108 CAD ambulance mesh
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-black text-white tracking-wide uppercase flex items-center gap-2">
-                      <span>🇮🇳 National Emergency Live Radar</span>
-                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        LIVE TELEMETRY
-                      </span>
-                    </h3>
-                    <p className="text-[10px] text-slate-400">
-                      Multi-agency autonomous triage, hospital capacity & 108 CAD ambulance mesh
-                    </p>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* View Mode Toggle */}
+                    <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setModalMode('vector')}
+                        className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                          modalMode === 'vector' ? 'bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        🗺️ National Macro Radar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalMode('gps')}
+                        className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                          modalMode === 'gps' ? 'bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        🛰️ Live GPS Leaflet Radar
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsFullMapModalOpen(false)}
+                      className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition-all cursor-pointer"
+                      title="Close"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {/* View Mode Toggle */}
-                  <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-                    <button
-                      onClick={() => setModalMode('vector')}
-                      className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                        modalMode === 'vector' ? 'bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      🗺️ National Macro Radar
-                    </button>
-                    <button
-                      onClick={() => setModalMode('gps')}
-                      className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                        modalMode === 'gps' ? 'bg-cyan-500 text-black shadow-md' : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      🛰️ Live GPS Leaflet Radar
-                    </button>
-                  </div>
-
+                {/* Mobile View Mode Switcher */}
+                <div className="flex sm:hidden items-center justify-center gap-1 p-2 bg-[#040D1E] border-b border-white/5 shrink-0">
                   <button
-                    onClick={() => setIsFullMapModalOpen(false)}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white transition-all cursor-pointer"
+                    type="button"
+                    onClick={() => setModalMode('vector')}
+                    className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg cursor-pointer ${
+                      modalMode === 'vector' ? 'bg-cyan-500 text-black' : 'bg-slate-900 text-slate-400'
+                    }`}
                   >
-                    <X className="w-5 h-5" />
+                    🗺️ National Macro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModalMode('gps')}
+                    className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg cursor-pointer ${
+                      modalMode === 'gps' ? 'bg-cyan-500 text-black' : 'bg-slate-900 text-slate-400'
+                    }`}
+                  >
+                    🛰️ GPS Leaflet
                   </button>
                 </div>
-              </div>
 
-              {/* Mobile View Mode Switcher */}
-              <div className="flex sm:hidden items-center justify-center gap-1 p-2 bg-[#040D1E] border-b border-white/5">
-                <button
-                  onClick={() => setModalMode('vector')}
-                  className={`flex-1 py-1 text-[10px] font-bold rounded-lg cursor-pointer ${
-                    modalMode === 'vector' ? 'bg-cyan-500 text-black' : 'bg-slate-900 text-slate-400'
-                  }`}
-                >
-                  🗺️ National Macro
-                </button>
-                <button
-                  onClick={() => setModalMode('gps')}
-                  className={`flex-1 py-1 text-[10px] font-bold rounded-lg cursor-pointer ${
-                    modalMode === 'gps' ? 'bg-cyan-500 text-black' : 'bg-slate-900 text-slate-400'
-                  }`}
-                >
-                  🛰️ GPS Leaflet
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="flex-1 min-h-0 relative flex flex-col">
-                {modalMode === 'vector' ? (
-                  <div className="flex-1 flex flex-col sm:flex-row min-h-0">
-                    <div className="flex-1 relative">
-                      {renderSvgMap(true)}
-                    </div>
-                    {/* Expanded telemetry panel on side */}
-                    <div className="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-white/10 bg-[#020712] p-3 overflow-y-auto space-y-3">
-                      <div className="text-[10px] font-black text-cyan-400 tracking-wider uppercase">
-                        Quick Agency Dispatch
+                {/* Modal Body */}
+                <div className="flex-1 min-h-0 relative flex flex-col">
+                  {modalMode === 'vector' ? (
+                    <div className="flex-1 flex flex-col sm:flex-row min-h-0">
+                      <div className="flex-1 relative">
+                        {renderSvgMap(true)}
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
-                        {[
-                          { tab: 'accident', title: 'Accident & 108 SOS', icon: '🚨', color: 'border-red-500/40 bg-red-950/30 text-red-400' },
-                          { tab: 'blood', title: 'Universal Blood Mesh', icon: '🩸', color: 'border-rose-500/40 bg-rose-950/30 text-rose-400' },
-                          { tab: 'snakebite', title: 'Snakebite AVS AI', icon: '🐍', color: 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400' },
-                          { tab: 'dashboard', title: 'Hospital ER & Beds', icon: '🏥', color: 'border-blue-500/40 bg-blue-950/30 text-blue-400' },
-                        ].map((btn, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setIsFullMapModalOpen(false);
-                              if (setActiveTab) setActiveTab(btn.tab);
-                            }}
-                            className={`p-2.5 rounded-xl border text-left flex items-center justify-between hover:scale-[1.02] active:scale-98 transition-all cursor-pointer ${btn.color}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-base">{btn.icon}</span>
-                              <span className="text-[11px] font-bold text-white leading-tight">{btn.title}</span>
-                            </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                          </button>
-                        ))}
-                      </div>
+                      {/* Expanded telemetry panel on side */}
+                      <div className="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-white/10 bg-[#020712] p-3 overflow-y-auto space-y-3 shrink-0">
+                        <div className="text-[10px] font-black text-cyan-400 tracking-wider uppercase">
+                          Quick Agency Dispatch
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
+                          {[
+                            { tab: 'accident', title: 'Accident & 108 SOS', icon: '🚨', color: 'border-red-500/40 bg-red-950/30 text-red-400' },
+                            { tab: 'blood', title: 'Universal Blood Mesh', icon: '🩸', color: 'border-rose-500/40 bg-rose-950/30 text-rose-400' },
+                            { tab: 'snakebite', title: 'Snakebite AVS AI', icon: '🐍', color: 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400' },
+                            { tab: 'dashboard', title: 'Hospital ER & Beds', icon: '🏥', color: 'border-blue-500/40 bg-blue-950/30 text-blue-400' },
+                          ].map((btn, idx) => (
+                            <button
+                              type="button"
+                              key={idx}
+                              onClick={() => {
+                                setIsFullMapModalOpen(false);
+                                if (setActiveTab) setActiveTab(btn.tab);
+                              }}
+                              className={`p-2.5 rounded-xl border text-left flex items-center justify-between hover:scale-[1.02] active:scale-98 transition-all cursor-pointer ${btn.color}`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-base">{btn.icon}</span>
+                                <span className="text-[11px] font-bold text-white leading-tight">{btn.title}</span>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+                          ))}
+                        </div>
 
-                      <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 space-y-1.5 text-[10px]">
-                        <div className="font-bold text-slate-200">Active Network Status</div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>Live 108 CAD Feeds:</span>
-                          <span className="font-mono text-emerald-400 font-bold">ONLINE</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>NHP Blood Stock Sync:</span>
-                          <span className="font-mono text-cyan-400 font-bold">100% VERIFIED</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>ICU Trauma Telemetry:</span>
-                          <span className="font-mono text-cyan-400 font-bold">254 ERs</span>
+                        <div className="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 space-y-1.5 text-[10px]">
+                          <div className="font-bold text-slate-200">Active Network Status</div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>Live 108 CAD Feeds:</span>
+                            <span className="font-mono text-emerald-400 font-bold">ONLINE</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>NHP Blood Stock Sync:</span>
+                            <span className="font-mono text-cyan-400 font-bold">100% VERIFIED</span>
+                          </div>
+                          <div className="flex justify-between text-slate-400">
+                            <span>ICU Trauma Telemetry:</span>
+                            <span className="font-mono text-cyan-400 font-bold">254 ERs</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 w-full h-full relative">
-                    <LiveLocationMap mode="all" onEmergencyClick={() => {
-                      setIsFullMapModalOpen(false);
-                      if (setActiveTab) setActiveTab('accident');
-                    }} />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+                  ) : (
+                    <div className="flex-1 w-full h-full relative">
+                      <LiveLocationMap mode="all" onEmergencyClick={() => {
+                        setIsFullMapModalOpen(false);
+                        if (setActiveTab) setActiveTab('accident');
+                      }} />
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
