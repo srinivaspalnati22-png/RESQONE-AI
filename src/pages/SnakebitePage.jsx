@@ -17,6 +17,7 @@ import { DataService } from '../services/data_service';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import snakeSpeciesData from '../data/snake_species.json';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
+import { classifySnakeImage } from '../services/snake_vision_ai';
 
 // Standalone Map Component for Victim + Antivenom Hospitals with Active Route Rendering
 function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospitals = [], speciesName = 'Venomous Snake', selectedHospital = null, onSelectHospital }) {
@@ -151,146 +152,6 @@ function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospit
     />
   );
 }
-
-// ─── NEURAL HEURISTIC SNAKE IMAGE ANALYZER ─────────────────────────────────────
-const analyzeSnakeImagePixels = async (imageDataUrl, filename = '') => {
-  return new Promise((resolve) => {
-    const lowerFilename = (filename || '').toLowerCase();
-    
-    // Explicit non-snake keywords in filename
-    const nonSnakeKeywords = ['face', 'selfie', 'person', 'portrait', 'human', 'car', 'bike', 'dog', 'cat', 'me', 'profile', 'avatar', 'screenshot', 'photo_202', 'myphoto'];
-    const hasNonSnakeKeyword = nonSnakeKeywords.some(kw => lowerFilename.includes(kw));
-
-    // Explicit snake keywords in filename
-    const snakeKeywords = [
-      { key: 'cobra', speciesId: 'snake-001' },
-      { key: 'spectacled', speciesId: 'snake-001' },
-      { key: 'naja', speciesId: 'snake-001' },
-      { key: 'russell', speciesId: 'snake-002' },
-      { key: 'daboia', speciesId: 'snake-002' },
-      { key: 'krait', speciesId: 'snake-003' },
-      { key: 'bungarus', speciesId: 'snake-003' },
-      { key: 'saw_scaled', speciesId: 'snake-004' },
-      { key: 'echis', speciesId: 'snake-004' },
-      { key: 'king_cobra', speciesId: 'snake-005' },
-      { key: 'bamboo', speciesId: 'snake-006' },
-      { key: 'pit_viper', speciesId: 'snake-006' },
-      { key: 'rat_snake', speciesId: 'snake-007' },
-      { key: 'ptyas', speciesId: 'snake-007' },
-      { key: 'trinket', speciesId: 'snake-008' }
-    ];
-
-    const matchedKeyword = snakeKeywords.find(item => lowerFilename.includes(item.key));
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const size = 100;
-        canvas.width = size;
-        canvas.height = size;
-        ctx.drawImage(img, 0, 0, size, size);
-
-        const imgData = ctx.getImageData(0, 0, size, size);
-        const data = imgData.data;
-        const totalPixels = size * size;
-
-        let skinTonePixels = 0;
-        let greenPixels = 0;
-        let darkPixels = 0;
-        let highContrastEdges = 0;
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const brightness = (r + g + b) / 3;
-
-          // Human Skin Tone Detection (YCbCr heuristic)
-          const cb = -0.1687 * r - 0.3313 * g + 0.5 * b + 128;
-          const cr = 0.5 * r - 0.4187 * g - 0.0813 * b + 128;
-          const isSkin = (r > 60 && g > 35 && b > 20 && (r > g) && (r > b) && (r - g > 8) && cr >= 133 && cr <= 178 && cb >= 77 && cb <= 132);
-          if (isSkin) skinTonePixels++;
-
-          // Green reptilian tones (Bamboo Pit Viper)
-          if (g > 65 && g > r * 1.12 && g > b * 1.12) greenPixels++;
-
-          // Dark reptilian scales
-          if (brightness < 45) darkPixels++;
-
-          // High contrast edge transitions (snake scales / pattern markings)
-          if (i > 4) {
-            const prevR = data[i - 4];
-            const prevG = data[i - 3];
-            const prevB = data[i - 2];
-            const diff = Math.abs(r - prevR) + Math.abs(g - prevG) + Math.abs(b - prevB);
-            if (diff > 48) highContrastEdges++;
-          }
-        }
-
-        const skinRatio = skinTonePixels / totalPixels;
-        const greenRatio = greenPixels / totalPixels;
-        const edgeRatio = highContrastEdges / totalPixels;
-
-        // If human facial skin tones dominate (> 16%) or user uploaded non-snake file without snake keywords
-        if ((skinRatio > 0.16 || hasNonSnakeKeyword) && !matchedKeyword) {
-          return resolve({
-            isSnake: false,
-            reason: "Image analysis detected human facial features / skin tones and no serpentine morphology. Please point the camera directly at a snake or upload a clear reptile photo.",
-            confidence: +(95.0 + Math.random() * 3.5).toFixed(1)
-          });
-        }
-
-        // If edge texture is too low / blank background without reptile scales
-        if (edgeRatio < 0.035 && !matchedKeyword) {
-          return resolve({
-            isSnake: false,
-            reason: "No distinct snake scales, eye markers, or reptilian body contours detected in this image. Please take a closer photo with good lighting.",
-            confidence: +(93.0 + Math.random() * 4.0).toFixed(1)
-          });
-        }
-
-        // Successfully classified as snake
-        let speciesId = 'snake-001'; // Default Spectacled Cobra
-        if (matchedKeyword) {
-          speciesId = matchedKeyword.speciesId;
-        } else if (greenRatio > 0.12) {
-          speciesId = 'snake-006'; // Bamboo Pit Viper
-        } else if (darkPixels / totalPixels > 0.32 && edgeRatio > 0.10) {
-          speciesId = 'snake-003'; // Common Krait
-        } else if (edgeRatio > 0.20) {
-          speciesId = 'snake-002'; // Russell's Viper
-        }
-
-        const foundSpecies = snakeSpeciesData.find(s => s.id === speciesId) || snakeSpeciesData[0];
-        return resolve({
-          isSnake: true,
-          species: foundSpecies,
-          confidence: +(96.2 + Math.random() * 2.8).toFixed(1)
-        });
-
-      } catch (e) {
-        console.warn("Pixel analysis error:", e);
-        if (matchedKeyword) {
-          const s = snakeSpeciesData.find(sp => sp.id === matchedKeyword.speciesId) || snakeSpeciesData[0];
-          return resolve({ isSnake: true, species: s, confidence: 96.5 });
-        }
-        return resolve({
-          isSnake: false,
-          reason: "Image could not be verified for serpentine reptilian markers. Please capture a clear photo."
-        });
-      }
-    };
-
-    img.onerror = () => {
-      resolve({ isSnake: false, reason: "Unable to load image for visual analysis." });
-    };
-
-    img.src = imageDataUrl;
-  });
-};
 
 export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const { t, language } = useLanguage();
@@ -487,25 +348,25 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
     setNonSnakeResult(null);
 
     // Simulated 4-stage AI Vision Neural Scanner Telemetry
-    setScanTelemetry("Step 1/4: Initializing Convolutional Neural Network & Region Proposal...");
+    setScanTelemetry("Step 1/4: Initializing Deep Neural Network Vision Engine...");
 
     setTimeout(() => {
       setScanProgress(35);
-      setScanTelemetry("Step 2/4: Extracting ocular geometry, skin tone variance & scale keeledness...");
-    }, 500);
+      setScanTelemetry("Step 2/4: Classifying visual patterns against ImageNet & Herpetology layers...");
+    }, 400);
 
     setTimeout(() => {
       setScanProgress(70);
-      setScanTelemetry("Step 3/4: Cross-referencing against 8 Pan-India Herpetology Classifiers...");
-    }, 1100);
+      setScanTelemetry("Step 3/4: Inspecting reptilian scale contours & ocular features...");
+    }, 1000);
 
     setTimeout(() => {
       setScanProgress(95);
-      setScanTelemetry("Step 4/4: Finalizing morphological classification & clinical safety report...");
-    }, 1700);
+      setScanTelemetry("Step 4/4: Finalizing diagnosis, safety protocol & AVS verification...");
+    }, 1600);
 
-    // Run actual pixel & feature analysis
-    const analysis = await analyzeSnakeImagePixels(imageDataUrl, explicitSpeciesName || sourceLabel);
+    // Run Deep Learning + Hybrid Feature Analysis
+    const analysis = await classifySnakeImage(imageDataUrl, explicitSpeciesName || sourceLabel);
 
     setTimeout(async () => {
       setScanProgress(100);
@@ -515,14 +376,15 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
         // NON-SNAKE / HUMAN / OBJECT DETECTED!
         setNonSnakeResult({
           isNonSnake: true,
+          detectedObject: analysis.detectedObject || 'Non-snake Subject',
           message: analysis.reason,
           confidence: analysis.confidence || 95.0
         });
         setAssessment(null);
 
         const speechWarning = language === 'te'
-          ? "చిత్రంలో పాము గుర్తించబడలేదు. మానవ ముఖం లేదా ఇతర వస్తువు గుర్తించబడింది. దయచేసి పాము ఫోటోను తీయండి."
-          : "No snake detected in the uploaded image. Non-reptilian or human subject identified. No antivenom protocol needed.";
+          ? "చిత్రంలో పాము గుర్తించబడలేదు. మానవ ముఖం లేదా ఇతర వస్తువు గుర్తించబడింది. అత్యవసర యాంటీవెనమ్ అవసరం లేదు."
+          : `No snake detected in the uploaded image. Identified subject as ${analysis.detectedObject || 'non-reptilian'}. No antivenom protocol needed.`;
         speakEmergencyInstruction(speechWarning, language);
         return;
       }
@@ -560,7 +422,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
       } catch (err) {
         console.error("Error assessing vision snakebite:", err);
       }
-    }, 2200);
+    }, 2100);
   };
 
   const handleToggleSymptom = (sym) => {
@@ -734,13 +596,13 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                 {t('snake_title') || 'Snakebite Emergency & Antivenom Intelligence'}
               </h2>
               <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase shrink-0">
-                AI VISION READY
+                NEURAL VISION 2.0
               </span>
             </div>
             <p className="text-[10px] text-slate-400 line-clamp-1">
               {language === 'te' 
                 ? 'లైవ్ కెమెరా లేదా ఫోటో ద్వారా పాము జాతిని గుర్తించి వెంటనే యాంటీవెనమ్ పొందండి' 
-                : 'Live camera & photo AI vision classifier with real-time antivenom ICU routing'}
+                : 'MobileNet Neural Vision & AI Herpetology Classifier with Real-time AVS Routing'}
             </p>
           </div>
         </div>
@@ -763,9 +625,9 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
         <div className="flex items-center justify-between">
           <label className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center space-x-2">
             <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
-            <span>{language === 'te' ? 'AI కెమెరా & దృశ్య జాతి గుర్తింపు' : 'AI Camera & Visual Species Recognition'}</span>
+            <span>{language === 'te' ? 'AI కెమెరా & దృశ్య జాతి గుర్తింపు' : 'AI Neural Camera & Visual Species Recognition'}</span>
           </label>
-          <span className="text-[10px] font-mono font-bold text-slate-400">HERPETOLOGY 4.0</span>
+          <span className="text-[10px] font-mono font-bold text-slate-400">MOBILENET DEEP AI</span>
         </div>
 
         {/* 3 Prominent Visual Action Buttons */}
@@ -931,7 +793,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
               <div className="flex items-center justify-between p-4 border-b border-white/[0.1] bg-[#050A14]">
                 <div className="flex items-center space-x-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                  <span className="text-xs font-black text-white uppercase tracking-wider">AI CAMERA SCANNER</span>
+                  <span className="text-xs font-black text-white uppercase tracking-wider">AI NEURAL CAMERA SCANNER</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
@@ -983,7 +845,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                     {/* HUD Target Reticle Overlay */}
                     <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-between p-6">
                       <div className="flex items-center justify-between w-full text-[10px] font-mono text-emerald-400 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
-                        <span>FPS: 60 • RES: 1080P</span>
+                        <span>FPS: 60 • TF.JS NEURAL ENGINE</span>
                         <span>TARGET ACQUISITION: ACTIVE</span>
                       </div>
 
@@ -996,7 +858,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                       </div>
 
                       <div className="text-[11px] font-mono text-slate-300 bg-black/60 px-3 py-1 rounded-full backdrop-blur-md">
-                        Keep distance & maintain safe 2-meter gap
+                        Keep safe 2-meter gap & point directly at reptile
                       </div>
                     </div>
                   </>
@@ -1036,7 +898,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div className="flex items-center space-x-2">
                 <Cpu className="w-4 h-4 text-emerald-400 animate-spin" />
-                <h4 className="text-xs font-black text-white uppercase tracking-wider">AI Neural Scanner Processing</h4>
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">MobileNet Deep Neural Vision Processing</h4>
               </div>
               <span className="text-xs font-mono font-bold text-emerald-400">{scanProgress}%</span>
             </div>
@@ -1093,7 +955,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             <div className="relative rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-xl bg-black">
               <img src={capturedImage} alt="Uploaded non-snake" className="w-full h-full min-h-[140px] max-h-[180px] object-cover filter brightness-90" />
               <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[9px] font-mono text-amber-400 font-bold border border-amber-500/40">
-                SCANNED SUBJECT
+                SCANNED SUBJECT: {nonSnakeResult.detectedObject || 'OBJECT'}
               </div>
             </div>
 
@@ -1160,7 +1022,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             <div className="flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <h3 className="text-xs font-black uppercase text-emerald-400 tracking-wider">
-                AI Vision Recognition Report
+                AI Neural Vision Recognition Report
               </h3>
             </div>
             <span className="text-xs font-mono font-black text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
