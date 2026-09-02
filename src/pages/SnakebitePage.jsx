@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
   Activity, ShieldAlert, CheckCircle2, Phone, MapPin, 
-  Hospital as HospIcon, Info, RefreshCw, AlertOctagon, 
+  Hospital, Hospital as HospIcon, Info, RefreshCw, AlertOctagon, 
   Eye, Zap, Stethoscope, AlertTriangle, Mic, MicOff, Volume2, 
   XCircle, Sparkles, HelpCircle, ArrowRight, Check, Table, Search, Filter, Send,
   Navigation, ShieldCheck, Route, ExternalLink, Building2,
@@ -203,6 +203,14 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
     };
   }, []);
 
+  // When camera opens and stream is ready, ensure video element receives the stream
+  useEffect(() => {
+    if (isCameraOpen && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(e => console.warn("Auto video play:", e));
+    }
+  }, [isCameraOpen]);
+
   useEffect(() => {
     if (initialQuery) {
       const q = initialQuery.species || initialQuery.query || 'Spectacled Cobra';
@@ -246,15 +254,17 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(e => console.warn("Video play error:", e));
-      }
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(e => console.warn("Video play error:", e));
+        }
+      }, 50);
     } catch (err) {
       console.error("Camera access error:", err);
       setCameraError(
         err.name === 'NotAllowedError' 
-          ? "Camera permission was denied. Please allow camera access in browser settings or upload a photo." 
+          ? "Camera permission was denied. Please allow camera access in your browser settings or upload a photo." 
           : "Unable to access live camera stream. You can still upload any snake photo from your device."
       );
     }
@@ -278,9 +288,9 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   };
 
   const handleCapturePhoto = () => {
-    if (!videoRef.current) return;
-
     const video = videoRef.current;
+    if (!video) return;
+
     const canvas = canvasRef.current || document.createElement('canvas');
     canvas.width = video.videoWidth || 640;
     canvas.height = video.videoHeight || 480;
@@ -306,6 +316,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
       }
     };
     reader.readAsDataURL(file);
+    e.target.value = ''; // Reset input so same file can be picked again
   };
 
   // ─── TEST SAMPLE SELECTOR ─────────────────────────────────────────────────────
@@ -347,7 +358,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
       );
     }
     if (!targetSpecies) {
-      // Default to India's most critical archetype (Spectacled Cobra or Russell's Viper)
+      // Default to India's primary archetype
       targetSpecies = snakeSpeciesData[0];
     }
 
@@ -367,17 +378,17 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
     setTimeout(() => {
       setScanProgress(35);
       setScanTelemetry("Step 2/4: Extracting scale texture, keeled ridges & hood morphology...");
-    }, 600);
+    }, 500);
 
     setTimeout(() => {
       setScanProgress(70);
       setScanTelemetry("Step 3/4: Cross-referencing against 8 Pan-India Herpetology Classifiers...");
-    }, 1300);
+    }, 1100);
 
     setTimeout(() => {
       setScanProgress(95);
       setScanTelemetry("Step 4/4: Evaluating Neurotoxic / Hemotoxic clinical severity & AVS dosage...");
-    }, 2000);
+    }, 1700);
 
     setTimeout(async () => {
       setScanProgress(100);
@@ -406,7 +417,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
       } catch (err) {
         console.error("Error assessing vision snakebite:", err);
       }
-    }, 2600);
+    }, 2200);
   };
 
   const handleToggleSymptom = (sym) => {
@@ -635,7 +646,6 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={handleFileUpload}
           />
@@ -662,7 +672,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             >
               <div className="flex items-center justify-between text-xs text-amber-300 font-bold px-1">
                 <span>Select a sample snake to test instant AI identification:</span>
-                <button onClick={() => setShowSampleGallery(false)} className="text-slate-400 hover:text-white p-1">
+                <button onClick={() => setShowSampleGallery(false)} className="text-slate-400 hover:text-white p-1 cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>
