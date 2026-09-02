@@ -83,7 +83,8 @@ npm run dev
 
 Comprehensive architectural blueprints, clinical methodology, research papers, and judge presentation guides are organized in the [`docs/`](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs) directory:
 
-- 📖 **[System Documentation](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/SYSTEM_DOCUMENTATION.md)** — Complete architecture, clinical decision tree, and sensor algorithms.
+- 📑 **[Master Project Documentation](docs/MASTER_PROJECT_DOCUMENTATION.md)** — Complete end-to-end breakdown: Problem statement, models, datasets, architecture, workflows, and build guide.
+- 📖 **[System Documentation](docs/SYSTEM_DOCUMENTATION.md)** — Complete architecture, clinical decision tree, and sensor algorithms.
 - 🧪 **[Technical Architecture & Setup Guide](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/DOCUMENTATION.md)** — Deep-dive on backend endpoints, Supabase schema, and components.
 - 🎓 **[IEEE Research Paper & TeX Source](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/RESQONE_AI_IEEE_PAPER.tex)** — Full academic paper format and experimental evaluation.
 - 🔬 **[Research Paper (Markdown)](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/RESQONE_AI_RESEARCH_PAPER.md)** — Comprehensive methodology and comparative clinical benchmarks.
