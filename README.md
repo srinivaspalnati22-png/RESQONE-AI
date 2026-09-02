@@ -77,8 +77,26 @@ npm run dev
 
 ---
 
+---
+
+## 📚 Project Documentation & Research Blueprints
+
+Comprehensive architectural blueprints, clinical methodology, research papers, and judge presentation guides are organized in the [`docs/`](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs) directory:
+
+- 📖 **[System Documentation](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/SYSTEM_DOCUMENTATION.md)** — Complete architecture, clinical decision tree, and sensor algorithms.
+- 🧪 **[Technical Architecture & Setup Guide](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/DOCUMENTATION.md)** — Deep-dive on backend endpoints, Supabase schema, and components.
+- 🎓 **[IEEE Research Paper & TeX Source](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/RESQONE_AI_IEEE_PAPER.tex)** — Full academic paper format and experimental evaluation.
+- 🔬 **[Research Paper (Markdown)](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/RESQONE_AI_RESEARCH_PAPER.md)** — Comprehensive methodology and comparative clinical benchmarks.
+- 🏆 **[Judge Presentation Guide](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/JUDGE_PRESENTATION_GUIDE.md)** — Step-by-step hackathon judging flow and scenario walkthroughs.
+- ❓ **[Judge Q&A Guide](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/JUDGE_QA.md)** — Answers to technical, architectural, and clinical defense questions.
+- 🎬 **[Live Demo Guide](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/DEMO_GUIDE.md)** — Quick live demonstration scenarios and telemetry validation.
+- 📱 **[User Guide](file:///c:/Users/srini/OneDrive/Desktop/RESQONE-AI/docs/USER_GUIDE.md)** — End-user operational guide for citizens, paramedics, and hospitals.
+
+---
+
 ## 🚀 Continuous Deployment
 
 The application is deployed live on **Vercel** and automatically synchronizes with the `main` branch of this GitHub repository:
 - **Production URL**: **[https://resqone-ai-app.vercel.app](https://resqone-ai-app.vercel.app)**
 - **GitHub Repository**: **[https://github.com/srinivaspalnati22-png/RESQONE-AI](https://github.com/srinivaspalnati22-png/RESQONE-AI)**
+
