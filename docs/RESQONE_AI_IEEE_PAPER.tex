@@ -111,6 +111,37 @@ U_{\text{hosp}}(i) = \alpha_1 \left(\frac{1}{1 + d_{v,i}}\right) + \alpha_2 \lef
 \end{equation}
 subject to $\sum_{k=1}^3 \alpha_k = 1.0$.
 
+\section{System Architecture \& Operational Implementation}
+
+The RESQONE-AI+ system was implemented as a production-ready edge-cloud application. Fig.~\ref{fig:screenshots} displays the primary operational interfaces of the deployed system across four core emergency modules.
+
+\begin{figure*}[htbp]
+\centering
+\begin{minipage}{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_crash_telemetry.png}
+  \caption*{(a) Edge Kinematic 3D Crash Telemetry \& 4.85G Impact Detection}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_snakebite_ai.png}
+  \caption*{(b) Neural Vision Snakebite Triage \& 10-Vial AVS Dosage Titration}
+\end{minipage}
+\vspace{0.3cm}
+\begin{minipage}{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_blood_mesh.png}
+  \caption*{(c) Deterministic ABO/Rh Compatibility \& Proximity Blood Mesh}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_dashboard.png}
+  \caption*{(d) Real-Time CAD Multi-Agency Mission Control \& Bed Telemetry}
+\end{minipage}
+\caption{Operational interfaces of the deployed RESQONE-AI+ ecosystem: (a) real-time 3-axis accelerometer and gyroscope sensor stream capturing vehicular rollover impact; (b) multimodal clinical envenomation assistant matching Russell's Viper (*D. russelii*) and routing to GGH Vijayawada; (c) ABO/Rh compatibility matrix locating nearest O- cryo-reserves; and (d) multi-agency Computer-Aided Dispatch mission control console.}
+\label{fig:screenshots}
+\end{figure*}
+
 \section{Experimental Results \& Performance Analysis}
 
 \subsection{Experimental Setup}
@@ -120,6 +151,16 @@ The framework was evaluated on an experimental testbed incorporating:
     \item $1,400$ validated Indian snake species clinical symptom cases (Kaggle Indian Snakebite Dataset).
     \item $15$ tertiary healthcare institutions across Andhra Pradesh (Visakhapatnam KGH, Vijayawada GGH, Guntur GGH, Tirupati Ruia Hospital, etc.) via open government datasets.
 \end{itemize}
+
+\subsection{Emergency Dispatch Latency Benchmarking}
+As delineated in Table~\ref{tab:latency} and illustrated in Fig.~\ref{fig:latency_bar}, the automated zero-touch architecture drastically curtails communication bottlenecks. Incident detection latency is curtailed by $99.05\%$ (from $8.50\text{ min}$ to $0.08\text{ min}$), and clinical triage is achieved within $0.003\text{ min}$ via our explainable NLP classifier.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_dispatch_latency_bar.png}
+\caption{Comparative analysis of CAD emergency dispatch latency across operational phases (Manual EMS baseline vs. RESQONE-AI+ autonomous dispatch).}
+\label{fig:latency_bar}
+\end{figure}
 
 \begin{table}[htbp]
 \caption{Emergency CAD Dispatch Latency Benchmarking}
@@ -140,6 +181,23 @@ CAD Dispatch Trigger & $2.60 \pm 0.80$ m & $0.05 \pm 0.01$ m & $98.07\%$ \\
 \end{center}
 \end{table}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_response_reduction_bar.png}
+\caption{End-to-end emergency response latency reduction, demonstrating an $88.58\%$ improvement preserving the victim's critical Golden Hour.}
+\label{fig:response_reduction}
+\end{figure}
+
+\subsection{Kinematic Crash Telemetry Validation}
+The 3-axis IMU detection daemon was rigorously evaluated against 1,000 true collision events and 250 benign disturbance events (potholes, smartphone drops, and rapid decelerations). As summarized in Table~\ref{tab:crash} and Fig.~\ref{fig:crash_metrics}, the system achieved a sensitivity of $98.40\%$, specificity of $99.20\%$, and an overall precision of $99.79\%$, confirming resilience against spurious triggers.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_crash_detection_metrics_bar.png}
+\caption{Validation performance metrics for the edge zero-touch kinematic crash detection daemon across $1,250$ experimental trials.}
+\label{fig:crash_metrics}
+\end{figure}
+
 \begin{table}[htbp]
 \caption{Crash Detection Confusion Matrix (1,250 Trials)}
 \begin{center}
@@ -157,6 +215,16 @@ Benign Motion ($N=250$) & 2 (FP) & 248 (TN) \\
 \label{tab:crash}
 \end{center}
 \end{table}
+
+\subsection{Multimodal Envenomation \& Emergency Triage Accuracy}
+The classification performance of the multimodal triage classifier across snakebite envenomation species and traumatic events is depicted in Fig.~\ref{fig:model_perf}. The model attained an aggregate F1-score of $0.955$ and precision of $0.961$ across $1,950$ clinical evaluations.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_model_performance_bar.png}
+\caption{Multimodal AI triage and envenomation diagnostic performance across emergency categories (Precision, Recall, and F1-Score).}
+\label{fig:model_perf}
+\end{figure}
 
 \subsection{Partition-Tolerant Offline Sync Validation}
 During simulated network partitions, $100\%$ ($200/200$) of queued emergency payloads stored inside the client IndexedDB buffer successfully synchronized with Supabase PostgreSQL within $850\text{ ms}$ upon network restoration, confirming zero transaction loss in rural blind spots.

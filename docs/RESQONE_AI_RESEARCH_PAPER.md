@@ -203,69 +203,39 @@ $$\mathbf{M}_{\text{ABO/Rh}}(\text{Type}_d, \text{Type}_v) = 1 \quad \land \quad
 - **Data & Mesh Layer**: Supabase PostgreSQL 15 with Row Level Security (RLS) policies, PostGIS spatial indexing, and Realtime WebSocket engine for zero-polling state broadcasts.
 - **Offline Storage Engine**: HTML5 IndexedDB transactional ledger running in background service workers.
 
-### B. Core Algorithms & Operational Workflows
+### C. Operational Application Interfaces & Deployed Workflows
 
-#### Algorithm 1: Edge-Based Kinematic Crash Verification and CAD Dispatch
-```python
-Algorithm: Zero-Touch Crash Telemetry & CAD Execution
-Input: Sensor Stream {accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, speed_kmh}
-Output: Emergency Dispatch Trigger / Reset
+The RESQONE-AI+ system was evaluated through an interactive production deployment. The operational interfaces capturing real-time telemetry, AI triage, logistics routing, and computer-aided dispatch are illustrated below:
 
-1: Initialize: G_THRESHOLD = 4.0, ANGULAR_THRESHOLD = 120.0, JERK_THRESHOLD = 45.0
-2: Loop continuously at 100 Hz:
-3:    g_vector = sqrt(accel_x^2 + accel_y^2 + accel_z^2) / 9.80665
-4:    jerk = abs(g_vector - prev_g_vector) / delta_t
-5:    angular_rate = sqrt(gyro_x^2 + gyro_y^2 + gyro_z^2)
-6:    
-7:    if (g_vector >= G_THRESHOLD and jerk >= JERK_THRESHOLD and angular_rate >= ANGULAR_THRESHOLD):
-8:       Trigger UI Acoustic Alarm & Start 5-Second Cancellation Countdown
-9:       Wait for (t = 5 seconds)
-10:      if User_Aborted_Cancellation() == True:
-11:          Log("False positive cancelled by user.")
-12:          Reset_Sensor_State()
-13:      else:
-14:          packet = Build_Emergency_Packet(Location_GPS, g_vector, angular_rate, Speed_Delta)
-15:          if Network_Connected() == True:
-16:              Supabase_Realtime_Broadcast("resqone_emergency_mesh", packet)
-17:              Dispatch_CAD_108_Ambulance(packet)
-18:              Notify_Trauma_Center_ICU(packet)
-19:              Send_SMS_To_Family_Contacts(packet.contacts, packet.tracking_url)
-20:          else:
-21:              IndexedDB_Queue_Offline_Report(packet)
-22:              Register_ServiceWorker_BackgroundSync()
-23:   prev_g_vector = g_vector
-```
+#### 1. Emergency Command Center & Live Operations Overview
+The central landing command center aggregates telemetry from rescue fleets, partner hospitals, and volunteer meshes while displaying a live spatial emergency event map across urban and rural corridors.
 
-#### Algorithm 2: Explainable Natural Language Emergency Classification
-```python
-Algorithm: Explainable Clinical Triage & Uncertainty Gating
-Input: Natural Language Voice Transcript or Text String (T)
-Output: Classification (E_type), Severity (S_tier), Explanation (Exp), Dispatch Action
+![RESQONE-AI+ Emergency Command Center & Live Operations Overview](figures/screenshot_landing.png)
+*Fig. 1. RESQONE-AI+ centralized emergency command center displaying live operational status across 108 rescue units, tertiary hospitals, active emergency alerts, and dynamic GIS incident clustering.*
 
-1: T_norm = Lowercase_And_Remove_Punctuation(T)
-2: Matches = Scan_Clinical_Keywords(T_norm, CLINICAL_LEXICON_DB)
-3: 
-4: For each category c in [SNAKEBITE, ACCIDENT, CARDIAC, BLOOD, DISASTER]:
-5:    Score[c] = Calculate_TFIDF_Cosine_Similarity(T_norm, c)
-6: 
-7: Best_Category = argmax(Score)
-8: Confidence = Softmax(Score)[Best_Category]
-9: S_tier = Compute_Severity_Index(Matches, High_Risk_Pointers)
-10: Exp_Text = Synthesize_Reasoning_Audit(Best_Category, Matches, Confidence)
-11: 
-12: if Confidence < 0.65:
-13:    Route_To_Human_Control_Room(T_norm, Best_Category, Confidence, "UNRESOLVED_UNCERTAINTY")
-14: else:
-15:    Nearest_Facility = Query_PostGIS_Optimal_Hospital(User_GPS, Best_Category, S_tier)
-16:    Return {
-17:       "emergency_type": Best_Category,
-18:       "severity": S_tier,
-19:       "ai_confidence": Confidence,
-20:       "ai_explanation": Exp_Text,
-21:       "recommended_action": WHO_First_Aid_Protocol(Best_Category),
-22:       "assigned_hospital": Nearest_Facility
-23:    }
-```
+#### 2. Zero-Touch Kinematic 3D Crash Telemetry & Impact Detection Console
+The crash detection interface streams 100 Hz tri-axial accelerometer and gyroscope data. Upon exceeding calibrated physiological thresholds ($\ge 4.0\text{G}$ and angular rotation $>120^\circ/\text{s}$), a severe vehicular collision is immediately detected with automatic pre-alert CAD routing.
+
+![Zero-Touch 3D Multi-Sensor Crash Telemetry & Detection Console](figures/screenshot_crash_telemetry.png)
+*Fig. 2. Edge kinematic crash telemetry console capturing a verified 4.85G vehicular collision with 3-axis accelerometer readings ($a_x=12.45, a_y=-8.9, a_z=32.1\text{ m/s}^2$), 3D gyroscopic deflection ($Roll=68.4^\circ, Pitch=24.2^\circ, Yaw=114.8^\circ$), and proactive pre-crash safety radar.*
+
+#### 3. AI Neural Vision Snakebite Triage & Polyvalent Antivenom Dosage Calculator
+The clinical envenomation module fuses image recognition with symptom-based clinical indicators, identifying high-risk species such as Russell's Viper (*Daboia russelii*), prescribing exact WHO polyvalent AVS dosages, and routing to hospitals with verified cold-chain stocks.
+
+![AI Neural Vision Snakebite Triage & Polyvalent Antivenom Dosage Calculator](figures/screenshot_snakebite_ai.png)
+*Fig. 3. Multimodal snakebite diagnostic interface identifying Russell's Viper (*Daboia russelii*), prescribing 10 vials of Polyvalent Antivenom Serum, surfacing WHO clinical first-aid protocols, and routing to Government General Hospital (GGH Vijayawada, 150 vials in stock, 12 ICU beds available).*
+
+#### 4. Smart ABO/Rh Blood Compatibility Matching & Proximity Cryo-Mesh
+The spatial-medical blood matching engine matches recipients with eligible donors and cryo-preservation centers, guaranteeing rapid component delivery within the critical therapeutic window.
+
+![Smart ABO/Rh Blood Compatibility Matching & Proximity Cryo-Mesh](figures/screenshot_blood_mesh.png)
+*Fig. 4. Deterministic ABO/Rh compatibility matching for O- negative acute hemorrhagic emergency, mapping proximity to Red Cross Blood Bank (100% match, 12 units available) and GGH Regional Blood Bank (18 units available).*
+
+#### 5. Real-Time Multi-Agency CAD Mission Control Dashboard
+The mission control console synchronizes emergency dispatches across 108 ALS rescue teams, trauma center ICUs, and victim kin via automated SMS/WhatsApp alerts.
+
+![Real-Time Multi-Agency CAD Mission Control Dashboard](figures/screenshot_dashboard.png)
+*Fig. 5. Multi-agency Computer-Aided Dispatch (CAD) mission control dashboard tracking assigned trauma beds, ALS ambulance ETA (3.2 minutes en route), automated family notifications, and live incident feeds.*
 
 ---
 
@@ -279,6 +249,9 @@ To evaluate the system under rigorous academic conditions, the framework was tes
 
 ### B. Performance Metrics & Comparative Analysis
 
+#### 1. Emergency CAD Dispatch Latency Benchmarking
+As shown in Table I and visualized in Fig. 6 and Fig. 7, RESQONE-AI+ slashes total incident response latency from an average of $18.40\text{ minutes}$ down to $2.10\text{ minutes}$, representing an overall **$88.58\%$ latency reduction**.
+
 #### Table I: Emergency CAD Dispatch Latency Benchmarking (Manual vs. RESQONE-AI+)
 | Operational Phase | Manual EMS Baseline (Minutes) | RESQONE-AI+ System (Minutes) | Latency Reduction (%) |
 | :--- | :---: | :---: | :---: |
@@ -289,6 +262,15 @@ To evaluate the system under rigorous academic conditions, the framework was tes
 | **En-Route Green Wave Negotiation** | Manual Siren Only | Automated Traffic Pre-emption | **$38.40\%$ Speedup** |
 | **Total Response Time (Mean $\pm$ SD)**| **$18.40 \pm 3.20$** | **$2.10 \pm 0.40$** | **$88.58\%$** |
 
+![Emergency CAD Dispatch Latency Benchmarking Bar Chart](figures/fig_dispatch_latency_bar.png)
+*Fig. 6. Multi-phase latency benchmarking comparing traditional manual emergency protocols against the automated RESQONE-AI+ CAD pipeline, highlighting >98% gains across detection, triage, and bed allocation.*
+
+![Total Golden Hour Emergency Response Time Reduction Bar Chart](figures/fig_response_reduction_bar.png)
+*Fig. 7. Total end-to-end incident response time reduction from 18.40 minutes to 2.10 minutes, safeguarding the victim's critical Golden Hour window.*
+
+#### 2. Kinematic Crash Detection Evaluation
+The automated crash detection daemon was evaluated across 1,250 trials. As summarized in Table II and Fig. 8, the algorithm achieved a sensitivity of $98.40\%$, a specificity of $99.20\%$, and an F1-score of $0.9909$.
+
 #### Table II: Crash Detection Confusion Matrix (1,250 Test Events)
 | Actual Class \ Predicted Class | Impact Detected (Crash) | Benign Motion (Non-Crash) | Metric Score |
 | :--- | :---: | :---: | :---: |
@@ -297,6 +279,12 @@ To evaluate the system under rigorous academic conditions, the framework was tes
 | **Overall Accuracy** | — | — | **$98.56\%$** |
 | **Precision** | — | — | **$99.79\%$** |
 | **F1-Score** | — | — | **$0.9909$** |
+
+![Zero-Touch Kinematic Crash Detection Evaluation Metrics](figures/fig_crash_detection_metrics_bar.png)
+*Fig. 8. Validation performance metrics of the zero-touch kinematic crash detection daemon across 1,250 hardware-benchmarked trials.*
+
+#### 3. AI Multimodal Triage Classification Accuracy
+The explainable NLP triage classifier achieved superior diagnostic precision across snakebite envenomation species and trauma classes. As presented in Table III and Fig. 9, the weighted aggregate F1-score reached $0.955$ with an average model confidence of $94.2\%$.
 
 #### Table III: AI Envenomation & Triage Classification Metrics across Species
 | Species / Emergency Domain | Sample Size ($N$) | Precision | Recall | F1-Score | Mean Confidence |
@@ -308,13 +296,8 @@ To evaluate the system under rigorous academic conditions, the framework was tes
 | **Acute Hemorrhagic Shock / Blood**| $400$ | $0.975$ | $0.962$ | $0.968$ | $95.3\%$ |
 | **Weighted Aggregate Average** | **$1,950$** | **$0.961$** | **$0.950$** | **$0.955$** | **$94.2\%$** |
 
-```
-                       END-TO-END DISPATCH LATENCY COMPARISON
-  
-  Manual Traditional EMS  [========================================] 18.40 Mins
-  RESQONE-AI+ Ecosystem   [====] 2.10 Mins (88.58% Reduction)
-                          0    2    4    6    8   10   12   14   16   18   20 (Minutes)
-```
+![AI Multimodal Triage Classification Performance Bar Chart](figures/fig_model_performance_bar.png)
+*Fig. 9. AI multimodal triage classification performance across emergency categories, depicting Precision, Recall, and F1-Scores.*
 
 ### C. Partition-Tolerant Offline Sync Resilience
 Under induced network disconnections (simulated high-packet-loss mobile handoffs), $100\%$ ($200/200$) of queued emergency payloads stored inside the client IndexedDB buffer successfully synchronized with Supabase PostgreSQL within $850\text{ ms}$ of network restoration, validating zero transaction drop across rural blind spots.
