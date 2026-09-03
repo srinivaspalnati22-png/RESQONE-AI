@@ -91,33 +91,11 @@ Envenomation management in South-East Asia remains hindered by layperson misiden
 
 ## III. System Architecture and Mathematical Modeling
 
-```
-+-------------------------------------------------------------------------------------------------+
-|                                 RESQONE-AI+ MULTI-TIER ARCHITECTURE                             |
-+-------------------------------------------------------------------------------------------------+
-| [EDGE CLIENT LAYER]                                                                             |
-|  - PWA Browser Client / Flutter Engine / Native Sensor Daemon                                   |
-|  - 3-Axis MEMS Accelerometer + Gyroscope (100 Hz Continuous Polling)                             |
-|  - Multilingual WebSpeech API / NLP Preprocessor / Offline IndexedDB Storage Engine             |
-+------------------------------------------------┬------------------------------------------------+
-                                                 │ HTTPS / WebSocket / WebRTC
-                                                 ▼
-+-------------------------------------------------------------------------------------------------+
-| [REAL-TIME EMERGENCY BROKER & AI ORCHESTRATION LAYER]                                           |
-|  - Supabase Realtime Mesh (`resqone_emergency_mesh`)                                            |
-|  - FastAPI AI Copilot Engine (Triage Classification, Explainability Synthesis, Uncertainty Gate)|
-|  - Computer Vision Species Diagnostic Engine (ResNet-50 / MobileNetV3 Transfer Pipeline)        |
-+------------------------------------------------┬------------------------------------------------+
-                                                 │ Role-Based Broadcast Routing
-                                                 ▼
-+-------------------------------------------------------------------------------------------------+
-| [STAKEHOLDER COMMAND MESH]                                                                      |
-|  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  ┌────────────────┐  |
-|  │  108 CAD Dispatch   │  │   Hospital ER/ICU   │  │  Blood Bank / Cryo  │  │ Verified BLS   │  |
-|  │ (Green Wave Corridor)│  │ (Trauma Bay Reserve)│  │ (ABO/Rh Match Mesh) │  │ Volunteers     │  |
-|  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  └────────────────┘  |
-+-------------------------------------------------------------------------------------------------+
-```
+The end-to-end operational architecture of RESQONE-AI+ is structured as a multi-tier, fault-tolerant edge-cloud ecosystem. As illustrated in Fig. 1, the pipeline bridges continuous edge sensor telemetry, localized autonomous inference engines, transactional offline mesh synchronization, and real-time cloud Computer-Aided Dispatch (CAD) routing.
+
+![RESQONE-AI+ End-to-End Multimodal Emergency Intelligence Architecture](figures/fig_architecture_flow.png)
+*Fig. 1. Architectural blueprint of the RESQONE-AI+ ecosystem across five hierarchical tiers: (Layer 1) Edge multimodal sensor telemetry; (Layer 2) Edge autonomous inference engines; (Layer 3) Fault-tolerant offline mesh and sync engine; (Layer 4) Cloud microservices and PostGIS spatial indexing; and (Layer 5) Stakeholder CAD dispatch and automated family notifications.*
+
 
 ### A. Kinematic Crash Detection & Impact Vector Modeling
 The edge sensor daemon continuously samples the tri-axial acceleration components $a_x(t), a_y(t), a_z(t)$ and angular rates $\omega_x(t), \omega_y(t), \omega_z(t)$ at a frequency of $f_s = 100\text{ Hz}$.
@@ -205,37 +183,86 @@ $$\mathbf{M}_{\text{ABO/Rh}}(\text{Type}_d, \text{Type}_v) = 1 \quad \land \quad
 
 ### C. Operational Application Interfaces & Deployed Workflows
 
-The RESQONE-AI+ system was evaluated through an interactive production deployment. The operational interfaces capturing real-time telemetry, AI triage, logistics routing, and computer-aided dispatch are illustrated below:
+The RESQONE-AI+ system was evaluated through an interactive production deployment. The operational interfaces capturing real-time telemetry, AI triage, logistics routing, and computer-aided dispatch are illustrated below across key operational phases:
 
-#### 1. Emergency Command Center & Live Operations Overview
+#### 1. Multi-Role Authentication & Access Hub
+The onboarding gateway allows stakeholders to select their institutional role (Citizen/Victim, Blood Donor, Hospital ER/ICU, First Responder, or 108 Rescue Team) and access 1-Tap Quick Demo credentials, regional language support (Telugu, Hindi, Tamil, Kannada, English), and encrypted OAuth verification.
+
+![Multi-Role Authentication & Access Hub](figures/screenshot_auth_login.png)
+*Fig. 2. Stakeholder authentication portal providing instantaneous role-based routing (Citizen, Blood Donor, Hospital ER, First Responder, 108 CAD) with multi-lingual UI toggle.*
+
+#### 2. Emergency Command Center & Live Operations Overview
 The central landing command center aggregates telemetry from rescue fleets, partner hospitals, and volunteer meshes while displaying a live spatial emergency event map across urban and rural corridors.
 
 ![RESQONE-AI+ Emergency Command Center & Live Operations Overview](figures/screenshot_landing.png)
-*Fig. 1. RESQONE-AI+ centralized emergency command center displaying live operational status across 108 rescue units, tertiary hospitals, active emergency alerts, and dynamic GIS incident clustering.*
+*Fig. 3. RESQONE-AI+ centralized emergency command center displaying live operational status across 108 rescue units, tertiary hospitals, active emergency alerts, and dynamic GIS incident clustering.*
 
-#### 2. Zero-Touch Kinematic 3D Crash Telemetry & Impact Detection Console
+#### 3. Zero-Touch Kinematic 3D Crash Telemetry & Impact Detection Console
 The crash detection interface streams 100 Hz tri-axial accelerometer and gyroscope data. Upon exceeding calibrated physiological thresholds ($\ge 4.0\text{G}$ and angular rotation $>120^\circ/\text{s}$), a severe vehicular collision is immediately detected with automatic pre-alert CAD routing.
 
 ![Zero-Touch 3D Multi-Sensor Crash Telemetry & Detection Console](figures/screenshot_crash_telemetry.png)
-*Fig. 2. Edge kinematic crash telemetry console capturing a verified 4.85G vehicular collision with 3-axis accelerometer readings ($a_x=12.45, a_y=-8.9, a_z=32.1\text{ m/s}^2$), 3D gyroscopic deflection ($Roll=68.4^\circ, Pitch=24.2^\circ, Yaw=114.8^\circ$), and proactive pre-crash safety radar.*
+*Fig. 4. Edge kinematic crash telemetry console capturing a verified 4.85G vehicular collision with 3-axis accelerometer readings ($a_x=12.45, a_y=-8.9, a_z=32.1\text{ m/s}^2$), 3D gyroscopic deflection ($Roll=68.4^\circ, Pitch=24.2^\circ, Yaw=114.8^\circ$), and proactive pre-crash safety radar.*
 
-#### 3. AI Neural Vision Snakebite Triage & Polyvalent Antivenom Dosage Calculator
-The clinical envenomation module fuses image recognition with symptom-based clinical indicators, identifying high-risk species such as Russell's Viper (*Daboia russelii*), prescribing exact WHO polyvalent AVS dosages, and routing to hospitals with verified cold-chain stocks.
+#### 4. Autonomous Accident Emergency Alert & Life-Critical Countdown
+Upon detecting an acute impact spike (4.85G), an emergency countdown modal activates with an acoustic siren. If the conscious victim does not cancel the alarm within the safety window, autonomous Computer-Aided Dispatch (CAD) executes automatically to protect incapacitated victims.
+
+![Autonomous Accident Emergency Alert & Countdown Ring](figures/screenshot_accident_countdown.png)
+*Fig. 5. Life-critical 4.85G crash detection modal featuring circular countdown timer, impact vector telemetry, victim blood group classification, and fail-safe automated CAD override.*
+
+#### 5. Autonomous Hospital Case Acceptance & Trauma Bay Allocation
+Following countdown verification, lead tertiary trauma centers (Government General Hospital, Vijayawada) immediately receive encrypted patient packets, allocate ICU trauma beds, and acknowledge ambulance dispatch.
+
+![Autonomous Hospital Case Acceptance & Trauma Bay Allocation](figures/screenshot_accident_alert_dispatched.png)
+*Fig. 6. Automated hospital case acceptance notification confirming GGH Vijayawada lead acceptance, ALS-108 ambulance dispatch with a 3.5-minute ETA, and 5/5 emergency SMS deliveries.*
+
+#### 6. Live 3D Ambulance Mission Route & Automated Family SMS Delivery
+The system dynamically clears urban green wave traffic corridors between the crash coordinates on NH-16 and GGH Vijayawada, while confirming simultaneous real-time SMS delivery with live GPS tracking links to registered family guardians.
+
+![Live 3D Ambulance Mission Route & Family SMS Status](figures/screenshot_accident_rescue_mission.png)
+*Fig. 7. Live 3D CAD mission telemetry displaying real-time ambulance corridor navigation across 4 pre-empted green signal intersections, paired with 5/5 verified family emergency SMS transmissions.*
+
+#### 7. Emergency SOS Beacon Broadcast Window
+Victims experiencing non-vehicular acute crises can engage the 1-Tap SOS Beacon, initiating a priority distress broadcast to 108 CAD, nearest ICUs, and kin with pipeline progress tracking.
+
+![Emergency SOS Beacon Broadcast Window](figures/screenshot_emergency_sos_modal.png)
+*Fig. 8. Emergency SOS beacon execution dialog displaying real-time multi-stage pipeline dispatch progress and verified family notification logs.*
+
+#### 8. AI Neural Vision Snakebite Triage & Polyvalent Antivenom Dosage Calculator
+The clinical envenomation module fuses MobileNet image recognition with symptom indicators, identifying high-risk species such as Russell's Viper (*Daboia russelii*), extracting morphological markers, and prescribing exact WHO polyvalent AVS dosages.
 
 ![AI Neural Vision Snakebite Triage & Polyvalent Antivenom Dosage Calculator](figures/screenshot_snakebite_ai.png)
-*Fig. 3. Multimodal snakebite diagnostic interface identifying Russell's Viper (*Daboia russelii*), prescribing 10 vials of Polyvalent Antivenom Serum, surfacing WHO clinical first-aid protocols, and routing to Government General Hospital (GGH Vijayawada, 150 vials in stock, 12 ICU beds available).*
+*Fig. 9. Multimodal snakebite diagnostic report displaying identified Russell's Viper (*Daboia russelii*), 91.5% model confidence, 10-vial Polyvalent Antivenom prescription, and detected morphological markers.*
 
-#### 4. Smart ABO/Rh Blood Compatibility Matching & Proximity Cryo-Mesh
-The spatial-medical blood matching engine matches recipients with eligible donors and cryo-preservation centers, guaranteeing rapid component delivery within the critical therapeutic window.
+#### 9. Live Antivenom Supply Tracking & Regional Hospital Route Map
+The envenomation engine cross-references real-time cold-chain inventories across regional hospitals, routing victims to institutions with verified polyvalent AVS stocks (GGH Vijayawada: 150 vials, Ramesh Hospitals: 35 vials).
 
-![Smart ABO/Rh Blood Compatibility Matching & Proximity Cryo-Mesh](figures/screenshot_blood_mesh.png)
-*Fig. 4. Deterministic ABO/Rh compatibility matching for O- negative acute hemorrhagic emergency, mapping proximity to Red Cross Blood Bank (100% match, 12 units available) and GGH Regional Blood Bank (18 units available).*
+![Live Antivenom Supply Tracking & Regional Hospital Route Map](figures/screenshot_snakebite_hospitals_map.png)
+*Fig. 10. Real-time GIS antivenom stock tracking and navigation interface charting direct routes to verified regional hospitals with live AVS vial counts and ICU availability.*
 
-#### 5. Real-Time Multi-Agency CAD Mission Control Dashboard
-The mission control console synchronizes emergency dispatches across 108 ALS rescue teams, trauma center ICUs, and victim kin via automated SMS/WhatsApp alerts.
+#### 10. Smart ABO/Rh Blood Compatibility Matching & Proximity Map
+The spatial-medical blood matching engine deterministic pairs acute hemorrhagic recipients with eligible universal donors and regional blood centers within a 15 km radius.
+
+![Smart ABO/Rh Blood Compatibility Matching & Proximity Map](figures/screenshot_blood_mesh.png)
+*Fig. 11. Deterministic ABO/Rh compatibility matching for O- negative acute hemorrhagic emergency, mapping proximity to Red Cross Blood Bank (100% match, 12 units available) and GGH Regional Blood Bank (18 units available).*
+
+#### 11. Verified Live Community Donors & Cryo-Courier Mesh
+The platform activates nearby pre-screened volunteer blood donors and dispatches temperature-monitored cryo-couriers ($2^\circ\text{C}-6^\circ\text{C}$) to guarantee component viability during transit.
+
+![Verified Live Community Donors & Cryo-Courier Mesh](figures/screenshot_blood_donors_courier.png)
+*Fig. 12. Community blood donor proximity registry identifying verified O- donors (K. Venkata Ramana 1.4 km, S. Srinivas Rao 2.3 km) with 1-tap courier dispatch.*
+
+#### 12. Real-Time Multi-Agency CAD Mission Control Dashboard
+The mission control console synchronizes multi-agency emergency operations, displaying trauma bed capacity (42 ready), active 108 ALS patrol fleets (18 units), and real-time incident feeds.
 
 ![Real-Time Multi-Agency CAD Mission Control Dashboard](figures/screenshot_dashboard.png)
-*Fig. 5. Multi-agency Computer-Aided Dispatch (CAD) mission control dashboard tracking assigned trauma beds, ALS ambulance ETA (3.2 minutes en route), automated family notifications, and live incident feeds.*
+*Fig. 13. Multi-agency Computer-Aided Dispatch (CAD) mission control dashboard tracking assigned trauma beds, ALS ambulance ETA (3.2 minutes en route), automated family notifications, and live incident feeds.*
+
+#### 13. Live CAD Incident Command Feed & Stakeholder Actions
+Control supervisors monitor incoming multi-agency emergency distress packets, severity ratings, patient blood types, and hospital assignments in real time.
+
+![Live CAD Incident Command Feed & Stakeholder Actions](figures/screenshot_mission_incident_feed.png)
+*Fig. 14. Real-time incident feed detailing live vehicular collision and acute blood shortage alerts with GPS coordinates, impact severity, and automated guardian contact logs.*
+
 
 ---
 

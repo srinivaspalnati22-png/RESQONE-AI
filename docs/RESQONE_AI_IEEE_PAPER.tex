@@ -60,7 +60,16 @@ Current Emergency Medical Service (EMS) paradigms suffer from several architectu
 
 To resolve these bottlenecks, \textbf{RESQONE-AI+} presents a comprehensive, fault-tolerant, edge-cloud ecosystem integrating zero-touch kinematic crash detection, explainable multilingual clinical triage, and offline-first transactional synchronization.
 
-\section{Mathematical Formulation \& Methodology}
+\section{System Architecture \& Mathematical Formulation}
+
+The end-to-end framework of \textbf{RESQONE-AI+} is organized into a five-tier architecture spanning continuous edge sensor telemetry, localized autonomous inference engines, transactional offline sync buffers, and real-time cloud Computer-Aided Dispatch (CAD) routing, as depicted in Fig.~\ref{fig:architecture}.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_architecture_flow.png}
+\caption{End-to-end multimodal emergency intelligence architecture of RESQONE-AI+ detailing hierarchical flow from Layer 1 (Edge Multimodal Sensing \& 100 Hz IMU Telemetry) through Layer 2 (Edge Inference Engines), Layer 3 (Offline Resilience \& Mesh Sync), Layer 4 (Cloud PostGIS Spatial Indexing), and Layer 5 (Automated CAD Dispatch \& Kin Notifications).}
+\label{fig:architecture}
+\end{figure*}
 
 \subsection{Kinematic Crash Detection \& Impact Vector Modeling}
 The edge sensor daemon continuously samples the tri-axial acceleration components $a_x(t), a_y(t), a_z(t)$ and angular rates $\omega_x(t), \omega_y(t), \omega_z(t)$ at a sampling frequency $f_s = 100\text{ Hz}$.
@@ -111,34 +120,65 @@ U_{\text{hosp}}(i) = \alpha_1 \left(\frac{1}{1 + d_{v,i}}\right) + \alpha_2 \lef
 \end{equation}
 subject to $\sum_{k=1}^3 \alpha_k = 1.0$.
 
-\section{System Architecture \& Operational Implementation}
+\section{System Implementation \& Operational Deployment}
 
-The RESQONE-AI+ system was implemented as a production-ready edge-cloud application. Fig.~\ref{fig:screenshots} displays the primary operational interfaces of the deployed system across four core emergency modules.
+The RESQONE-AI+ system was evaluated through an interactive production deployment. Fig.~\ref{fig:screenshots} exhibits the operational interfaces across all life-saving pipelines.
 
 \begin{figure*}[htbp]
 \centering
-\begin{minipage}{0.48\textwidth}
+\begin{minipage}{0.32\textwidth}
   \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_crash_telemetry.png}
-  \caption*{(a) Edge Kinematic 3D Crash Telemetry \& 4.85G Impact Detection}
+  \includegraphics[width=\linewidth]{figures/screenshot_auth_login.png}
+  \caption*{(a) Multi-Role Authentication \& Language Hub}
 \end{minipage}\hfill
-\begin{minipage}{0.48\textwidth}
+\begin{minipage}{0.32\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_accident_countdown.png}
+  \caption*{(b) 4.85G Crash Alert \& Countdown Ring}
+\end{minipage}\hfill
+\begin{minipage}{0.32\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_accident_alert_dispatched.png}
+  \caption*{(c) Hospital Case Accepted \& Bed Reserved}
+\end{minipage}
+
+\vspace{0.25cm}
+
+\begin{minipage}{0.32\textwidth}
   \centering
   \includegraphics[width=\linewidth]{figures/screenshot_snakebite_ai.png}
-  \caption*{(b) Neural Vision Snakebite Triage \& 10-Vial AVS Dosage Titration}
-\end{minipage}
-\vspace{0.3cm}
-\begin{minipage}{0.48\textwidth}
+  \caption*{(d) Snake Neural Vision \& 10-Vial AVS Titration}
+\end{minipage}\hfill
+\begin{minipage}{0.32\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_snakebite_hospitals_map.png}
+  \caption*{(e) Live Antivenom Stocks \& Route Navigation}
+\end{minipage}\hfill
+\begin{minipage}{0.32\textwidth}
   \centering
   \includegraphics[width=\linewidth]{figures/screenshot_blood_mesh.png}
-  \caption*{(c) Deterministic ABO/Rh Compatibility \& Proximity Blood Mesh}
+  \caption*{(f) ABO/Rh Proximity Blood Matrix}
+\end{minipage}
+
+\vspace{0.25cm}
+
+\begin{minipage}{0.32\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_blood_donors_courier.png}
+  \caption*{(g) Verified Donors \& Cryo-Couriers}
 \end{minipage}\hfill
-\begin{minipage}{0.48\textwidth}
+\begin{minipage}{0.32\textwidth}
   \centering
   \includegraphics[width=\linewidth]{figures/screenshot_dashboard.png}
-  \caption*{(d) Real-Time CAD Multi-Agency Mission Control \& Bed Telemetry}
+  \caption*{(h) CAD Mission Control \& Bed Telemetry}
+\end{minipage}\hfill
+\begin{minipage}{0.32\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/screenshot_mission_incident_feed.png}
+  \caption*{(i) Live Incident Feed \& Kin Broadcast Logs}
 \end{minipage}
-\caption{Operational interfaces of the deployed RESQONE-AI+ ecosystem: (a) real-time 3-axis accelerometer and gyroscope sensor stream capturing vehicular rollover impact; (b) multimodal clinical envenomation assistant matching Russell's Viper (*D. russelii*) and routing to GGH Vijayawada; (c) ABO/Rh compatibility matrix locating nearest O- cryo-reserves; and (d) multi-agency Computer-Aided Dispatch mission control console.}
+
+\caption{Operational interfaces of the deployed RESQONE-AI+ ecosystem: (a) institutional role and language selector; (b) 4.85G crash detection modal with 25s life-critical countdown; (c) lead trauma center acceptance at GGH Vijayawada; (d) MobileNet vision triage identifying Russell's Viper (*D. russelii*) with visible morphological markers; (e) live regional hospital antivenom cold-chain tracking; (f) deterministic ABO/Rh compatibility pairing; (g) volunteer community donor dispatch; (h) multi-agency Computer-Aided Dispatch dashboard; and (i) live CAD incident feed with automated kin notification tracking.}
 \label{fig:screenshots}
 \end{figure*}
 
