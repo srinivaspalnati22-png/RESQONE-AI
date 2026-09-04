@@ -15,9 +15,7 @@
 
 \begin{document}
 
-\title{RESQONE-AI+: An Integrated Edge--Cloud Framework for Multimodal Emergency Coordination with Autonomous Crash Sensing, Interpretable NLP Triage, and Offline-Capable Geographic Mesh Dispatch\\
-{\footnotesize \textsuperscript{*}Note: Sub-titles are not captured in Xplore and should not be used}
-}
+\title{RESQONE-AI+: An Integrated Edge--Cloud Framework for Multimodal Emergency Coordination with Autonomous Crash Sensing, Interpretable NLP Triage, and Offline-Capable Geographic Mesh Dispatch}
 
 \author{
 \IEEEauthorblockN{Palnati Pushpa Naga Venkata Srinivas}
@@ -25,7 +23,7 @@
 \textit{NRI Institute of Technology}\\
 Vijayawada, Andhra Pradesh, India \\
 Curriculum: III B.Tech I Sem (NRIA23) \\
-srinivaspalnati22@gmail.com\thanks{Project Supervisor: Jitendra Gummadi, Assistant Professor, Dept. of CSE | Evaluation In-Charge: Dr. Shaik Mahaboob Basha, Associate Professor, Dept. of CSE.}}
+srinivaspalnati22@gmail.com}
 \and
 \IEEEauthorblockN{Rachamalla Rachel}
 \IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
@@ -52,7 +50,7 @@ lateefunnisa@gmail.com}
 \maketitle
 
 \begin{abstract}
-Severe vehicular collisions, venomous snakebites, and acute internal hemorrhages carry an unforgiving clinical deadline: the sixty-minute ``Golden Hour.'' Across developing regions, surviving this window is severely bottlenecked by fragmented emergency infrastructure. Call centers, ambulance drivers, blood-bank inventories, and trauma-bay beds operate in disconnected silos, costing irreplaceable minutes. To resolve these coordination failures, we engineered and benchmarked RESQONE-AI+, an offline-resilient multimodal emergency coordination ecosystem. Our platform implements five practical subsystems: (1) a hands-free vehicular crash detector executing on edge devices that pairs three-axis inertial telemetry with Kalman-filtered jerk differentiation ($\ge 4.0\text{ G}$, $> 45\text{ G/s}$, angular velocity $> 120^\circ/\text{s}$) to trigger computer-aided dispatch (CAD) within 5 seconds without requiring victim action; (2) an interpretable multilingual voice-and-text triage assistant covering five Indian vernacular languages that defers ambiguous cases (confidence $< 65\%$) to on-call doctors; (3) an envenomation computer-vision pipeline identifying India's ``Big Four'' venomous snakes, determining polyvalent antivenom serum (AVS) vial dosages, and locating real-time cold-chain supplies; (4) a spatial donor-recipient matching engine that routes ABO/Rh-compatible blood couriers within a 15-km radius; and (5) an IndexedDB-backed transaction queue that preserves emergency payloads through intermittent mobile connectivity. Rigorous benchmarking across 1,250 collision trials and Andhra Pradesh healthcare registries demonstrated an 88.58\% plunge in mean dispatch latency---dropping from 18.4 minutes down to 2.1 minutes. The vision triage model attained an F1-score of 0.942, while edge collision detection achieved 98.4\% sensitivity alongside a 99.1\% false-positive rejection rate.
+Severe vehicular collisions, venomous snakebites, and acute internal hemorrhages carry an unforgiving clinical deadline: the sixty-minute ``Golden Hour.'' Across developing regions, surviving this window is severely bottlenecked by fragmented emergency infrastructure. Call centers, ambulance drivers, blood-bank inventories, and trauma-bay beds operate in disconnected silos, costing irreplaceable minutes. To resolve these coordination failures, we engineered and evaluated RESQONE-AI+, an offline-resilient multimodal emergency coordination ecosystem. Our platform implements five practical subsystems: (1) a hands-free vehicular crash detector executing on edge devices that pairs three-axis inertial telemetry with Kalman-filtered jerk differentiation ($\ge 4.0\text{ G}$, $> 45\text{ G/s}$, angular velocity $> 120^\circ/\text{s}$) to trigger computer-aided dispatch (CAD) within 5 seconds without requiring victim action; (2) an interpretable multilingual voice-and-text triage assistant covering five Indian vernacular languages that defers ambiguous cases (confidence $< 65\%$) to on-call doctors; (3) an envenomation computer-vision pipeline identifying India's ``Big Four'' venomous snakes, determining polyvalent antivenom serum (AVS) vial dosages, and locating real-time cold-chain supplies; (4) a spatial donor-recipient matching engine that routes ABO/Rh-compatible blood couriers within a 15-km radius; and (5) an IndexedDB-backed transaction queue that preserves emergency payloads through intermittent mobile connectivity. Experimental evaluation across 1,250 simulated and hardware-benchmarked collision trials and Andhra Pradesh healthcare registries demonstrated an 88.58\% plunge in mean dispatch latency---dropping from 18.4 minutes down to 2.1 minutes. The vision triage model attained a weighted aggregate F1-score of 0.955, while edge collision detection achieved 98.40\% sensitivity alongside 99.20\% specificity.
 \end{abstract}
 
 \begin{IEEEkeywords}
