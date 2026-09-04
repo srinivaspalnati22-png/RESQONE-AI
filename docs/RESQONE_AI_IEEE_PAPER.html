@@ -5,8 +5,8 @@
 <title>RESQONE-AI+: An Integrated Edge–Cloud Framework for Multimodal Emergency Coordination with Autonomous Crash Sensing, Interpretable NLP Triage, and Offline-Capable Geographic Mesh Dispatch</title>
 <style>
   @page {
-    size: A4 portrait;
-    margin: 16mm 13mm 18mm 13mm;
+    size: letter portrait;
+    margin: 18mm 14mm 18mm 14mm;
   }
   @media print {
     body {
@@ -19,8 +19,8 @@
   }
   body {
     font-family: "Times New Roman", Times, "Nimbus Roman No9 L", serif;
-    font-size: 9.8pt;
-    line-height: 1.21;
+    font-size: 9.6pt;
+    line-height: 1.2;
     color: #000000;
     background: #ffffff;
     margin: 0;
@@ -28,22 +28,22 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Paper Header & Authors */
+  /* Paper Title & Authors Banner (Spanning Full Width at Top) */
   .paper-header {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     padding-bottom: 2px;
   }
   .paper-title {
     font-size: 18.5pt;
     font-weight: bold;
-    line-height: 1.2;
+    line-height: 1.22;
     margin: 0 auto 5px auto;
     max-width: 98%;
     letter-spacing: -0.2px;
   }
   .sub-note {
-    font-size: 7.8pt;
+    font-size: 7.6pt;
     font-style: italic;
     color: #444444;
     margin-bottom: 10px;
@@ -51,26 +51,28 @@
   .authors-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 24px;
-    row-gap: 7px;
+    column-gap: 30px;
+    row-gap: 8px;
     max-width: 96%;
-    margin: 0 auto 10px auto;
+    margin: 0 auto 12px auto;
     text-align: center;
     font-size: 8.5pt;
     line-height: 1.22;
   }
   .author-card {
-    padding: 2px 6px;
+    padding: 2px 8px;
   }
   .author-name {
-    font-size: 9.8pt;
+    font-size: 10pt;
     font-weight: bold;
     display: block;
     margin-bottom: 1px;
+    color: #000000;
   }
   .author-dept {
     font-style: italic;
     display: block;
+    font-size: 8.5pt;
   }
   .author-inst {
     display: block;
@@ -87,12 +89,14 @@
     font-family: "Courier New", Courier, monospace;
     font-size: 7.5pt;
     margin-top: 1px;
+    color: #000000;
   }
 
-  /* Two Column Matter */
+  /* Two Column Body Layout (Strict IEEE Double Column) */
   .two-column-matter {
     column-count: 2;
     column-gap: 18px;
+    column-fill: balance;
     text-align: justify;
     text-justify: inter-word;
     hyphens: auto;
@@ -100,17 +104,17 @@
 
   /* Section Headings */
   h2.sec-heading {
-    font-size: 9.8pt;
+    font-size: 9.6pt;
     font-weight: bold;
     text-transform: uppercase;
     text-align: center;
-    margin: 11px 0 5px 0;
+    margin: 11px 0 4px 0;
     letter-spacing: 0.6px;
     break-after: avoid;
     page-break-after: avoid;
   }
   h3.subsec-heading {
-    font-size: 9.4pt;
+    font-size: 9.2pt;
     font-weight: bold;
     font-style: italic;
     margin: 7px 0 3px 0;
@@ -126,19 +130,19 @@
     text-indent: 0;
   }
   ul {
-    margin: 3px 0 5px 12px;
+    margin: 2px 0 5px 10px;
     padding-left: 10px;
   }
   li {
-    margin-bottom: 3px;
+    margin-bottom: 2.5px;
     text-align: justify;
   }
 
-  /* Abstract Box */
+  /* Abstract & Index Terms */
   .abstract-box {
-    margin-bottom: 9px;
+    margin-bottom: 8px;
     font-size: 8.8pt;
-    line-height: 1.22;
+    line-height: 1.2;
     text-align: justify;
   }
   .abstract-title {
@@ -148,53 +152,49 @@
   .keywords-box {
     margin-top: 4px;
     font-size: 8.8pt;
-    line-height: 1.22;
+    line-height: 1.2;
   }
   .keywords-title {
     font-weight: bold;
     font-style: italic;
   }
 
-  /* Mathematical Equations */
+  /* Equations */
   .equation-box {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 4px 0;
-    padding: 1px 4px;
+    margin: 3px 0;
+    padding: 1px 2px;
     break-inside: avoid;
   }
   .equation-content {
     flex-grow: 1;
     text-align: center;
     font-style: italic;
-    font-size: 9pt;
+    font-size: 8.8pt;
   }
   .equation-number {
     font-style: normal;
     font-size: 8.5pt;
-    padding-left: 6px;
+    padding-left: 4px;
     white-space: nowrap;
   }
 
-  /* Figures & Captions */
+  /* Publication Figures & Captions */
   .figure-container {
-    margin: 8px 0 10px 0;
+    margin: 7px 0 9px 0;
     break-inside: avoid;
     page-break-inside: avoid;
     text-align: center;
     width: 100%;
   }
-  .figure-container.span-both {
-    column-span: all;
-    margin: 10px 0 12px 0;
-  }
   .img-frame {
-    border: 0.5px solid #a0a0a0;
+    border: 0.5px solid #999999;
     border-radius: 2px;
     background: #ffffff;
     padding: 2px;
-    display: inline-block;
+    display: block;
     width: 100%;
     box-sizing: border-box;
   }
@@ -202,12 +202,24 @@
     width: 100%;
     max-width: 100%;
     height: auto;
+    max-height: 170px;
     display: block;
+    margin: 0 auto;
     object-fit: contain;
   }
+  .img-frame.paired {
+    display: flex;
+    gap: 4px;
+    padding: 2px;
+  }
+  .img-frame.paired img {
+    width: 50%;
+    max-height: 105px;
+    object-fit: cover;
+  }
   .fig-caption {
-    font-size: 7.8pt;
-    line-height: 1.22;
+    font-size: 7.6pt;
+    line-height: 1.2;
     color: #111111;
     text-align: justify;
     margin-top: 3px;
@@ -216,30 +228,30 @@
     font-weight: bold;
   }
 
-  /* Diagram Cards (for Golden Hour Flowchart) */
+  /* Conceptual Flowcard (Fig 1) */
   .diagram-card {
     border: 1px solid #718096;
-    border-radius: 3px;
+    border-radius: 2px;
     background: #f7fafc;
-    padding: 5px 7px;
-    margin: 7px 0;
+    padding: 4px 6px;
+    margin: 6px 0;
     break-inside: avoid;
-    font-size: 7.8pt;
-    line-height: 1.25;
+    font-size: 7.6pt;
+    line-height: 1.2;
   }
   .diagram-header {
     font-weight: bold;
-    font-size: 8pt;
+    font-size: 7.8pt;
     text-align: center;
     border-bottom: 1px solid #cbd5e0;
     padding-bottom: 2px;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
   .pathway-row {
-    margin-bottom: 5px;
-    padding: 4px 6px;
+    margin-bottom: 4px;
+    padding: 3px 5px;
     border-radius: 2px;
   }
   .pathway-row.traditional {
@@ -252,35 +264,35 @@
   }
   .pathway-title {
     font-weight: bold;
-    font-size: 7.8pt;
-    margin-bottom: 2px;
+    font-size: 7.6pt;
+    margin-bottom: 1px;
   }
   .pathway-steps {
-    font-size: 7.4pt;
+    font-size: 7.2pt;
     color: #2d3748;
-    line-height: 1.2;
+    line-height: 1.18;
   }
   .pathway-metric {
     font-weight: bold;
-    font-size: 7.4pt;
-    margin-top: 2px;
+    font-size: 7.2pt;
+    margin-top: 1px;
   }
 
   /* IEEE Tables */
   table.ieee-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 7.3pt;
-    line-height: 1.18;
-    margin: 8px 0;
+    font-size: 7.2pt;
+    line-height: 1.15;
+    margin: 6px 0;
     break-inside: avoid;
     page-break-inside: avoid;
   }
   table.ieee-table caption {
-    font-size: 7.8pt;
+    font-size: 7.6pt;
     text-align: center;
     margin-bottom: 3px;
-    line-height: 1.22;
+    line-height: 1.2;
   }
   .table-title {
     font-weight: bold;
@@ -291,13 +303,13 @@
   table.ieee-table th {
     border-top: 1.5px solid #000000;
     border-bottom: 1px solid #000000;
-    padding: 3px 2px;
+    padding: 2.5px 2px;
     font-weight: bold;
     text-align: left;
     background: #fafafa;
   }
   table.ieee-table td {
-    padding: 2.2px 2px;
+    padding: 2px 2px;
     border-bottom: 0.5px solid #e2e8f0;
   }
   table.ieee-table tr.total-row td {
@@ -311,16 +323,16 @@
     border-top: 1.5px solid #000000;
     border-bottom: 1.5px solid #000000;
     padding: 3px 1px;
-    margin: 7px 0;
-    font-size: 7.3pt;
-    line-height: 1.2;
+    margin: 6px 0;
+    font-size: 7.2pt;
+    line-height: 1.18;
     break-inside: avoid;
     page-break-inside: avoid;
     background: #ffffff;
   }
   .algo-heading {
     font-weight: bold;
-    font-size: 7.8pt;
+    font-size: 7.6pt;
     margin-bottom: 1px;
   }
   .algo-io {
@@ -334,8 +346,8 @@
     padding-left: 17px;
     text-indent: -17px;
     font-family: "Courier New", Courier, monospace;
-    font-size: 6.8pt;
-    line-height: 1.18;
+    font-size: 6.7pt;
+    line-height: 1.16;
     color: #000000;
   }
   .algo-kw {
@@ -343,24 +355,28 @@
     font-family: "Times New Roman", Times, serif;
   }
 
-  /* References formatting */
+  /* References Table */
   .ref-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 7.3pt;
+    font-size: 7.2pt;
     line-height: 1.18;
     margin-top: 4px;
   }
   .ref-table td {
     vertical-align: top;
-    padding: 2px 1px;
+    padding: 2.2px 1px;
     border: none;
     text-align: justify;
   }
   .ref-num {
-    width: 20px;
+    width: 22px;
     white-space: nowrap;
     font-weight: normal;
+  }
+  .page-divider {
+    break-before: page;
+    page-break-before: always;
   }
 </style>
 </head>
@@ -372,20 +388,20 @@
 
   <div class="authors-grid">
     <div class="author-card">
-      <span class="author-name">1st Rachamalla Rachel</span>
-      <span class="author-dept">Department of Computer Science and Engineering</span>
-      <span class="author-inst">NRI Institute of Technology, Pothavarappadu, Agiripalli</span>
-      <span class="author-inst">Vijayawada, Andhra Pradesh, India</span>
-      <span class="author-meta">Curriculum: III B.Tech I Semester (NRIA23 Autonomous)</span>
-      <span class="author-email">rachelrachamalla@gmail.com</span>
-    </div>
-    <div class="author-card">
-      <span class="author-name">2nd Palnati Pushpa Naga Venkata Srinivas</span>
+      <span class="author-name">1st Palnati Pushpa Naga Venkata Srinivas</span>
       <span class="author-dept">Department of Computer Science and Engineering</span>
       <span class="author-inst">NRI Institute of Technology, Pothavarappadu, Agiripalli</span>
       <span class="author-inst">Vijayawada, Andhra Pradesh, India</span>
       <span class="author-meta">Curriculum: III B.Tech I Semester (NRIA23 Autonomous)</span>
       <span class="author-email">srinivaspalnati22@gmail.com</span>
+    </div>
+    <div class="author-card">
+      <span class="author-name">2nd Rachamalla Rachel</span>
+      <span class="author-dept">Department of Computer Science and Engineering</span>
+      <span class="author-inst">NRI Institute of Technology, Pothavarappadu, Agiripalli</span>
+      <span class="author-inst">Vijayawada, Andhra Pradesh, India</span>
+      <span class="author-meta">Curriculum: III B.Tech I Semester (NRIA23 Autonomous)</span>
+      <span class="author-email">rachelrachamalla@gmail.com</span>
     </div>
     <div class="author-card">
       <span class="author-name">3rd Jannu Vinay Babu</span>
@@ -406,6 +422,7 @@
   </div>
 </div>
 
+<!-- PAGES 1 to 4 Block -->
 <div class="two-column-matter">
 
   <div class="abstract-box">
@@ -471,11 +488,11 @@
 
   <h2 class="sec-heading">III. System Architecture and Mathematical Modeling</h2>
 
-  <div class="figure-container span-both">
+  <div class="figure-container">
     <div class="img-frame">
-      <img src="figures/fig_architecture_flow.png" alt="RESQONE-AI+ Multi-Tier Architecture Diagram" style="max-height:340px;">
+      <img src="figures/fig_architecture_flow.png" alt="RESQONE-AI+ Multi-Tier Architecture Diagram">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 2.</span> Complete multi-tier architecture of the RESQONE-AI+ ecosystem, spanning the edge client layer (PWA/Flutter sensor daemons), the real-time broker/AI orchestration layer (FastAPI, ResNet-50, Supabase Realtime mesh), and the stakeholder command mesh (108 CAD, trauma ICU, blood bank cryo-couriers).</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 2.</span> Complete multi-tier architecture of the RESQONE-AI+ ecosystem, spanning the edge client layer (PWA/Flutter sensor daemons), real-time broker/AI orchestration layer (FastAPI, ResNet-50, Supabase Realtime mesh), and stakeholder command mesh.</div>
   </div>
 
   <h3 class="subsec-heading">A. Kinematic Crash Detection and Impact-Vector Modeling</h3>
@@ -508,10 +525,11 @@
   <p class="no-indent">with empirically calibrated baselines <i>G</i><sub>th</sub> = 4.0 G, <i>J</i><sub>th</sub> = 45.0 G/s, and &Omega;<sub>th</sub> = 120&deg;/s.</p>
 
   <div class="figure-container">
-    <div class="img-frame">
-      <img src="figures/screenshot_crash_telemetry.png" alt="Kinematic Crash Telemetry and State Machine Dashboard">
+    <div class="img-frame paired">
+      <img src="figures/screenshot_crash_telemetry.png" alt="Crash Telemetry">
+      <img src="figures/screenshot_accident_countdown.png" alt="5-Second Abort Countdown">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 3.</span> Autonomous kinematic crash telemetry interface demonstrating real-time tri-axial G-force vectors, Kalman-filtered jerk differentiation, and 5-second abort countdown state machine.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 3.</span> Autonomous kinematic crash telemetry interface: (left) real-time tri-axial G-force and Kalman jerk vector monitoring; (right) 5-second emergency safety-abort countdown modal.</div>
   </div>
 
   <h3 class="subsec-heading">B. Natural-Language Triage and Explainability Formulation</h3>
@@ -541,6 +559,14 @@
     <div class="equation-number">(8)</div>
   </div>
 
+  <div class="figure-container">
+    <div class="img-frame paired">
+      <img src="figures/screenshot_snakebite_ai.png" alt="Species Identification">
+      <img src="figures/screenshot_snakebite_hospitals_map.png" alt="Cold Chain AVS Map">
+    </div>
+    <div class="fig-caption"><span class="fig-label">Fig. 4.</span> Multimodal AI triage interface: (left) species-specific snakebite envenomation analysis and WHO protocol dosage recommendations; (right) live tertiary hospital cold-chain antivenom stock map.</div>
+  </div>
+
   <h3 class="subsec-heading">C. Spatial Routing and Hospital–Donor Matching</h3>
   <p>Given the victim's coordinate <i>L</i><sub><i>v</i></sub> = (&phi;<sub><i>v</i></sub>, &lambda;<sub><i>v</i></sub>) and a candidate facility or donor at <i>L</i><sub><i>i</i></sub> = (&phi;<sub><i>i</i></sub>, &lambda;<sub><i>i</i></sub>):</p>
   
@@ -564,6 +590,14 @@
     <div class="equation-number">(11)</div>
   </div>
 
+  <div class="figure-container">
+    <div class="img-frame paired">
+      <img src="figures/screenshot_blood_mesh.png" alt="Blood Mesh Map">
+      <img src="figures/screenshot_blood_donors_courier.png" alt="Cryo Courier List">
+    </div>
+    <div class="fig-caption"><span class="fig-label">Fig. 5.</span> Blood Banking Logistics: (left) live ABO/Rh donor-recipient spatial routing mesh; (right) temperature-controlled (2&deg;C–6&deg;C) cryo-courier dispatch with Haversine radius partitioning.</div>
+  </div>
+
   <h2 class="sec-heading">IV. Implementation and Edge–Cloud Pipeline</h2>
   <h3 class="subsec-heading">A. Technology Stack</h3>
   <ul>
@@ -572,6 +606,14 @@
     <li><strong>Data and mesh layer</strong>: Supabase PostgreSQL 15 with Row-Level Security (RLS), PostGIS spatial indexing, and Realtime WebSocket engine for zero-polling state broadcast.</li>
     <li><strong>Offline storage</strong>: HTML5 IndexedDB transactional ledger running inside background service workers.</li>
   </ul>
+
+  <div class="figure-container">
+    <div class="img-frame paired">
+      <img src="figures/screenshot_accident_alert_dispatched.png" alt="108 CAD Auto Alert">
+      <img src="figures/screenshot_mission_incident_feed.png" alt="Hospital Incident Feed">
+    </div>
+    <div class="fig-caption"><span class="fig-label">Fig. 6.</span> Command Mesh in Action: (left) automated 108 CAD ambulance dispatch alert with green-corridor pre-emption; (right) hospital trauma-bay real-time admission incident feed.</div>
+  </div>
 
   <h3 class="subsec-heading">B. Core Algorithms</h3>
 
@@ -617,9 +659,9 @@
 
   <div class="figure-container">
     <div class="img-frame">
-      <img src="figures/screenshot_snakebite_ai.png" alt="Species Identification and Cold-Chain AVS Logistics">
+      <img src="figures/screenshot_dashboard.png" alt="Unified ResQOne Dashboard">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 4.</span> Multimodal AI triage interface executing species-specific snakebite envenomation analysis, WHO protocol dosage recommendations, and real-time cold-chain hospital inventory lookup.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 7.</span> Unified ResQOne-AI+ command dashboard integrating real-time incident mapping, ambulance telemetry, and multi-agency responder status.</div>
   </div>
 
   <h2 class="sec-heading">V. Experimental Evaluation and Results</h2>
@@ -687,12 +729,19 @@
 
   <div class="figure-container">
     <div class="img-frame">
-      <img src="figures/fig_dispatch_latency_bar.png" alt="End-to-end dispatch latency comparison bar chart">
+      <img src="figures/fig_dispatch_latency_bar.png" alt="Dispatch Latency Bar Graph">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 5.</span> End-to-end emergency CAD dispatch latency: manual traditional EMS (18.40 min) vs. RESQONE-AI+ ecosystem (2.10 min), demonstrating an overall 88.58% response reduction.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 8.</span> End-to-end emergency CAD dispatch latency: manual traditional EMS (18.40 min) vs. RESQONE-AI+ ecosystem (2.10 min), demonstrating an overall 88.58% response reduction.</div>
   </div>
 
-  <table class="ieee-table">
+</div>
+
+<!-- PAGE 5 Block: Evaluation Results, Remaining Tables & Bar Graphs -->
+<div class="page-divider"></div>
+
+<div class="two-column-matter">
+
+  <table class="ieee-table" style="margin-top:2px;">
     <caption>
       <span class="table-title">TABLE II</span>
       Crash-Detection Confusion Matrix (1,250 Test Events)
@@ -741,9 +790,9 @@
 
   <div class="figure-container">
     <div class="img-frame">
-      <img src="figures/fig_crash_detection_metrics_bar.png" alt="Crash Detection Performance Metrics Bar Graph">
+      <img src="figures/fig_crash_detection_metrics_bar.png" alt="Crash Detection Performance Bar Graph">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 6.</span> Kinematic crash detection performance metrics under hardware-calibrated MEMS accelerometer and gyroscope evaluation across 1,250 trials.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 9.</span> Kinematic crash detection performance metrics under hardware-calibrated MEMS accelerometer and gyroscope evaluation across 1,250 trials.</div>
   </div>
 
   <table class="ieee-table">
@@ -817,14 +866,14 @@
     <div class="img-frame">
       <img src="figures/fig_model_performance_bar.png" alt="Multimodal Model Performance Bar Graph">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 7.</span> Precision, recall, and F1-score breakdown across Indian venomous snakebite species and high-acuity clinical triage emergency domains.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 10.</span> Precision, recall, and F1-score breakdown across Indian venomous snakebite species and high-acuity clinical triage emergency domains.</div>
   </div>
 
   <div class="figure-container">
     <div class="img-frame">
-      <img src="figures/screenshot_blood_mesh.png" alt="Live Blood Mesh and Cryo-Courier Geospatial Routing">
+      <img src="figures/fig_response_reduction_bar.png" alt="Response Time Reduction Bar Graph">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 8.</span> Real-time ABO/Rh donor-recipient spatial routing mesh and temperature-controlled cryo-courier dispatch with Haversine radius partitioning.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 11.</span> End-to-end response time reduction (18.40 min vs 2.10 min) representing an 88.58% latency decrease across operational computer-aided dispatch phases.</div>
   </div>
 
   <h3 class="subsec-heading">C. Resilience of the Offline Synchronization Layer</h3>
@@ -834,7 +883,14 @@
   <h3 class="subsec-heading">A. Explainability as a Clinical Safety Mechanism</h3>
   <p>Unlike conventional neural classifiers that operate as opaque black boxes, the dual-output design of RESQONE-AI+ produces an explicit medical audit trail—for example, a note reading: classification, Russell's viper; key indicators, rapid local edema and hemotoxic coagulopathy markers; suggested dosage, 12 polyvalent AVS vials. This kind of transparent reasoning is what allows emergency-room physicians and toxicologists to place trust in the system's recommendations.</p>
 
-  <h3 class="subsec-heading">B. Ethical Considerations and Privacy Preservation</h3>
+</div>
+
+<!-- PAGE 6 Block: Ethics, Conclusion, Acknowledgment, and Complete References -->
+<div class="page-divider"></div>
+
+<div class="two-column-matter">
+
+  <h3 class="subsec-heading" style="margin-top:2px;">B. Ethical Considerations and Privacy Preservation</h3>
   <p>All synthetic donor entries and user contact records are stored under Row-Level Security (RLS) policies. Location data is transmitted only when an emergency is triggered or when the user has given explicit consent, limiting the risk of continuous background tracking.</p>
 
   <h2 class="sec-heading">VII. Conclusion and Future Work</h2>
