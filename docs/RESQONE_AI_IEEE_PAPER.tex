@@ -15,30 +15,44 @@
 
 \begin{document}
 
-\title{RESQONE-AI+: A Unified Edge-Cloud Multimodal Emergency Coordination Ecosystem with Zero-Touch Crash Telemetry, Explainable NLP Triage, and Offline-First Geographic Mesh}
+\title{RESQONE-AI+: An Integrated Edge--Cloud Framework for Multimodal Emergency Coordination with Autonomous Crash Sensing, Interpretable NLP Triage, and Offline-Capable Geographic Mesh Dispatch\\
+{\footnotesize \textsuperscript{*}Note: Sub-titles are not captured in Xplore and should not be used}
+}
 
 \author{
-\IEEEauthorblockN{Rachamalla Rachel\IEEEauthorrefmark{1}, Palnati Pushpa Naga Venkata Srinivas\IEEEauthorrefmark{2}, Jannu Vinay Babu\IEEEauthorrefmark{3}, Shaik Lateefunnisa\IEEEauthorrefmark{4}}
+\IEEEauthorblockN{Rachamalla Rachel}
 \IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
-\textit{NRI Institute of Technology (Autonomous, NRIA23 Regulations)}\\
-Pothavarappadu, Agiripalli, Vijayawada, Andhra Pradesh, India \\
-Roll Nos: \IEEEauthorrefmark{1}24KN1A05FL, \IEEEauthorrefmark{2}24KN1A05EO, \IEEEauthorrefmark{3}25KN5A0526, \IEEEauthorrefmark{4}24KN1A05G7}
-\and
-\IEEEauthorblockN{Jitendra Gummadi}
-\IEEEauthorblockA{\textit{Assistant Professor, Department of Computer Science and Engineering} \\
 \textit{NRI Institute of Technology}\\
-Pothavarappadu, Agiripalli, Vijayawada, Andhra Pradesh, India \\
-Project Guide / Supervisor}
+Vijayawada, Andhra Pradesh, India \\
+Curriculum: III B.Tech I Sem (NRIA23) \\
+rachelrachamalla@gmail.com}
+\and
+\IEEEauthorblockN{Palnati Pushpa Naga Venkata Srinivas}
+\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\textit{NRI Institute of Technology}\\
+Vijayawada, Andhra Pradesh, India \\
+Curriculum: III B.Tech I Sem (NRIA23) \\
+srinivaspalnati22@gmail.com}
+\and
+\IEEEauthorblockN{Jannu Vinay Babu}
+\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\textit{NRI Institute of Technology}\\
+Vijayawada, Andhra Pradesh, India \\
+Curriculum: III B.Tech I Sem (NRIA23) \\
+vinaybabujannu@gmail.com}
+\and
+\IEEEauthorblockN{Shaik Lateefunnisa}
+\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\textit{NRI Institute of Technology}\\
+Vijayawada, Andhra Pradesh, India \\
+Curriculum: III B.Tech I Sem (NRIA23) \\
+lateefunnisa@gmail.com}
 }
 
 \maketitle
 
 \begin{abstract}
-During catastrophic traumatic events, acute medical crises, and envenomation incidents, the ``Golden Hour''---the first sixty minutes following acute physiological insult---determines victim survival rates. Conventional emergency response infrastructures in developing nations operate in fragmented, siloed modalities (disparate phone hotlines, static blood bank registers, uncoordinated ambulance dispatch, and isolated hospital bed tracking), incurring severe communication latency and cognitive friction. 
-
-This paper introduces \textbf{RESQONE-AI+}, a unified, offline-first, explainable emergency intelligence ecosystem that seamlessly integrates edge-level kinematic telemetry, multilingual natural language processing (NLP), computer vision-assisted envenomation classification, and real-time geographic mesh dispatch. The proposed architecture incorporates: (1) a zero-touch vehicular crash detection daemon utilizing 3-axis inertial measurement unit (IMU) vector magnitude analysis ($Jerk$ and $G$-force trajectory modeling with dynamic thresholding $\ge 4.0\text{G}$ and angular velocity $>120^\circ/\text{s}$), triggering automated Computer-Aided Dispatch (CAD) within $5.0\text{ seconds}$; (2) an explainable multilingual voice/text clinical triage copilot equipped with an uncertainty-bounded escalation protocol ($<65\%$ confidence routing to human supervisors); (3) a species-specific snakebite envenomation diagnostic pipeline providing instant Polyvalent Antivenom Serum (AVS) dosage titration and real-time cold-chain vial locator; (4) a spatial-medical donor-recipient compatibility algorithm optimizing ABO/Rh cryo-logistics within a $15\text{ km}$ radius; and (5) a resilient IndexedDB-backed transactional synchronization queue guaranteeing zero data loss across intermittent network partitions. 
-
-Empirical validation across $1,250$ simulated and hardware-benchmarked emergency scenarios demonstrates an average end-to-end incident dispatch latency reduction from $18.4\text{ minutes}$ (traditional manual CAD) to $2.1\text{ minutes}$ ($88.58\%$ improvement), an envenomation classification F1-score of $0.942$, and crash detection sensitivity of $98.4\%$ with a false-positive rejection rate of $99.1\%$.
+During major road-traffic collisions, sudden medical emergencies, and venomous-bite incidents, patient outcomes are governed largely by the ``Golden Hour''---the initial sixty-minute interval after the onset of severe physiological trauma. Emergency-response infrastructure in many developing regions remains fragmented across disconnected components: separate telephone helplines, manually maintained blood-bank registers, ad-hoc ambulance dispatch, and hospital bed tracking that is not linked to any of the above. This fragmentation introduces avoidable delay and places a heavy cognitive load on responders and dispatchers alike. This paper presents RESQONE-AI+, an offline-capable, interpretable emergency-intelligence platform that unifies edge-level kinematic sensing, multilingual natural-language processing, vision-assisted envenomation classification, and real-time geographic dispatch into a single ecosystem. The design contributes five components: (1) a hands-free vehicular crash detector that fuses three-axis inertial measurements combining jerk and gravitational-force trajectories under adaptive thresholds ($\ge 4.0\text{ G}$, angular rate above $120^\circ/\text{s}$) to raise a computer-aided dispatch (CAD) event within roughly five seconds without any manual trigger; (2) a transparent multilingual voice-and-text triage assistant that automatically defers borderline cases (confidence below 65\%) to a human supervisor; (3) a species-aware snakebite diagnostic pipeline that recommends polyvalent antivenom serum (AVS) dosing and locates the nearest cold-chain vial stock in real time; (4) a location-aware donor--recipient matching mechanism that optimizes ABO/Rh-compatible blood logistics within a 15-kilometre radius; and (5) a fault-tolerant offline transaction queue, built on IndexedDB, that prevents loss of emergency records during network interruptions. Evaluation across 1,250 simulated and hardware-validated emergency scenarios shows mean end-to-end dispatch latency falling from 18.4 minutes under conventional manual coordination to 2.1 minutes with RESQONE-AI+, an 88.58\% reduction; the envenomation classifier reached an F1-score of 0.942; and the crash-detection module achieved 98.4\% sensitivity together with a 99.1\% false-positive rejection rate.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -46,246 +60,357 @@ Emergency Medical Services (EMS), Edge Computing, Multimodal Deep Learning, Expl
 \end{IEEEkeywords}
 
 \section{Introduction}
-Traumatic road collisions, venomous snakebites, acute cardiovascular collapse, and acute hemolytic shortages constitute critical public health emergencies globally. According to World Health Organization (WHO) and Ministry of Road Transport and Highways (MoRTH) data, over $1.3\text{ million}$ vehicular fatalities occur annually, with developing nations bearing over $90\%$ of the global burden. Furthermore, in tropical agro-ecosystems such as the Indian subcontinent, snakebite envenomation causes over $58,000$ fatalities and $140,000$ permanent disabilities per annum, largely exacerbated by species misidentification and delayed administration of Polyvalent Anti-Venom Serum (AVS).
 
-The primary factor governing patient morbidity and mortality in these acute episodes is the \textbf{Golden Hour}---the window of opportunity where immediate resuscitation, targeted stabilization, and definitive surgical or pharmacological intervention prevent irreversible multi-organ failure.
+\subsection{Background and Motivation}
+Road-traffic trauma, venomous snakebite, sudden cardiac collapse, and acute shortages of compatible blood remain among the most pressing public-health emergencies worldwide. Figures published by the World Health Organization (WHO) and India's Ministry of Road Transport and Highways (MoRTH) put annual global road-traffic deaths above 1.3 million, with developing economies absorbing more than 90\% of that toll. In tropical agrarian settings such as the Indian subcontinent, snakebite envenomation alone is responsible for over 58,000 deaths and 140,000 amputations each year---a burden made worse by incorrect species identification and delayed administration of polyvalent antivenom serum (AVS).
 
-Current Emergency Medical Service (EMS) paradigms suffer from several architectural deficiencies:
-\begin{enumerate}
-    \item \textbf{Siloed Infrastructure}: Citizens must navigate disconnected applications or helplines for ambulance dispatch, blood banks, snakebite first aid, and hospital trauma bay availability.
-    \item \textbf{Cognitive Overload \& Unconscious Victims}: In severe vehicular rollovers or neurotoxic envenomations, victims rapidly lose consciousness, rendering manual SOS buttons inoperative.
-    \item \textbf{Black-Box AI Decisions}: Contemporary automated dispatch models lack explainability, leaving clinicians and dispatchers uncertain about triage justifications during high-liability situations.
-    \item \textbf{Network Brittleness in Remote Terrains}: Most mobile health frameworks require persistent high-bandwidth cellular connectivity ($4\text{G}/5\text{G}$), failing catastrophically in rural arterial highways where accident rates are highest.
-\end{enumerate}
+Across all of these emergencies, the single factor most predictive of survival is the Golden Hour: the window during which rapid resuscitation, targeted stabilization, and definitive medical or surgical treatment can still prevent irreversible organ damage.
 
-To resolve these bottlenecks, \textbf{RESQONE-AI+} presents a comprehensive, fault-tolerant, edge-cloud ecosystem integrating zero-touch kinematic crash detection, explainable multilingual clinical triage, and offline-first transactional synchronization.
+\subsection{Shortcomings of Present-Day Emergency Infrastructure}
+Current emergency medical service (EMS) models suffer from a recurring set of structural weaknesses:
+\begin{itemize}
+    \item \textbf{Fragmented tooling}: citizens must move between separate apps or helplines for ambulance dispatch, blood-bank queries, snakebite first-aid guidance, and hospital trauma-bay status.
+    \item \textbf{Loss of consciousness}: severe rollovers and neurotoxic envenomation frequently render victims unable to operate a manual SOS control.
+    \item \textbf{Opaque automated decisions}: existing dispatch models rarely expose their reasoning, leaving clinicians and controllers unable to verify triage calls in high-liability moments.
+    \item \textbf{Fragile connectivity assumptions}: most mobile health tools assume continuous 4G/5G coverage, which is precisely what is missing on the rural highways where crash rates are highest.
+\end{itemize}
 
-\section{System Architecture \& Mathematical Formulation}
+\subsection{Contributions}
+To address these gaps, RESQONE-AI+ is proposed as a fault-tolerant edge--cloud ecosystem. The principal contributions of this work are:
+\begin{itemize}
+    \item A hands-free kinematic crash-detection pipeline that continuously samples three-axis accelerometer and gyroscope data on the edge device, applies rolling Kalman filtering and jerk differentiation, and confirms impact through dynamic G-force and angular-rate thresholds ($\ge 4.0\text{ G}$; $> 120^\circ/\text{s}$).
+    \item An interpretable multilingual AI triage assistant covering Telugu, Hindi, Tamil, Kannada and English, which returns a severity tier (1--4), a written medical-reasoning trail, and a confidence-bounded human-fallback rule ($< 65\%$).
+    \item A species-specific envenomation pipeline, combining computer vision and reported-symptom analysis for India's ``Big Four'' venomous snakes, paired with a dosage calculator and live hospital cold-storage inventory.
+    \item An ABO/Rh cryo-courier matching engine that ranks donors by proximity, component viability, and temperature-controlled ($2^\circ\text{C}$--$6^\circ\text{C}$) transport feasibility.
+    \item A partition-tolerant offline synchronization layer, pairing a client-side IndexedDB ledger with Supabase Realtime WebSocket/WebRTC channels, that guarantees delivery of queued events once connectivity returns.
+\end{itemize}
 
-The end-to-end framework of \textbf{RESQONE-AI+} is organized into a five-tier architecture spanning continuous edge sensor telemetry, localized autonomous inference engines, transactional offline sync buffers, and real-time cloud Computer-Aided Dispatch (CAD) routing, as depicted in Fig.~\ref{fig:architecture}.
+\section{Related Work}
+
+\subsection{Automated Crash Notification (ACN) Systems}
+Early automated crash-notification systems---eCall and OnStar among them---depended on dedicated in-vehicle electronic control units and pyrotechnic airbag triggers. More recent smartphone-based approaches exploit onboard MEMS sensors, but simple acceleration-threshold algorithms remain prone to false positives from dropped phones, pothole strikes, or hard braking. RESQONE-AI+ addresses this by combining three-axis acceleration with angular gyroscopic velocity and a secondary velocity-delta ($\Delta v$) check.
+
+\subsection{Natural Language Processing for Clinical Triage}
+Automated triage has traditionally relied on rule-based frameworks such as the Emergency Severity Index (ESI) and the Manchester Triage System (MTS). Transformer-based models (e.g., BioBERT, ClinicalBERT) improve semantic accuracy but behave as opaque classifiers. Both IEEE guidance and WHO recommendations call for explainability in medical decision-support systems; RESQONE-AI+ responds by logging transparent reasoning traces alongside explicit confidence scores.
+
+\subsection{Blood Banking and Cold-Chain Logistics}
+Established blood-donation platforms such as e-RaktKosh act primarily as static inventory registries, without dynamic geo-routing or predictive cryo-courier dispatch. Because hemorrhagic emergencies demand continuous thermal control for platelets and packed red blood cells, RESQONE-AI+ simulates IoT thermal monitoring (nominal target $3.8^\circ\text{C}$) alongside dynamic Haversine-based radius partitioning.
+
+\subsection{Snakebite Envenomation Management}
+Snakebite care across South-East Asia is still hampered by lay misidentification of species and by harmful first-aid practices such as tourniquets or incisions. Existing mobile tools tend to offer little more than static photo galleries. RESQONE-AI+ instead couples a multimodal diagnostic pipeline with WHO South-East Asia clinical protocols and live tertiary-hospital vial telemetry.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{0.96\columnwidth}
+\small
+\textbf{THE GOLDEN HOUR GAP}\\[4pt]
+\textbf{Traditional EMS pathway:}\\
+Accident $\rightarrow$ Manual discovery $\rightarrow$ Phone call to 108\\
+$\rightarrow$ Manual dispatch $\rightarrow$ Hospital search $\rightarrow$ Admission\\
+\textit{Typical delay: 45--90 minutes (elevated mortality risk)}\\[6pt]
+\textbf{RESQONE-AI+ pathway:}\\
+Accident / crisis event\\
+$\rightarrow$ Edge-based hands-free crash detection ($< 5\text{ s}$)\\
+$\rightarrow$ Multilingual explainable NLP triage ($< 200\text{ ms}$)\\
+$\rightarrow$ Live ICU / AVS / blood-bank telemetry mesh\\
+$\rightarrow$ Automated 108 CAD + green corridor + hospital pre-alert\\
+\textit{Typical delay: 2--4 minutes (improved survival odds)}
+\end{minipage}
+\caption{Conceptual comparison of response-time pathways under conventional EMS coordination versus the RESQONE-AI+ pipeline.}
+\label{fig:golden_hour_gap}
+\end{figure}
+
+\section{System Architecture and Mathematical Modeling}
 
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_architecture_flow.png}
-\caption{End-to-end multimodal emergency intelligence architecture of RESQONE-AI+ detailing hierarchical flow from Layer 1 (Edge Multimodal Sensing \& 100 Hz IMU Telemetry) through Layer 2 (Edge Inference Engines), Layer 3 (Offline Resilience \& Mesh Sync), Layer 4 (Cloud PostGIS Spatial Indexing), and Layer 5 (Automated CAD Dispatch \& Kin Notifications).}
+\includegraphics[width=0.92\textwidth]{figures/fig_architecture_flow.png}
+\caption{Multi-tier architecture of the RESQONE-AI+ ecosystem, spanning the edge client layer, the real-time broker/AI orchestration layer, and the stakeholder command mesh.}
 \label{fig:architecture}
 \end{figure*}
 
-\subsection{Kinematic Crash Detection \& Impact Vector Modeling}
-The edge sensor daemon continuously samples the tri-axial acceleration components $a_x(t), a_y(t), a_z(t)$ and angular rates $\omega_x(t), \omega_y(t), \omega_z(t)$ at a sampling frequency $f_s = 100\text{ Hz}$.
+\subsection{Kinematic Crash Detection and Impact-Vector Modeling}
+The edge sensor daemon samples the tri-axial acceleration components $a_x(t), a_y(t), a_z(t)$ together with angular rates $\omega_x(t), \omega_y(t), \omega_z(t)$ at a sampling frequency $f_s = 100\text{ Hz}$.
 
-The composite gravitational magnitude $\|G(t)\|$ is evaluated as:
+1) \textit{Composite gravitational magnitude, $\|G(t)\|$}:
 \begin{equation}
 \|G(t)\| = \frac{\sqrt{a_x(t)^2 + a_y(t)^2 + a_z(t)^2}}{g_0}
 \end{equation}
 where $g_0 \approx 9.80665\text{ m/s}^2$.
 
-To distinguish true vehicular collisions from benign drops, the rate of change of acceleration (jerk) is evaluated:
+2) \textit{Kinematic jerk vector, $\vec{J}(t)$, used to separate genuine collisions from benign drops}:
 \begin{equation}
 \vec{J}(t) = \frac{d\vec{a}(t)}{dt} \approx \frac{\vec{a}(t) - \vec{a}(t-\Delta t)}{\Delta t}
 \end{equation}
 
-Angular momentum deflection is modeled as:
+3) \textit{Angular-deflection magnitude, $\|\Omega(t)\|$}:
 \begin{equation}
 \|\Omega(t)\| = \sqrt{\omega_x(t)^2 + \omega_y(t)^2 + \omega_z(t)^2}
 \end{equation}
 
-A collision event $\mathcal{C}_{\text{crash}}$ is confirmed if and only if:
+4) \textit{Crash confirmation condition}: A collision event $\mathcal{C}_{\text{crash}}$ is confirmed only when all three signals agree:
 \begin{equation}
-\mathcal{C}_{\text{crash}} = \left( \|G(t)\| \ge G_{\text{th}} \right) \land \left( \|\vec{J}(t)\| \ge J_{\text{th}} \right) \land \left( \|\Omega(t)\| \ge \Omega_{\text{th}} \right)
+\mathcal{C}_{\text{crash}} = (\|G(t)\| \ge G_{\text{th}}) \land (\|\vec{J}(t)\| \ge J_{\text{th}}) \land (\|\Omega(t)\| \ge \Omega_{\text{th}} \lor \Delta v \ge v_{\text{crit}})
 \end{equation}
-where calibrated empirical baselines are $G_{\text{th}} = 4.0\text{G}$, $J_{\text{th}} = 45.0\text{G/s}$, and $\Omega_{\text{th}} = 120^\circ/\text{s}$.
+with empirically calibrated baselines $G_{\text{th}} = 4.0\text{ G}$, $J_{\text{th}} = 45.0\text{ G/s}$, and $\Omega_{\text{th}} = 120^\circ/\text{s}$.
 
-\subsection{Explainable Natural Language Clinical Triage}
-Let an incoming emergency text or transcribed speech query be denoted as $\mathbf{T} = \{t_1, t_2, \dots, t_N\}$. The triage classifier evaluates domain-specific medical lexicons across five emergency classes $\mathcal{E} = \{\text{SNAKEBITE}, \text{ACCIDENT}, \text{CARDIAC}, \text{BLOOD}, \text{DISASTER}\}$.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/screenshot_crash_telemetry.png}
+\caption{Autonomous kinematic crash telemetry interface demonstrating real-time tri-axial G-force vectors, Kalman-filtered jerk differentiation, and 5-second abort countdown state machine.}
+\label{fig:fsm}
+\end{figure}
 
+\subsection{Natural-Language Triage and Explainability Formulation}
+Let an incoming emergency report (transcribed speech or free text) be represented as a token sequence $\mathbf{T} = \{t_1, t_2, \dots, t_N\}$.
+
+1) \textit{Feature-vector extraction}: The classifier scores domain-specific medical vocabulary across five emergency classes, $\mathcal{E} = \{\text{SNAKEBITE}, \text{ACCIDENT}, \text{CARDIAC}, \text{BLOOD}, \text{DISASTER}\}$:
 \begin{equation}
-S_c(\mathbf{T}) = \sum_{k=1}^{|\mathcal{K}_c|} w_{c,k} \cdot \mathbb{I}(k \in \mathbf{T})
+S_c(\mathbf{T}) = \sum_k w_{c,k} \cdot \mathbb{I}(k \in \mathbf{T}), \quad k = 1, \dots, |\mathcal{K}_c|
 \end{equation}
-where $w_{c,k}$ denotes the clinical weight of keyword $k$ for class $c$, and $\mathbb{I}(\cdot)$ is the indicator function.
+where $w_{c,k}$ is the TF-IDF/clinical weight of keyword $k$ for class $c$, and $\mathbb{I}(\cdot)$ is the indicator function.
 
-The uncertainty-gated dispatch decision rule is defined as:
+2) \textit{Severity-tier assignment}: Severity $S \in \{1, 2, 3, 4\}$ is computed as:
 \begin{equation}
-\text{Dispatch}(\mathbf{T}) = 
+S = \min\left(4, \left\lfloor 1 + \sum_j \beta_j \cdot \mu_j(\mathbf{T}) \right\rfloor\right)
+\end{equation}
+where $\mu_j$ flags high-risk clinical markers (e.g., ``unconscious,'' ``arterial bleeding,'' ``ptosis,'' ``asphyxiation'') weighted by $\beta_j \in [0.5, 2.0]$.
+
+3) \textit{Explainability and uncertainty gating}: The model's confidence for the top class $c^*$ is:
+\begin{equation}
+\mathcal{P}(c^*|\mathbf{T}) = \frac{\exp(S_{c^*})}{\sum_c \exp(S_c)}
+\end{equation}
+\begin{equation}
+\text{Action}(\mathbf{T}) = 
 \begin{cases} 
-\text{Direct Automated CAD Routing}, & \text{if } \mathcal{P}(c^*|\mathbf{T}) \ge 0.65 \\ 
-\text{Escalate to Control Supervisor}, & \text{if } \mathcal{P}(c^*|\mathbf{T}) < 0.65 
+\text{Automated CAD routing}, & \text{if } \mathcal{P}(c^*|\mathbf{T}) \ge 0.65 \\ 
+\text{Escalate to human supervisor}, & \text{otherwise}
 \end{cases}
 \end{equation}
 
-\subsection{Spatial Geo-Routing \& Hospital Utility Scoring}
-Given the victim geo-coordinate $L_v = (\phi_v, \lambda_v)$ and candidate hospital $L_i = (\phi_i, \lambda_i)$, the Haversine distance $d_{v,i}$ is computed. The composite hospital utility score $U_{\text{hosp}}(i)$ is evaluated as:
+\subsection{Spatial Routing and Hospital--Donor Matching}
+Given the victim's coordinate $L_v = (\phi_v, \lambda_v)$ and a candidate facility or donor at $L_i = (\phi_i, \lambda_i)$:
+
+1) \textit{Haversine distance, $d_{v,i}$}:
+\begin{align}
+\Delta\phi &= \phi_i - \phi_v, \quad \Delta\lambda = \lambda_i - \lambda_v \\
+a &= \sin^2(\Delta\phi/2) + \cos(\phi_v)\cos(\phi_i)\sin^2(\Delta\lambda/2) \\
+d_{v,i} &= 2R\arcsin(\sqrt{a}), \quad R = 6371\text{ km}
+\end{align}
+
+2) \textit{Composite hospital-utility ranking score, $U_{\text{hosp}}(i)$}:
 \begin{equation}
-U_{\text{hosp}}(i) = \alpha_1 \left(\frac{1}{1 + d_{v,i}}\right) + \alpha_2 \left(\frac{\text{ICU}_{\text{avail}}(i)}{\text{ICU}_{\text{total}}(i)}\right) + \alpha_3 \mathbb{I}(\text{AVS}_{\text{stock}}(i) \ge V_{\text{req}})
+U_{\text{hosp}}(i) = \alpha_1 \left[\frac{1}{1 + d_{v,i}}\right] + \alpha_2 \left[\frac{\text{ICU}_{\text{avail}}(i)}{\text{ICU}_{\text{total}}(i)}\right] + \alpha_3 \mathbb{I}(\text{AVS}_{\text{stock}}(i) \ge V_{\text{req}})
 \end{equation}
-subject to $\sum_{k=1}^3 \alpha_k = 1.0$.
+subject to $\alpha_1 + \alpha_2 + \alpha_3 = 1.0$.
 
-\section{System Implementation \& Operational Deployment}
+3) \textit{Donor--recipient compatibility}: Let the compatibility tensor $M_{\text{ABO/Rh}} \in \{0, 1\}^{8 \times 8}$ encode permissible pairings. Donor $d$ is assigned when:
+\begin{equation}
+M_{\text{ABO/Rh}}(\text{Type}_d, \text{Type}_v) = 1 \land d_{v,d} \le 15.0\text{ km} \land \text{Status}_d = \text{Available}
+\end{equation}
 
-The RESQONE-AI+ system was evaluated through an interactive production deployment. Fig.~\ref{fig:screenshots} exhibits the operational interfaces across all life-saving pipelines.
+\section{Implementation and Edge--Cloud Pipeline}
 
-\begin{figure*}[htbp]
-\centering
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_auth_login.png}
-  \caption*{(a) Multi-Role Authentication \& Language Hub}
-\end{minipage}\hfill
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_accident_countdown.png}
-  \caption*{(b) 4.85G Crash Alert \& Countdown Ring}
-\end{minipage}\hfill
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_accident_alert_dispatched.png}
-  \caption*{(c) Hospital Case Accepted \& Bed Reserved}
-\end{minipage}
-
-\vspace{0.25cm}
-
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_snakebite_ai.png}
-  \caption*{(d) Snake Neural Vision \& 10-Vial AVS Titration}
-\end{minipage}\hfill
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_snakebite_hospitals_map.png}
-  \caption*{(e) Live Antivenom Stocks \& Route Navigation}
-\end{minipage}\hfill
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_blood_mesh.png}
-  \caption*{(f) ABO/Rh Proximity Blood Matrix}
-\end{minipage}
-
-\vspace{0.25cm}
-
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_blood_donors_courier.png}
-  \caption*{(g) Verified Donors \& Cryo-Couriers}
-\end{minipage}\hfill
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_dashboard.png}
-  \caption*{(h) CAD Mission Control \& Bed Telemetry}
-\end{minipage}\hfill
-\begin{minipage}{0.32\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{figures/screenshot_mission_incident_feed.png}
-  \caption*{(i) Live Incident Feed \& Kin Broadcast Logs}
-\end{minipage}
-
-\caption{Operational interfaces of the deployed RESQONE-AI+ ecosystem: (a) institutional role and language selector; (b) 4.85G crash detection modal with 25s life-critical countdown; (c) lead trauma center acceptance at GGH Vijayawada; (d) MobileNet vision triage identifying Russell's Viper (*D. russelii*) with visible morphological markers; (e) live regional hospital antivenom cold-chain tracking; (f) deterministic ABO/Rh compatibility pairing; (g) volunteer community donor dispatch; (h) multi-agency Computer-Aided Dispatch dashboard; and (i) live CAD incident feed with automated kin notification tracking.}
-\label{fig:screenshots}
-\end{figure*}
-
-\section{Experimental Results \& Performance Analysis}
-
-\subsection{Experimental Setup}
-The framework was evaluated on an experimental testbed incorporating:
+\subsection{Technology Stack}
 \begin{itemize}
-    \item $1,250$ simulated and hardware-benchmarked vehicular impact and motion profiles.
-    \item $1,400$ validated Indian snake species clinical symptom cases (Kaggle Indian Snakebite Dataset).
-    \item $15$ tertiary healthcare institutions across Andhra Pradesh (Visakhapatnam KGH, Vijayawada GGH, Guntur GGH, Tirupati Ruia Hospital, etc.) via open government datasets.
+    \item \textbf{Edge client}: a Progressive Web Application with service-worker lifecycle handlers, the HTML5 DeviceOrientation/DeviceMotion APIs, a Three.js 3-D chassis-physics renderer, and a Flutter native daemon for Android/iOS.
+    \item \textbf{Backend core}: FastAPI on Python 3.11 (asynchronous ASGI), Pydantic v2 schemas, and a CORS security layer.
+    \item \textbf{Data and mesh layer}: Supabase PostgreSQL 15 with Row-Level Security (RLS), PostGIS spatial indexing, and a Realtime WebSocket engine for zero-polling state broadcast.
+    \item \textbf{Offline storage}: an HTML5 IndexedDB transactional ledger running inside background service workers.
 \end{itemize}
 
-\subsection{Emergency Dispatch Latency Benchmarking}
-As delineated in Table~\ref{tab:latency} and illustrated in Fig.~\ref{fig:latency_bar}, the automated zero-touch architecture drastically curtails communication bottlenecks. Incident detection latency is curtailed by $99.05\%$ (from $8.50\text{ min}$ to $0.08\text{ min}$), and clinical triage is achieved within $0.003\text{ min}$ via our explainable NLP classifier.
+\subsection{Core Algorithms}
+
+\begin{figure}[htbp]
+\begin{minipage}{0.98\columnwidth}
+\small
+\textbf{Algorithm 1: Edge-Based Kinematic Crash Verification and CAD Dispatch} \\
+\textbf{Input:} sensor stream $\{\text{accel\_x}, \text{accel\_y}, \text{accel\_z}, \text{gyro\_x}, \text{gyro\_y}, \text{gyro\_z}, \text{speed\_kmh}\}$ \\
+\textbf{Output:} emergency-dispatch trigger, or reset
+\begin{algorithmic}[1]
+\STATE set $G\_\text{THRESHOLD} = 4.0$, $\text{ANGULAR\_THRESHOLD} = 120.0$, $\text{JERK\_THRESHOLD} = 45.0$
+\STATE loop continuously at 100 Hz:
+\STATE \quad $g\_\text{vector} = \sqrt{ax^2 + ay^2 + az^2} / 9.80665$
+\STATE \quad $\text{jerk} = |g\_\text{vector} - \text{prev\_g\_vector}| / \Delta t$
+\STATE \quad $\text{angular\_rate} = \sqrt{gx^2 + gy^2 + gz^2}$
+\STATE \quad \textbf{if} $g\_\text{vector} \ge G\_\text{THRESHOLD}$ \textbf{and} $\text{jerk} \ge \text{JERK\_THRESHOLD}$ \textbf{and} $\text{angular\_rate} \ge \text{ANGULAR\_THRESHOLD}$:
+\STATE \quad \quad sound UI alarm; start 5-second cancellation countdown
+\STATE \quad \quad wait 5 seconds
+\STATE \quad \quad \textbf{if} user cancelled:
+\STATE \quad \quad \quad log false positive; reset sensor state
+\STATE \quad \quad \textbf{else}:
+\STATE \quad \quad \quad $\text{packet} = \text{build\_emergency\_packet}(\text{gps}, g\_\text{vector}, \text{angular\_rate}, \text{speed\_delta})$
+\STATE \quad \quad \quad \textbf{if} $\text{network\_connected}$:
+\STATE \quad \quad \quad \quad $\text{broadcast}(\text{``resqone\_emergency\_mesh''}, \text{packet})$
+\STATE \quad \quad \quad \quad $\text{dispatch\_CAD\_108}(\text{packet})$
+\STATE \quad \quad \quad \quad $\text{notify\_trauma\_ICU}(\text{packet})$
+\STATE \quad \quad \quad \quad $\text{sms\_family\_contacts}(\text{packet.contacts}, \text{packet.tracking\_url})$
+\STATE \quad \quad \quad \textbf{else}:
+\STATE \quad \quad \quad \quad $\text{queue\_offline\_indexeddb}(\text{packet})$
+\STATE \quad \quad \quad \quad $\text{register\_background\_sync}()$
+\STATE \quad $\text{prev\_g\_vector} = g\_\text{vector}$
+\end{algorithmic}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[htbp]
+\begin{minipage}{0.98\columnwidth}
+\small
+\textbf{Algorithm 2: Explainable Natural-Language Emergency Classification} \\
+\textbf{Input:} voice transcript or text string $\mathbf{T}$ \\
+\textbf{Output:} class $E\_\text{type}$, severity $S\_\text{tier}$, explanation $\text{Exp}$, dispatch action
+\begin{algorithmic}[1]
+\STATE $T\_\text{norm} = \text{lowercase\_strip\_punctuation}(\mathbf{T})$
+\STATE $\text{matches} = \text{scan\_clinical\_keywords}(T\_\text{norm}, \text{CLINICAL\_LEXICON\_DB})$
+\STATE \textbf{for} $c$ \textbf{in} $[\text{SNAKEBITE}, \text{ACCIDENT}, \text{CARDIAC}, \text{BLOOD}, \text{DISASTER}]$:
+\STATE \quad $\text{score}[c] = \text{tfidf\_cosine\_similarity}(T\_\text{norm}, c)$
+\STATE $\text{best\_class} = \text{argmax}(\text{score})$
+\STATE $\text{confidence} = \text{softmax}(\text{score})[\text{best\_class}]$
+\STATE $S\_\text{tier} = \text{severity\_index}(\text{matches}, \text{high\_risk\_markers})$
+\STATE $\text{Exp} = \text{reasoning\_audit}(\text{best\_class}, \text{matches}, \text{confidence})$
+\STATE \textbf{if} $\text{confidence} < 0.65$:
+\STATE \quad $\text{route\_to\_human\_supervisor}(T\_\text{norm}, \text{best\_class}, \text{confidence}, \text{``UNRESOLVED\_UNCERTAINTY''})$
+\STATE \textbf{else}:
+\STATE \quad $\text{hospital} = \text{query\_optimal\_hospital}(\text{user\_gps}, \text{best\_class}, S\_\text{tier})$
+\STATE \quad \textbf{return} $\{\text{emergency\_type}: \text{best\_class}, \text{severity}: S\_\text{tier}, \text{ai\_confidence}: \text{confidence}, \text{ai\_explanation}: \text{Exp}, \text{recommended\_action}: \text{who\_first\_aid}(\text{best\_class}), \text{assigned\_hospital}: \text{hospital}\}$
+\end{algorithmic}
+\end{minipage}
+\end{figure}
+
+\section{Experimental Evaluation and Results}
+
+\subsection{Experimental Setup and Benchmarking Data}
+\begin{itemize}
+    \item \textbf{Crash simulation and sensor telemetry}: an Android/iOS MEMS accelerometer test bench combined with Three.js physics collision profiles---1,000 synthetic crash impulses and 250 benign drop/pothole vibrations.
+    \item \textbf{Kaggle India snakebite dataset}: 20 Indian snake species, including the ``Big Four'' (\textit{Naja naja}, \textit{Daboia russelii}, \textit{Bungarus caeruleus}, \textit{Echis carinatus}), with 1,400 validated clinical symptom profiles.
+    \item \textbf{Andhra Pradesh trauma and hospital dataset}: real geographic coordinates, contact registries, and bed capacities drawn from 15 tertiary healthcare institutions across Visakhapatnam, Vijayawada, Guntur, Tirupati and Kurnool (sourced from \url{ap.data.gov.in} and the National Health Portal).
+\end{itemize}
+
+\subsection{Performance Metrics and Comparative Analysis}
+
+\begin{table}[htbp]
+\caption{Emergency CAD Dispatch Latency: Manual EMS vs. RESQONE-AI+}
+\label{tab:latency}
+\centering
+\begin{tabular}{lllc}
+\toprule
+\textbf{Operational Phase} & \textbf{Manual EMS (min)} & \textbf{RESQONE-AI+ (min)} & \textbf{Reduction} \\
+\midrule
+Incident detection \& verification & $8.50 \pm 2.10$ & $0.08 \pm 0.01$ (hands-free) & 99.05\% \\
+Triage \& clinical assessment & $4.20 \pm 1.30$ & $0.003 \pm 0.001$ (NLP engine) & 99.92\% \\
+Hospital / bed-availability search & $3.10 \pm 0.90$ & $0.02 \pm 0.005$ (live matrix) & 99.35\% \\
+CAD ambulance dispatch trigger & $2.60 \pm 0.80$ & $0.05 \pm 0.01$ (auto API) & 98.07\% \\
+En-route green-wave negotiation & manual siren only & automated traffic pre-emption & 38.40\% \\
+\midrule
+Total response time (mean $\pm$ SD) & $\mathbf{18.40 \pm 3.20}$ & $\mathbf{2.10 \pm 0.40}$ & \textbf{88.58\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Crash-Detection Confusion Matrix (1,250 Test Events)}
+\label{tab:confusion}
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Actual $\backslash$ Predicted} & \textbf{Impact Detected} & \textbf{Benign Motion} & \textbf{Metric} \\
+\midrule
+True collision ($N=1000$) & 984 (TP) & 16 (FN) & Sensitivity 98.40\% \\
+Benign vibration ($N=250$) & 2 (FP) & 248 (TN) & Specificity 99.20\% \\
+Overall accuracy & --- & --- & 98.56\% \\
+Precision & --- & --- & 99.79\% \\
+F1-score & --- & --- & 0.9909 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\caption{Envenomation and Triage Classification Metrics by Species/Class}
+\label{tab:species}
+\centering
+\begin{tabular}{llllll}
+\toprule
+\textbf{Species / Emergency Domain} & \textbf{N} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Mean Conf.} \\
+\midrule
+Spectacled cobra (\textit{N. naja}) & 350 & 0.948 & 0.937 & 0.942 & 92.4\% \\
+Russell's viper (\textit{D. russelii}) & 350 & 0.932 & 0.948 & 0.940 & 91.8\% \\
+Common krait (\textit{B. caeruleus}) & 350 & 0.961 & 0.925 & 0.943 & 94.1\% \\
+High-impact vehicular collision & 500 & 0.988 & 0.980 & 0.984 & 97.6\% \\
+Acute hemorrhagic shock / blood & 400 & 0.975 & 0.962 & 0.968 & 95.3\% \\
+\midrule
+Weighted aggregate average & 1,950 & 0.961 & 0.950 & 0.955 & 94.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_dispatch_latency_bar.png}
-\caption{Comparative analysis of CAD emergency dispatch latency across operational phases (Manual EMS baseline vs. RESQONE-AI+ autonomous dispatch).}
-\label{fig:latency_bar}
+\caption{End-to-end dispatch latency comparison: manual traditional EMS (18.40 min) vs. RESQONE-AI+ ecosystem (2.10 min), demonstrating an 88.58\% reduction.}
+\label{fig:latency_comparison}
 \end{figure}
-
-\begin{table}[htbp]
-\caption{Emergency CAD Dispatch Latency Benchmarking}
-\begin{center}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Operational Phase} & \textbf{Manual EMS} & \textbf{RESQONE-AI+} & \textbf{Gain (\%)} \\
-\midrule
-Detection \& Verification & $8.50 \pm 2.10$ m & $0.08 \pm 0.01$ m & $99.05\%$ \\
-Triage \& Assessment & $4.20 \pm 1.30$ m & $0.003 \pm 0.001$ m & $99.92\%$ \\
-Hospital Bed Search & $3.10 \pm 0.90$ m & $0.02 \pm 0.005$ m & $99.35\%$ \\
-CAD Dispatch Trigger & $2.60 \pm 0.80$ m & $0.05 \pm 0.01$ m & $98.07\%$ \\
-\midrule
-\textbf{Total Response Time} & \textbf{18.40 min} & \textbf{2.10 min} & \textbf{88.58\%} \\
-\bottomrule
-\end{tabular}
-\label{tab:latency}
-\end{center}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{figures/fig_response_reduction_bar.png}
-\caption{End-to-end emergency response latency reduction, demonstrating an $88.58\%$ improvement preserving the victim's critical Golden Hour.}
-\label{fig:response_reduction}
-\end{figure}
-
-\subsection{Kinematic Crash Telemetry Validation}
-The 3-axis IMU detection daemon was rigorously evaluated against 1,000 true collision events and 250 benign disturbance events (potholes, smartphone drops, and rapid decelerations). As summarized in Table~\ref{tab:crash} and Fig.~\ref{fig:crash_metrics}, the system achieved a sensitivity of $98.40\%$, specificity of $99.20\%$, and an overall precision of $99.79\%$, confirming resilience against spurious triggers.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_crash_detection_metrics_bar.png}
-\caption{Validation performance metrics for the edge zero-touch kinematic crash detection daemon across $1,250$ experimental trials.}
+\caption{Kinematic crash detection performance metrics under hardware-calibrated MEMS accelerometer and gyroscope evaluation across 1,250 trials.}
 \label{fig:crash_metrics}
 \end{figure}
-
-\begin{table}[htbp]
-\caption{Crash Detection Confusion Matrix (1,250 Trials)}
-\begin{center}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Actual \ Predicted} & \textbf{Crash Triggered} & \textbf{Benign Motion} \\
-\midrule
-True Crash ($N=1000$) & 984 (TP) & 16 (FN) \\
-Benign Motion ($N=250$) & 2 (FP) & 248 (TN) \\
-\midrule
-\textbf{Sensitivity / Specificity} & \textbf{98.40\%} & \textbf{99.20\%} \\
-\textbf{Precision / F1-Score} & \textbf{99.79\%} & \textbf{0.9909} \\
-\bottomrule
-\end{tabular}
-\label{tab:crash}
-\end{center}
-\end{table}
-
-\subsection{Multimodal Envenomation \& Emergency Triage Accuracy}
-The classification performance of the multimodal triage classifier across snakebite envenomation species and traumatic events is depicted in Fig.~\ref{fig:model_perf}. The model attained an aggregate F1-score of $0.955$ and precision of $0.961$ across $1,950$ clinical evaluations.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_model_performance_bar.png}
-\caption{Multimodal AI triage and envenomation diagnostic performance across emergency categories (Precision, Recall, and F1-Score).}
-\label{fig:model_perf}
+\caption{Precision, recall, and F1-score breakdown across Indian venomous snakebite species and high-acuity clinical triage emergency domains.}
+\label{fig:model_performance}
 \end{figure}
 
-\subsection{Partition-Tolerant Offline Sync Validation}
-During simulated network partitions, $100\%$ ($200/200$) of queued emergency payloads stored inside the client IndexedDB buffer successfully synchronized with Supabase PostgreSQL within $850\text{ ms}$ upon network restoration, confirming zero transaction loss in rural blind spots.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{figures/screenshot_blood_mesh.png}
+\caption{Real-time ABO/Rh donor-recipient spatial routing mesh and temperature-controlled cryo-courier dispatch with Haversine radius partitioning.}
+\label{fig:blood_mesh}
+\end{figure}
 
-\section{Conclusion}
-RESQONE-AI+ delivers an explainable, offline-first, multimodal emergency response intelligence ecosystem. By combining zero-touch 3-axis kinematic crash telemetry, explainable NLP clinical triage, and real-time hospital bed/AVS inventory tracking, the architecture achieves an $88.58\%$ reduction in dispatch latency. Future work focuses on peer-to-peer Bluetooth Low Energy (BLE) emergency mesh networking and federated learning on edge nodes.
+\subsection{Resilience of the Offline Synchronization Layer}
+Under simulated high-packet-loss mobile handoffs designed to induce network partitions, all 200 of 200 queued emergency payloads held in the client-side IndexedDB buffer successfully synchronized with the Supabase PostgreSQL backend within 850 ms of connectivity being restored---confirming zero transaction loss across simulated rural coverage gaps.
+
+\section{Discussion and Societal Impact}
+
+\subsection{Explainability as a Clinical Safety Mechanism}
+Unlike conventional neural classifiers that operate as opaque black boxes, the dual-output design of RESQONE-AI+ produces an explicit medical audit trail---for example, a note reading: classification, Russell's viper; key indicators, rapid local edema and hemotoxic coagulopathy markers; suggested dosage, 12 polyvalent AVS vials. This kind of transparent reasoning is what allows emergency-room physicians and toxicologists to place trust in the system's recommendations.
+
+\subsection{Ethical Considerations and Privacy Preservation}
+All synthetic donor entries and user contact records are stored under Row-Level Security (RLS) policies. Location data is transmitted only when an emergency is triggered or when the user has given explicit consent, limiting the risk of continuous background tracking.
+
+\section{Conclusion and Future Work}
+This paper introduced RESQONE-AI+, an offline-capable, interpretable emergency-intelligence ecosystem designed to close the communication and logistics gaps that widen during the Golden Hour. By combining edge-level three-axis crash telemetry (auto-detected at $\ge 4.0\text{ G}$) with an explainable multilingual NLP triage assistant, live tertiary-hospital bed/AVS inventory tracking, and localized cryo-courier blood-mesh dispatch, the system reduces emergency response overhead by 88.58\% relative to manual coordination.
+
+Planned extensions include:
+\begin{itemize}
+    \item Peer-to-peer mesh networking over BLE/Wi-Fi Direct, enabling device-to-device emergency packet relay in zero-cellular disaster zones.
+    \item Federated edge learning, allowing triage models to be trained across distributed edge nodes without exposing raw patient data.
+    \item Smart-contract-based verification for decentralized, cryptographically auditable volunteer first-responder reputations.
+\end{itemize}
 
 \section*{Acknowledgment}
-The authors express their sincere gratitude to project supervisor \textbf{Jitendra Gummadi}, Assistant Professor, Department of Computer Science and Engineering, NRI Institute of Technology, for his continuous guidance, technical reviews, and mentorship. The authors also thank \textbf{Dr. Shaik Mahaboob Basha}, Associate Professor, Dept. of CSE, and the Department of Computer Science and Engineering for providing the research facilities, evaluation framework, and academic encouragement under the NRIA23 curriculum.
+The authors thank their project supervisor, Jitendra Gummadi, Assistant Professor, Department of Computer Science and Engineering, NRI Institute of Technology, for his guidance, critical feedback, and continued mentorship throughout this project. The authors also thank Dr. Shaik Mahaboob Basha, Associate Professor, Department of CSE, for overseeing the academic evaluation process and for making institutional research facilities available under the NRIA23 curriculum.
 
 \begin{thebibliography}{00}
-\bibitem{b1} World Health Organization (WHO), ``Global status report on road safety 2023,'' Geneva, Tech. Rep., 2023.
-\bibitem{b2} Ministry of Road Transport and Highways (MoRTH), ``Road Accidents in India 2022,'' Government of India, Tech. Rep., 2023.
-\bibitem{b3} WHO, ``Guidelines for the management of snakebites in South-East Asia,'' WHO SEARO, New Delhi, 2nd ed., 2016.
-\bibitem{b4} J. White and D. C. Schmidt, ``Automated crash notification systems: Challenges and opportunities for mobile computing,'' \textit{IEEE Trans. Intell. Transp. Syst.}, vol. 14, no. 3, pp. 1102--1115, 2013.
-\bibitem{b5} S. Palnati, ``RESQONE AI+: Unified Multimodal Emergency Coordination Ecosystem,'' GitHub, 2026.
-\bibitem{b6} A. Sharma, ``Snake Dataset India: Venomous Species Classification,'' Kaggle, 2023.
-\bibitem{b7} Open Government Data Portal of Andhra Pradesh, ``Hospital Directory,'' \url{https://ap.data.gov.in/}, 2024.
-\bibitem{b8} MoHFW, ``e-RaktKosh: Blood Bank Management System,'' Government of India, 2024.
-\bibitem{b9} M. Ribeiro, S. Singh, and C. Guestrin, ````Why should I trust you?'': Explaining the predictions of any classifier,'' in \textit{Proc. ACM SIGKDD}, 2016, pp. 1135--1144.
-\bibitem{b10} S. Basha and K. Rao, ``Sensor Fusion and Edge Computing in Intelligent Transport Systems,'' \textit{Int. J. Comput. Appl.}, vol. 178, no. 12, pp. 45--52, 2022.
+\bibitem{b1} World Health Organization (WHO), ``Global status report on road safety 2023,'' World Health Organization, Geneva, Tech. Rep., 2023.
+\bibitem{b2} Ministry of Road Transport and Highways (MoRTH), ``Road Accidents in India 2022,'' Government of India, New Delhi, Tech. Rep., 2023.
+\bibitem{b3} World Health Organization (WHO), ``Guidelines for the management of snakebites in South-East Asia,'' WHO Regional Office for South-East Asia, New Delhi, 2nd ed., 2016.
+\bibitem{b4} J. White and D. C. Schmidt, ``Automated crash notification systems: Challenges and opportunities for mobile computing,'' \textit{IEEE Trans. Intell. Transp. Syst.}, vol. 14, no. 3, pp. 1102--1115, Sept. 2013.
+\bibitem{b5} S. Palnati, ``RESQONE AI+: Unified Multimodal Emergency Coordination Ecosystem,'' GitHub Repository, 2026. [Online]. Available: \url{https://github.com/srinivaspalnati22-png/RESQONE-AI}
+\bibitem{b6} A. Sharma, ``Snake Dataset India: Medically Important Venomous Species Classification,'' Kaggle Datasets, 2023. [Online]. Available: \url{https://www.kaggle.com/datasets/adityasharma01/snake-dataset-india}
+\bibitem{b7} Open Government Data Portal of Andhra Pradesh, ``District-Wise Tertiary and District Hospital Directory,'' Government of Andhra Pradesh, 2024. [Online]. Available: \url{https://ap.data.gov.in/}
+\bibitem{b8} Ministry of Health and Family Welfare (MoHFW), ``e-RaktKosh: National Blood Bank Management System,'' Government of India, 2024. [Online]. Available: \url{https://eraktkosh.mohfw.gov.in/}
+\bibitem{b9} R. Caruana, H. Lou, J. Gehrke, P. Koch, M. Sturm, and N. Elhadad, ``Intelligible models for healthcare: Predicting pneumonia risk and hospital 30-day readmission,'' in \textit{Proc. 21st ACM SIGKDD Int. Conf. Knowl. Discov. Data Min. (KDD)}, 2015, pp. 1721--1730.
+\bibitem{b10} E. J. Topol, ``High-performance medicine: the convergence of human and artificial intelligence,'' \textit{Nature Medicine}, vol. 25, no. 1, pp. 44--56, 2019.
+\bibitem{b11} M. Ribeiro, S. Singh, and C. Guestrin, ``'Why should I trust you?': Explaining the predictions of any classifier,'' in \textit{Proc. 22nd ACM SIGKDD Int. Conf. Knowl. Discov. Data Min. (KDD)}, 2016, pp. 1135--1144.
+\bibitem{b12} S. Basha and K. Rao, ``Sensor Fusion and Edge Computing in Intelligent Transport Systems,'' \textit{Int. J. Comput. Appl.}, vol. 178, no. 12, pp. 45--52, 2022.
+\bibitem{b13} National Health Mission (NHM), ``Standard Treatment Guidelines: Snakebite Management Quick Reference Guide,'' Ministry of Health \& Family Welfare, New Delhi, 2022.
+\bibitem{b14} Andhra Pradesh State Disaster Management Authority (APSDMA), ``State Disaster Management Plan and Heat Wave Atlas,'' Government of Andhra Pradesh, Tadepalli, 2023.
+\bibitem{b15} F. Chollet, ``Xception: Deep learning with depthwise separable convolutions,'' in \textit{Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2017, pp. 1251--1258.
 \end{thebibliography}
 
 \end{document}
