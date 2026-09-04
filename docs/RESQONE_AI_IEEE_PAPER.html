@@ -420,6 +420,9 @@
       <span class="author-email">lateefunnisa@gmail.com</span>
     </div>
   </div>
+  <div style="text-align: center; font-size: 8pt; font-style: italic; color: #333333; margin: 3px auto 6px auto; max-width: 95%; border-top: 0.5px solid #d1d5db; padding-top: 3px;">
+    <strong>Project Supervisor:</strong> Jitendra Gummadi, Assistant Professor, Dept. of CSE &nbsp;|&nbsp; <strong>Evaluation In-Charge:</strong> Dr. Shaik Mahaboob Basha, Associate Professor, Dept. of CSE
+  </div>
 </div>
 
 <!-- PAGES 1 to 4 Block -->
@@ -524,12 +527,27 @@
   </div>
   <p class="no-indent">with empirically calibrated baselines <i>G</i><sub>th</sub> = 4.0 G, <i>J</i><sub>th</sub> = 45.0 G/s, and &Omega;<sub>th</sub> = 120&deg;/s.</p>
 
+  <div class="diagram-card" style="margin: 4px 0 6px 0; padding: 4px 6px; font-size: 7.2pt; background: #f8fafc; border: 0.5px solid #cbd5e1; border-radius: 2px;">
+    <div style="font-weight: bold; text-align: center; margin-bottom: 2px; font-size: 7.2pt; color: #1e293b; letter-spacing: 0.3px;">CRASH IMPACT DETECTION STATE MACHINE</div>
+    <div style="font-family: 'Courier New', Courier, monospace; font-size: 6.6pt; line-height: 1.22; color: #334155;">
+      Normal driving (~1.0 G)<br>
+      &nbsp;&rarr; Impulse spike &gt; 4.0 G? &mdash;No&rarr; continue monitoring<br>
+      &nbsp;|&nbsp;Yes<br>
+      &nbsp;&rarr; Jerk &gt; 45 G/s AND angular rate &gt; 120&deg;/s? &mdash;No&rarr; reject as false positive<br>
+      &nbsp;|&nbsp;Yes<br>
+      &nbsp;&rarr; Trigger 5-second safety-abort countdown<br>
+      &nbsp;|&nbsp;<br>
+      &nbsp;+-- Cancelled &rarr; reset sensor state<br>
+      &nbsp;+-- Expired &rarr; dispatch 108 CAD + ICU pre-alert + family SMS
+    </div>
+  </div>
+
   <div class="figure-container">
     <div class="img-frame paired">
       <img src="figures/screenshot_crash_telemetry.png" alt="Crash Telemetry">
       <img src="figures/screenshot_accident_countdown.png" alt="5-Second Abort Countdown">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 3.</span> Autonomous kinematic crash telemetry interface: (left) real-time tri-axial G-force and Kalman jerk vector monitoring; (right) 5-second emergency safety-abort countdown modal.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 3.</span> Autonomous kinematic crash telemetry interface and finite-state logic: (left) real-time tri-axial G-force and Kalman jerk vector monitoring; (right) 5-second emergency safety-abort countdown modal.</div>
   </div>
 
   <h3 class="subsec-heading">B. Natural-Language Triage and Explainability Formulation</h3>
