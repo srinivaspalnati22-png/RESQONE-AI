@@ -19,8 +19,8 @@ import { calculateRealRoadRoute, getTileLayerConfig, geocodeLocation } from '../
 import { GoogleMapsToolbar } from './GoogleMapsToolbar';
 import { DataService } from '../services/data_service';
 
-// Default fallback coords for Pathanaguluru, AP (16.8118° N, 80.7045° E)
-const DEFAULT_PATHANAGULURU_COORDS = [16.8118, 80.7045];
+// Default fallback coords: Central Andhra Pradesh Hub (Vijayawada: 16.5068° N, 80.6561° E)
+const DEFAULT_HUB_COORDS = [16.5068, 80.6561];
 
 // Popular Indian Quick Search Suggestions
 const SEARCH_SUGGESTIONS = [
@@ -45,14 +45,28 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   const [liveCoords, setLiveCoords] = useState(() => {
     try {
       const saved = localStorage.getItem('resqone_live_coords');
-      return saved ? JSON.parse(saved) : DEFAULT_PATHANAGULURU_COORDS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Clear out stale hardcoded Pathanaguluru coordinates if previously saved
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          if (Math.abs(parsed[0] - 16.8118) < 0.01 && Math.abs(parsed[1] - 80.7045) < 0.01) {
+            return DEFAULT_HUB_COORDS;
+          }
+          return parsed;
+        }
+      }
+      return DEFAULT_HUB_COORDS;
     } catch {
-      return DEFAULT_PATHANAGULURU_COORDS;
+      return DEFAULT_HUB_COORDS;
     }
   });
 
   const [liveAddress, setLiveAddress] = useState(() => {
-    return localStorage.getItem('resqone_live_address') || 'Pathanaguluru, Andhra Pradesh';
+    const saved = localStorage.getItem('resqone_live_address');
+    if (saved && !saved.toLowerCase().includes('pathanaguluru')) {
+      return saved;
+    }
+    return 'Acquiring Live GPS Location...';
   });
 
   const [gpsAccuracy, setGpsAccuracy] = useState(3.0);
@@ -185,49 +199,69 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
-  // ================= 1. REAL DEVICE HARDWARE GPS + IP GEOLOCATION FALLBACK =================
+  // ================= 1. REAL DEVICE HARDWARE GPS + FAST IP GEOLOCATION =================
   const fetchLiveGPS = () => {
     setIsLocating(true);
+    let gpsLockedSuccess = false;
 
-    const fallbackToIpGeolocation = () => {
-      fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
-        .then(r => r.json())
-        .then(d => {
-          if (d && d.latitude && d.longitude) {
-            const lat = d.latitude;
-            const lng = d.longitude;
-            const locality = d.locality || d.city || 'Live Location';
-            const sub = d.principalSubdivision || 'Andhra Pradesh';
-            const addr = `${locality}, ${sub}`;
-            setLiveCoords([lat, lng]);
-            setLiveAddress(addr);
-            setGpsAccuracy(500);
-            setGpsLocked(true);
-            setIsLocating(false);
-            localStorage.setItem('resqone_live_address', addr);
-            localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
-            reverseGeocode(lat, lng);
-
-            if (mapInstanceRef.current) {
-              mapInstanceRef.current.setView([lat, lng], 16, { animate: true });
-              mapInstanceRef.current.invalidateSize();
+    // Fast multi-source IP Geolocation fallback (resolves within ~250ms so user never waits on blank coordinates)
+    const runFastIpGeolocation = async () => {
+      try {
+        const bdcPromise = fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', { signal: AbortSignal.timeout(3000) })
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.latitude && d.longitude) {
+              const locality = d.locality || d.city || 'Live Location';
+              const sub = d.principalSubdivision || 'Andhra Pradesh';
+              return { lat: d.latitude, lng: d.longitude, address: `${locality}, ${sub}` };
             }
-          } else {
-            setIsLocating(false);
+            throw new Error('No bdc data');
+          });
+
+        const ipwhoisPromise = fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) })
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.success && d.latitude && d.longitude) {
+              const locality = d.city || d.region || 'Live Location';
+              const sub = d.region || d.country || 'Andhra Pradesh';
+              return { lat: d.latitude, lng: d.longitude, address: `${locality}, ${sub}` };
+            }
+            throw new Error('No ipwhois data');
+          });
+
+        const geo = await Promise.any([bdcPromise, ipwhoisPromise]);
+        if (geo && !gpsLockedSuccess) {
+          setLiveCoords([geo.lat, geo.lng]);
+          setLiveAddress(geo.address);
+          setGpsAccuracy(300);
+          setGpsLocked(true);
+          localStorage.setItem('resqone_live_address', geo.address);
+          localStorage.setItem('resqone_live_coords', JSON.stringify([geo.lat, geo.lng]));
+          reverseGeocode(geo.lat, geo.lng);
+
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.setView([geo.lat, geo.lng], 16, { animate: true });
+            setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
           }
-        })
-        .catch(() => {
+        }
+      } catch (e) {
+        console.warn('[IP Geolocation Note]:', e?.message);
+      } finally {
+        if (!navigator.geolocation) {
           setIsLocating(false);
-        });
+        }
+      }
     };
 
-    if (!navigator.geolocation) {
-      fallbackToIpGeolocation();
-      return;
-    }
+    // Run IP geolocation immediately so coordinates appear within ~250ms
+    runFastIpGeolocation();
 
+    if (!navigator.geolocation) return;
+
+    // Concurrently attempt precision device GPS
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        gpsLockedSuccess = true;
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const acc = Math.round(pos.coords.accuracy || 3);
@@ -235,38 +269,41 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
         setGpsAccuracy(acc);
         setGpsLocked(true);
         setIsLocating(false);
+        localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
         reverseGeocode(lat, lng);
 
         if (mapInstanceRef.current) {
           mapInstanceRef.current.setView([lat, lng], 17, { animate: true });
-          mapInstanceRef.current.invalidateSize();
+          setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
         }
       },
       () => {
-        // Fallback to relaxed accuracy
+        // Fallback to relaxed accuracy if high accuracy times out or is unsupported
         navigator.geolocation.getCurrentPosition(
           (pos2) => {
+            gpsLockedSuccess = true;
             const lat = pos2.coords.latitude;
             const lng = pos2.coords.longitude;
             setLiveCoords([lat, lng]);
             setGpsAccuracy(Math.round(pos2.coords.accuracy || 25));
             setGpsLocked(true);
             setIsLocating(false);
+            localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
             reverseGeocode(lat, lng);
 
             if (mapInstanceRef.current) {
               mapInstanceRef.current.setView([lat, lng], 16, { animate: true });
-              mapInstanceRef.current.invalidateSize();
+              setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
             }
           },
           (err) => {
-            console.warn('[GPS Hardware Unavailable, switching to IP Geolocation]:', err.message);
-            fallbackToIpGeolocation();
+            console.warn('[Device GPS Unavailable, retaining fast IP Geolocation]:', err.message);
+            setIsLocating(false);
           },
-          { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
+          { enableHighAccuracy: false, timeout: 3500, maximumAge: 60000 }
         );
       },
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 3500, maximumAge: 0 }
     );
   };
 
@@ -689,6 +726,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
 
           const bounds = L.latLngBounds([liveCoords, [destLat, destLng], ...roadPoints]);
           mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+          setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
         }
 
         const distKm = `${route.distanceKm} km`;
@@ -726,6 +764,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
       }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.fitBounds(L.latLngBounds(fallbackPts), { padding: [50, 50] });
+        setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
       }
       const dist = (calculateDistanceM(originLat, originLng, destLat, destLng) / 1000).toFixed(1) + ' km';
       setSelectedRoute({
@@ -835,12 +874,6 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
         setAccelY(parseFloat((Math.random() * 0.3 - 0.15).toFixed(2)));
       }, 1200);
     }
-  };
-
-  const openInGoogleMapsApp = () => {
-    if (!selectedRoute) return;
-    const url = `https://www.google.com/maps/dir/?api=1&origin=${liveCoords[0]},${liveCoords[1]}&destination=${selectedRoute.lat},${selectedRoute.lng}&travelmode=driving`;
-    window.open(url, '_blank');
   };
 
   // ================= 6. HAZARD & CRASH DETECTION =================
@@ -1002,14 +1035,15 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
 
             <div className="flex items-center gap-1.5 flex-wrap pt-1">
               <button
-                onClick={() => handleSelectOrigin({ name: 'Pathanaguluru, Reddigudem, NTR District, Andhra Pradesh', lat: 16.8118, lng: 80.7045 })}
-                className="px-2.5 py-1 rounded-lg bg-blue-950 border border-blue-500/40 text-cyan-300 font-bold text-[11px] hover:bg-blue-900 cursor-pointer"
+                onClick={handleRecenter}
+                className="px-2.5 py-1 rounded-lg bg-emerald-950 border border-emerald-500/40 text-emerald-300 font-bold text-[11px] hover:bg-emerald-900 cursor-pointer flex items-center gap-1"
               >
-                📍 Pathanaguluru
+                <LocateFixed className="w-3 h-3" />
+                <span>{language === 'te' ? 'నా లైవ్ లొకేషన్' : language === 'hi' ? 'मेरा लाइव स्थान' : 'My Live Location'}</span>
               </button>
               <button
                 onClick={() => handleSelectOrigin({ name: 'Vijayawada Central, Andhra Pradesh', lat: 16.5062, lng: 80.6480 })}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] hover:text-white cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-blue-950 border border-blue-500/40 text-cyan-300 font-bold text-[11px] hover:bg-blue-900 cursor-pointer"
               >
                 Vijayawada
               </button>
@@ -1018,6 +1052,12 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
                 className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] hover:text-white cursor-pointer"
               >
                 Guntur
+              </button>
+              <button
+                onClick={() => handleSelectOrigin({ name: 'Hyderabad, Telangana', lat: 17.3850, lng: 78.4867 })}
+                className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] hover:text-white cursor-pointer"
+              >
+                Hyderabad
               </button>
             </div>
           </motion.div>
@@ -1160,23 +1200,15 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             </button>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-2 pt-1 w-full">
+          <div className="pt-1 w-full">
             <button
               onClick={handleStartDrive}
-              className="w-full sm:flex-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-2xl shadow-emerald-950/90 cursor-pointer transition-all active:scale-95 ring-2 ring-emerald-400/50"
+              className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black py-3 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-2xl shadow-emerald-950/90 cursor-pointer transition-all active:scale-95 ring-2 ring-emerald-400/50"
             >
               <Play className="w-4 h-4 fill-slate-950 text-slate-950 shrink-0" />
               <span className="truncate">
                 {language === 'te' ? `${selectedRoute.name} వైపు డ్రైవ్ ప్రారంభించండి` : language === 'hi' ? `${selectedRoute.name} के लिए ड्राइव शुरू करें` : language === 'ta' ? `${selectedRoute.name} நோக்கி பயணிக்கவும்` : language === 'kn' ? `${selectedRoute.name} ಕಡೆಗೆ ಡ್ರೈವ್ ಪ್ರಾರಂಭಿಸಿ` : `START DRIVE TO ${selectedRoute.name.toUpperCase()}`}
               </span>
-            </button>
-
-            <button
-              onClick={openInGoogleMapsApp}
-              className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-2xl text-xs font-bold border border-slate-700 flex items-center justify-center space-x-1.5 cursor-pointer shrink-0"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Google Maps</span>
             </button>
           </div>
         </motion.div>

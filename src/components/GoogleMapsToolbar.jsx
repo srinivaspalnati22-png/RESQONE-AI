@@ -7,8 +7,8 @@ export function GoogleMapsToolbar({ currentLayer = 'dark', onLayerChange }) {
       <div className="flex items-center gap-1 shrink-0">
         <span className="flex items-center gap-1 text-emerald-400 font-bold">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="hidden xs:inline sm:inline">Google Maps Engine</span>
-          <span className="inline xs:hidden sm:hidden">Google Maps</span>
+          <span className="hidden xs:inline sm:inline">Live Route Engine</span>
+          <span className="inline xs:hidden sm:hidden">Live Route</span>
         </span>
       </div>
 
@@ -31,7 +31,7 @@ export function GoogleMapsToolbar({ currentLayer = 'dark', onLayerChange }) {
             className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
               currentLayer === 'roadmap' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' : 'text-slate-400 hover:text-white'
             }`}
-            title="Google Maps Roadmap"
+            title="Road Navigation Map"
           >
             Road
           </button>
@@ -40,7 +40,7 @@ export function GoogleMapsToolbar({ currentLayer = 'dark', onLayerChange }) {
             className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
               currentLayer === 'hybrid' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50' : 'text-slate-400 hover:text-white'
             }`}
-            title="Google Maps Satellite Hybrid"
+            title="Satellite Hybrid Map"
           >
             Satellite
           </button>

@@ -37,17 +37,29 @@ export function useLiveLocation() {
       (err) => {
         console.warn('[useLiveLocation] getCurrentPosition fallback error:', err);
         setIsLocating(false);
-        if (err.code === 1) {
-          setPermissionStatus('denied');
-          setError('Location permission denied. Please allow GPS access in your browser or select a regional preset.');
-        } else {
-          setError(err.message || 'Unable to retrieve precise GPS coordinates.');
-        }
+        // Fallback to IP geolocation
+        fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.latitude && d.longitude) {
+              setRealGpsCoords({ lat: d.latitude, lng: d.longitude });
+              setAccuracy(300);
+              setError(null);
+            }
+          })
+          .catch(() => {
+            if (err.code === 1) {
+              setPermissionStatus('denied');
+              setError('Location permission denied. Please allow GPS access in your browser or select a regional preset.');
+            } else {
+              setError(err.message || 'Unable to retrieve precise GPS coordinates.');
+            }
+          });
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        timeout: 5000,
+        maximumAge: 10000
       }
     );
   }, []);

@@ -9,14 +9,13 @@ import {
 import { Vehicle3DSimulation } from '../components/Vehicle3DSimulation';
 import { LiveAccidentDetector } from '../components/LiveAccidentDetector';
 import { AccidentRescueWorkflow } from '../components/AccidentRescueWorkflow';
-import { GoogleLiveRoutingMap } from '../components/GoogleLiveRoutingMap';
 import { useLanguage } from '../context/LanguageContext';
 
 export const AccidentPage = () => {
   const { language, t } = useLanguage();
   const [activeCrashDetails, setActiveCrashDetails] = useState(null);
   const [isDispatched, setIsDispatched] = useState(false);
-  const [activeMode, setActiveMode] = useState('live_detection'); // 'live_detection' | 'google_maps' | '3d_simulation'
+  const [activeMode, setActiveMode] = useState('live_detection'); // 'live_detection' | '3d_simulation'
 
   const handleAccidentConfirmed = (details) => {
     setActiveCrashDetails(details);
@@ -45,14 +44,7 @@ export const AccidentPage = () => {
       if (language === 'hi') return 'लाइव ड्राइविंग और दुर्घटना पहचान';
       if (language === 'ta') return 'நேரலை விபத்து கண்டறிதல்';
       if (language === 'kn') return 'ಲೈವ್ ಅಪಘಾತ ಪತ್ತೆ';
-      return 'Live Drive & Accident Detection';
-    }
-    if (activeMode === 'google_maps') {
-      if (language === 'te') return 'గూగుల్ మ్యాప్స్ లైవ్ రూటింగ్ & నావిగేషన్';
-      if (language === 'hi') return 'गूगल मैप्स लाइव नेविगेशन एवं मार्ग';
-      if (language === 'ta') return 'கூகுள் வரைபடம் நேரலை வழிகாட்டல்';
-      if (language === 'kn') return 'ಗೂಗಲ್ ನಕ್ಷೆ ಲೈವ್ ಮಾರ್ಗದರ್ಶನ';
-      return 'Google Maps Live Routing & Directions Engine';
+      return 'Live Route & Accident Detection';
     }
     return t('sim_title') || '3D Real-Time Crash & Rescue';
   };
@@ -63,14 +55,7 @@ export const AccidentPage = () => {
       if (language === 'hi') return 'रीयल-टाइम जीपीएस रोड मैप, स्पीडोमीटर और जी-फोर्स सेंसर निगरानी';
       if (language === 'ta') return 'நேரலை GPS வரைபடம் மற்றும் சென்சார் கண்காணிப்பு';
       if (language === 'kn') return 'ನೈಜ ಸಮಯದ ಜಿಪಿಎಸ್ ನಕ್ಷೆ ಮತ್ತು ಸಂವೇದಕಗಳ ಮೇಲ್ವಿಚಾರಣೆ';
-      return 'Real-time GPS road map, speedometer thresholds, G-force impact & live driving detector';
-    }
-    if (activeMode === 'google_maps') {
-      if (language === 'te') return 'టర్న్-బై-టర్న్ లైవ్ నావిగేషన్, వేగవంతమైన ఆసుపత్రి మార్గాలు & గూగుల్ మ్యాప్స్ SDK';
-      if (language === 'hi') return 'चरण-दर-चरण लाइव नेविगेशन, तीव्र अस्पताल मार्ग और गूगल मैप्स एसडीके';
-      if (language === 'ta') return 'நேரலை திருப்ப வழிகாட்டல் மற்றும் மருத்துவமனை வழித்தடங்கள்';
-      if (language === 'kn') return 'ಲೈವ್ ಹಂತ-ಹಂತದ ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ಆಸ್ಪತ್ರೆ ಮಾರ್ಗಗಳು';
-      return 'Turn-by-turn live navigation, fastest hospital routing & Google Maps SDK integration';
+      return 'Real-time GPS road map, live route navigation, G-force impact & crash detector';
     }
     return t('sim_desc') || 'Physics collision engine, vehicle telemetry & emergency rescue simulations';
   };
@@ -98,7 +83,7 @@ export const AccidentPage = () => {
                 <span>ONLINE</span>
               </span>
               <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[9px] font-mono text-cyan-400 shrink-0">
-                {activeMode === 'live_detection' ? 'GPS CORRIDOR' : activeMode === 'google_maps' ? 'GOOGLE MAPS SDK' : '3D COLLISION'}
+                {activeMode === 'live_detection' ? 'GPS LIVE ROUTE' : '3D COLLISION'}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
@@ -107,41 +92,29 @@ export const AccidentPage = () => {
           </div>
         </div>
 
-        {/* Segmented Mode Switcher Tabs */}
-        <div className="grid grid-cols-3 sm:flex items-center bg-[#050A14] p-1 rounded-xl border border-white/[0.08] w-full md:w-auto shrink-0 gap-1 shadow-inner">
+        {/* Segmented Mode Switcher Tabs: ONLY Live Route and 3D Crash */}
+        <div className="grid grid-cols-2 sm:flex items-center bg-[#050A14] p-1 rounded-xl border border-white/[0.08] w-full md:w-auto shrink-0 gap-1.5 shadow-inner">
           <button
             onClick={() => setActiveMode('live_detection')}
-            className={`min-h-9 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`min-h-9 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               activeMode === 'live_detection'
                 ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-950/60 ring-1 ring-cyan-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-850'
             }`}
           >
-            <Satellite className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{language === 'te' ? 'లైవ్ డ్రైవ్' : language === 'hi' ? 'लाइव ड्राइव' : language === 'ta' ? 'நேரலை டிரைவ்' : language === 'kn' ? 'ಲೈವ್ ಡ್ರೈವ್' : 'Live Drive'}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('google_maps')}
-            className={`min-h-9 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
-              activeMode === 'google_maps'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-950/60 ring-1 ring-blue-400/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-850'
-            }`}
-          >
-            <Route className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Google Maps</span>
+            <Route className="w-4 h-4 shrink-0 text-cyan-300" />
+            <span className="truncate">{language === 'te' ? 'లైవ్ రూట్' : language === 'hi' ? 'लाइव मार्ग' : language === 'ta' ? 'நேரலை வழி' : language === 'kn' ? 'ಲೈವ್ ಮಾರ್ಗ' : 'Live Route'}</span>
           </button>
 
           <button
             onClick={() => setActiveMode('3d_simulation')}
-            className={`min-h-9 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`min-h-9 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               activeMode === '3d_simulation'
                 ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-950/60 ring-1 ring-red-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-850'
             }`}
           >
-            <Car className="w-3.5 h-3.5 shrink-0" />
+            <Car className="w-4 h-4 shrink-0 text-amber-300" />
             <span className="truncate">{language === 'te' ? '3D క్రాష్' : language === 'hi' ? '3D क्रैश' : language === 'ta' ? '3D விபத்து' : language === 'kn' ? '3D ಅಪಘಾತ' : '3D Crash'}</span>
           </button>
         </div>
@@ -155,13 +128,7 @@ export const AccidentPage = () => {
         />
       )}
 
-      {activeMode === 'google_maps' && (
-        <GoogleLiveRoutingMap 
-          onRouteCalculated={(route) => {
-            console.log('[GoogleLiveRoutingMap] Active route:', route);
-          }}
-        />
-      )}
+
 
       {activeMode === '3d_simulation' && (
         <Vehicle3DSimulation 
