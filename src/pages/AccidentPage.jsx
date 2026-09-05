@@ -4,7 +4,7 @@ import {
   AlertOctagon, ShieldAlert, Activity, Navigation, 
   Hospital, Users, Zap, Gauge, MapPin, Phone, 
   CheckCircle2, Clock, Car, Bike, Siren, AlertTriangle, 
-  Radio, Compass, ArrowRight, Sparkles, Satellite
+  Radio, Compass, ArrowRight, Sparkles, Satellite, Route
 } from 'lucide-react';
 import { Vehicle3DSimulation } from '../components/Vehicle3DSimulation';
 import { LiveAccidentDetector } from '../components/LiveAccidentDetector';
