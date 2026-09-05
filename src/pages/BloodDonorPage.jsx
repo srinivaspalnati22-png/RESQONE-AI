@@ -10,10 +10,184 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
-import { DataService } from '../services/data_service';
+import { DataService, calculateHaversineKm } from '../services/data_service';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import bloodBanksMaster from '../data/blood_banks.json';
+
+// Multi-language translation dictionary for Blood Donation System
+const BLOOD_TRANSLATIONS = {
+  en: {
+    title: 'Smart ABO/Rh Blood Donor Matcher',
+    subtitle: 'Deterministic ABO compatibility & cold-chain donor matching',
+    nhpLive: 'NHP LIVE',
+    newRequest: 'Reset / Refresh',
+    selectGroup: 'Select Recipient Blood Group:',
+    voicePrompt: "Type or speak blood request (e.g. 'Need 2 units of O- blood in Vijayawada')...",
+    unitsNeeded: 'Units Needed:',
+    targetHospital: 'Target Hospital / Location:',
+    runMatch: 'RUN REAL-TIME DONOR & BLOOD BANK MATCH',
+    searching: 'MATCHING...',
+    protocol: 'ABO/Rh COMPATIBILITY PROTOCOL',
+    compatible: 'Compatible',
+    universalNote: '💡 Universal donor O- can be safely transfused to all ABO/Rh blood groups in acute hemorrhagic emergencies.',
+    mapTitle: 'Live Blood Banks & Donors Proximity Map',
+    activeDestination: 'Active Destination:',
+    openGoogleMaps: 'Open in Google Maps',
+    myGps: 'My GPS',
+    locating: 'Locating...',
+    banksHeading: 'Ranked Blood Banks & Regional Reserve Stock',
+    matchScore: 'MATCH',
+    route: 'Route',
+    call: 'Call',
+    courier: 'Courier',
+    units: 'Units:',
+    donorsHeading: 'Verified Live Community Donors',
+    eligible: 'Eligible',
+    courierDispatched: 'EMERGENCY CRYOCARRIER DISPATCHED',
+    transporting: 'Transporting',
+    from: 'from',
+    to: 'to',
+    scrollHint: '1-Finger: Scroll Page',
+    panHint: '1-Finger: Pan Map'
+  },
+  te: {
+    title: 'స్మార్ట్ ABO/Rh రక్త దాతల శోధన',
+    subtitle: 'నిజ సమయ రక్త సరిపోలిక మరియు కోల్డ్-చైన్ కొరియర్ నెట్‌వర్క్',
+    nhpLive: 'NHP ప్రత్యక్షం',
+    newRequest: 'మళ్లీ వెతకండి',
+    selectGroup: 'బాధితుడి రక్త గ్రూప్‌ను ఎంచుకోండి:',
+    voicePrompt: 'రక్తం అవసరాన్ని మాట్లాడండి లేదా టైప్ చేయండి...',
+    unitsNeeded: 'కావాల్సిన యూనిట్లు:',
+    targetHospital: 'ఆసుపత్రి / చిరునామా:',
+    runMatch: 'రక్త దాతలను మరియు బ్లడ్ బ్యాంక్‌లను వెతకండి',
+    searching: 'శోధిస్తోంది...',
+    protocol: 'ABO/Rh రక్త సరిపోలిక నిబంధనలు',
+    compatible: 'సరిపోలుతుంది',
+    universalNote: '💡 యూనివర్సల్ డోనర్ O- రక్తం అత్యవసర పరిస్థితుల్లో అన్ని రక్త గ్రూపుల వారికి సురక్షితంగా ఎక్కించవచ్చు.',
+    mapTitle: 'బ్లడ్ బ్యాంక్ & దాతల సామీప్య మ్యాప్',
+    activeDestination: 'ఎంచుకున్న గమ్యం:',
+    openGoogleMaps: 'గూగుల్ మ్యాప్స్ దిశలు',
+    myGps: 'నా లొకేషన్',
+    locating: 'లొకేషన్...',
+    banksHeading: 'బ్లడ్ బ్యాంకులు మరియు రిజర్వ్ నిల్వలు',
+    matchScore: 'సరిపోలిక',
+    route: 'రూట్',
+    call: 'కాల్',
+    courier: 'కొరియర్',
+    units: 'నిల్వ:',
+    donorsHeading: 'ధృవీకరించబడిన ప్రత్యక్ష రక్త దాతలు',
+    eligible: 'అర్హత ఉంది',
+    courierDispatched: 'అత్యవసర కోల్డ్-చైన్ కొరియర్ పంపబడింది',
+    transporting: 'రవాణా చేయబడుతోంది',
+    from: 'నుండి',
+    to: 'కి',
+    scrollHint: '1-వేలు: పేజీ స్క్రోల్',
+    panHint: '1-వేలు: మ్యాప్ కదపండి'
+  },
+  hi: {
+    title: 'स्मार्ट ABO/Rh रक्त दाता खोज',
+    subtitle: 'रीयल-टाइम रक्त अनुकूलता और कोल्ड-चेन कूरियर नेटवर्क',
+    nhpLive: 'NHP लाइव',
+    newRequest: 'रीसेट / ताज़ा करें',
+    selectGroup: 'मरीज का रक्त समूह चुनें:',
+    voicePrompt: 'रक्त की आवश्यकता बोलें या लिखें...',
+    unitsNeeded: 'आवश्यक यूनिट:',
+    targetHospital: 'अस्पताल / स्थान:',
+    runMatch: 'रक्त दाता और ब्लड बैंक खोजें',
+    searching: 'खोज जारी...',
+    protocol: 'ABO/Rh अनुकूलता प्रोटोकॉल',
+    compatible: 'संगत',
+    universalNote: '💡 आपातकाल में यूनिवर्सल डोनर O- रक्त सभी रक्त समूहों को सुरक्षित रूप से दिया जा सकता है।',
+    mapTitle: 'ब्लड बैंक और रक्त दाता निकटता मानचित्र',
+    activeDestination: 'सक्रिय गंतव्य:',
+    openGoogleMaps: 'गूगल मैप्स में खोलें',
+    myGps: 'मेरी जीपीएस',
+    locating: 'खोज रहे हैं...',
+    banksHeading: 'रैंक किए गए ब्लड बैंक और क्षेत्रीय स्टॉक',
+    matchScore: 'मैच',
+    route: 'मार्ग',
+    call: 'कॉल करें',
+    courier: 'कूरियर',
+    units: 'स्टॉक:',
+    donorsHeading: 'सत्यापित लाइव समुदाय रक्त दाता',
+    eligible: 'योग्य',
+    courierDispatched: 'आपातकालीन कोल्ड-कैरियर रवाना',
+    transporting: 'परिवहन जारी',
+    from: 'से',
+    to: 'तक',
+    scrollHint: '1-उंगली: पेज स्क्रॉल',
+    panHint: '1-उंगली: मैप हिलाएं'
+  },
+  ta: {
+    title: 'ஸ்மார்ட் ABO/Rh இரத்த தானப் பொருத்தம்',
+    subtitle: 'நிகழ்நேர இரத்த இணக்கத்தன்மை மற்றும் குளிர்-சங்கிலி கூரியர்',
+    nhpLive: 'NHP நேரலை',
+    newRequest: 'மீட்டமை / புதுப்பி',
+    selectGroup: 'நோயாளியின் இரத்த வகையைத் தேர்ந்தெடுக்கவும்:',
+    voicePrompt: 'இரத்தத் தேவையைப் பேசவும் அல்லது தட்டச்சு செய்யவும்...',
+    unitsNeeded: 'தேவையான அலகுகள்:',
+    targetHospital: 'மருத்துவமனை / இடம்:',
+    runMatch: 'இரத்த தானம் மற்றும் வங்கிகளைத் தேடுங்கள்',
+    searching: 'தேடுகிறது...',
+    protocol: 'ABO/Rh இணக்கத்தன்மை நெறிமுறை',
+    compatible: 'பொருந்தும்',
+    universalNote: '💡 தீவிர அவசர காலங்களில் யுனிவர்சல் தானம் O- குருதி அனைத்து குழுக்களுக்கும் பாதுகாப்பானது.',
+    mapTitle: 'இரத்த வங்கி மற்றும் நன்கொடையாளர் வரைபடம்',
+    activeDestination: 'செயலில் உள்ள இடம்:',
+    openGoogleMaps: 'கூகிள் வரைபடத்தில் திறக்கவும்',
+    myGps: 'என் ஜிபிஎஸ்',
+    locating: 'கண்டறிகிறது...',
+    banksHeading: 'தரவரிசைப்படுத்தப்பட்ட இரத்த வங்கிகள்',
+    matchScore: 'பொருத்தம்',
+    route: 'பாதை',
+    call: 'அழைக்கவும்',
+    courier: 'கூரியர்',
+    units: 'அலகுகள்:',
+    donorsHeading: 'சரிபார்க்கப்பட்ட நேரடி சமூக நன்கொடையாளர்கள்',
+    eligible: 'தகுதியானது',
+    courierDispatched: 'அவசர கூரியர் அனுப்பப்பட்டது',
+    transporting: 'கொண்டு செல்லப்படுகிறது',
+    from: 'இருந்து',
+    to: 'வரை',
+    scrollHint: '1-விரல்: பக்கத்தை உருட்டவும்',
+    panHint: '1-விரல்: வரைபடத்தை நகர்த்தவும்'
+  },
+  kn: {
+    title: 'ಸ್ಮಾರ್ಟ್ ABO/Rh ರಕ್ತ ದಾನಿಗಳ ಹೊಂದಾಣಿಕೆ',
+    subtitle: 'ನೈಜ-ಸಮಯದ ರಕ್ತ ಹೊಂದಾಣಿಕೆ ಮತ್ತು ಕೋಲ್ಡ್-ಚೈನ್ ಕೊರಿಯರ್',
+    nhpLive: 'NHP ಲೈವ್',
+    newRequest: 'ಮರುಹೊಂದಿಸಿ / ರಿಫ್ರೆಶ್',
+    selectGroup: 'ರೋಗಿಯ ರಕ್ತದ ಗುಂಪನ್ನು ಆಯ್ಕೆಮಾಡಿ:',
+    voicePrompt: 'ರಕ್ತದ ಅಗತ್ಯವನ್ನು ಮಾತನಾಡಿ ಅಥವಾ ಟೈಪ್ ಮಾಡಿ...',
+    unitsNeeded: 'ಅಗತ್ಯವಿರುವ ಘಟಕಗಳು:',
+    targetHospital: 'ಆಸ್ಪತ್ರೆ / ಸ್ಥಳ:',
+    runMatch: 'ರಕ್ತ ದಾನಿಗಳು ಮತ್ತು ಬ್ಲಡ್ ಬ್ಯಾಂಕ್ ಹುಡುಕಿ',
+    searching: 'ಹುಡುಕಲಾಗುತ್ತಿದೆ...',
+    protocol: 'ABO/Rh ಹೊಂದಾಣಿಕೆ ನಿಯಮಗಳು',
+    compatible: 'ಹೊಂದಿಕೆಯಾಗುತ್ತದೆ',
+    universalNote: '💡 ತುರ್ತು ಪರಿಸ್ಥಿತಿಯಲ್ಲಿ ಸಾರ್ವತ್ರಿಕ ದಾನಿ O- ರಕ್ತವನ್ನು ಎಲ್ಲಾ ಗುಂಪುಗಳಿಗೆ ಸುರಕ್ಷಿತವಾಗಿ ನೀಡಬಹುದು.',
+    mapTitle: 'ಬ್ಲಡ್ ಬ್ಯಾಂಕ್ ಮತ್ತು ದಾನಿಗಳ ಸಾಮೀಪ್ಯ ನಕ್ಷೆ',
+    activeDestination: 'ಸಕ್ರಿಯ ಗಮ್ಯಸ್ಥಾನ:',
+    openGoogleMaps: 'ಗೂಗಲ್ ನಕ್ಷೆಯಲ್ಲಿ ತೆರೆಯಿರಿ',
+    myGps: 'ನನ್ನ ಜಿಪಿಎಸ್',
+    locating: 'ಹುಡುಕಲಾಗುತ್ತಿದೆ...',
+    banksHeading: 'ಶ್ರೇಣೀಕೃತ ರಕ್ತ ಬ್ಯಾಂಕುಗಳು ಮತ್ತು ದಾಸ್ತಾನು',
+    matchScore: 'ಹೊಂದಾಣಿಕೆ',
+    route: 'ಮಾರ್ಗ',
+    call: 'ಕರೆ ಮಾಡಿ',
+    courier: 'ಕೊರಿಯರ್',
+    units: 'ಘಟಕಗಳು:',
+    donorsHeading: 'ಪರಿಶೀಲಿಸಿದ ಲೈವ್ ಸಮುದಾಯ ರಕ್ತ ದಾನಿಗಳು',
+    eligible: 'ಅರ್ಹತೆ ಇದೆ',
+    courierDispatched: 'ತುರ್ತು ಕೊರಿಯರ್ ರವಾನಿಸಲಾಗಿದೆ',
+    transporting: 'ಸಾಗಿಸಲಾಗುತ್ತಿದೆ',
+    from: 'ಇಂದ',
+    to: 'ಗೆ',
+    scrollHint: '1-ಬೆರಳು: ಪುಟ ಸ್ಕ್ರಾಲ್',
+    panHint: '1-ಬೆರಳು: ನಕ್ಷೆ ಸರಿಸಿ'
+  }
+};
 
 // Real Verified Community Donors Dataset in Vijayawada / AP
 const VERIFIED_COMMUNITY_DONORS = [
@@ -97,7 +271,7 @@ const VERIFIED_COMMUNITY_DONORS = [
   }
 ];
 
-// Standalone Map Component
+// Standalone Leaflet Map Component with Mobile 1-Finger Touch Panning Control
 function BloodDonationMapComponent({ 
   patientCoords = [16.5167, 80.6500],
   selectedGroup, 
@@ -105,12 +279,24 @@ function BloodDonationMapComponent({
   selectedDestination, 
   onSelectDestination,
   onLocateUser,
-  isLocating = false
+  isLocating = false,
+  language = 'en'
 }) {
   const mapDivRef = useRef(null);
   const mapInstance = useRef(null);
   const markersGroupRef = useRef(null);
   const routePolylineRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [isTouchPanning, setIsTouchPanning] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Initialize Map
   useEffect(() => {
@@ -126,7 +312,9 @@ function BloodDonationMapComponent({
           center: patientCoords,
           zoom: 13,
           zoomControl: true,
-          attributionControl: false
+          attributionControl: false,
+          dragging: !isMobile,
+          tap: !isMobile
         });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -142,6 +330,23 @@ function BloodDonationMapComponent({
       }
     }
   }, []);
+
+  // Dynamic touch dragging toggle for mobile screen scroll protection
+  useEffect(() => {
+    if (!mapInstance.current) return;
+    if (isTouchPanning || !isMobile) {
+      mapInstance.current.dragging.enable();
+    } else {
+      mapInstance.current.dragging.disable();
+    }
+  }, [isTouchPanning, isMobile]);
+
+  // Center on patient coordinates when they update
+  useEffect(() => {
+    if (mapInstance.current && patientCoords) {
+      mapInstance.current.panTo(patientCoords);
+    }
+  }, [patientCoords]);
 
   // Update Markers & Route whenever patientCoords, selectedGroup, donors, or selectedDestination change
   useEffect(() => {
@@ -292,27 +497,49 @@ function BloodDonationMapComponent({
     return () => clearTimeout(t1);
   }, [patientCoords, selectedGroup, donors, selectedDestination]);
 
+  const activeLabels = BLOOD_TRANSLATIONS[language] || BLOOD_TRANSLATIONS.en;
+
   return (
     <div className="relative w-full h-full min-h-[320px] sm:min-h-[440px] rounded-3xl overflow-hidden">
       <div 
         ref={mapDivRef} 
         className="w-full h-full z-0" 
+        style={{ touchAction: isTouchPanning ? 'none' : 'pan-y' }}
       />
+      
+      {/* GPS Locate Button */}
       {onLocateUser && (
         <button
+          type="button"
           onClick={onLocateUser}
           disabled={isLocating}
           className="absolute top-3 right-3 z-[400] px-3 py-1.5 rounded-xl bg-[#050A14]/90 hover:bg-[#081528] text-amber-400 hover:text-white border border-amber-500/40 text-xs font-black shadow-xl flex items-center space-x-1.5 transition-all backdrop-blur-md cursor-pointer active:scale-95"
           title="Detect Current GPS Location"
         >
           <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
-          <span>{isLocating ? 'Locating...' : 'My GPS'}</span>
+          <span>{isLocating ? activeLabels.locating : activeLabels.myGps}</span>
+        </button>
+      )}
+
+      {/* Mobile Touch Scroll vs Pan Toggle */}
+      {isMobile && (
+        <button
+          type="button"
+          onClick={() => setIsTouchPanning(prev => !prev)}
+          className={`absolute bottom-3 left-3 z-[400] px-3 py-1.5 rounded-xl text-[11px] font-black shadow-2xl backdrop-blur-md border transition-all cursor-pointer flex items-center space-x-1.5 ${
+            isTouchPanning 
+              ? 'bg-amber-500 text-slate-950 border-amber-400 font-black' 
+              : 'bg-[#050A14]/90 text-slate-200 border-white/20'
+          }`}
+        >
+          <span>{isTouchPanning ? `🗺️ ${activeLabels.panHint}` : `📜 ${activeLabels.scrollHint}`}</span>
         </button>
       )}
     </div>
   );
 }
 
+// Guaranteed Fallback Generator to ensure results are NEVER blank or null
 const getInitialBloodResults = (group = 'O-', units = 2) => {
   const validGroup = (group || 'O-').toUpperCase();
   const matrix = {
@@ -328,7 +555,7 @@ const getInitialBloodResults = (group = 'O-', units = 2) => {
   const compatibleGroups = matrix[validGroup] || [validGroup];
   const ranked = bloodBanksMaster.map((b, idx) => {
     let stockCount = 0;
-    const stockBreakdown = b.inventory_units || b.stock || { 'O+': 20, 'O-': 8, 'A+': 15, 'B+': 12, 'AB+': 5 };
+    const stockBreakdown = b.inventory_units || b.blood_stock || b.stock || { 'O+': 20, 'O-': 8, 'A+': 15, 'B+': 12, 'AB+': 5 };
     compatibleGroups.forEach(grp => {
       stockCount += (stockBreakdown[grp] || 0);
     });
@@ -339,7 +566,7 @@ const getInitialBloodResults = (group = 'O-', units = 2) => {
       ...b,
       lat: b.latitude || b.lat || 16.5167,
       lng: b.longitude || b.lng || 80.6500,
-      distanceKm,
+      distanceKm: typeof distanceKm === 'number' ? Number(distanceKm.toFixed(1)) : distanceKm,
       stockCount,
       stockBreakdown,
       hasEnoughUnits,
@@ -348,8 +575,10 @@ const getInitialBloodResults = (group = 'O-', units = 2) => {
   }).sort((a, b) => b.matchScore - a.matchScore);
 
   return {
+    recipientBloodGroup: validGroup,
     recipientGroup: validGroup,
     compatibleGroups,
+    unitsNeeded: units,
     results: ranked
   };
 };
@@ -358,12 +587,15 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   const { t, language } = useLanguage();
   const { queueOfflineReport, isOnline } = useDemo();
 
+  const tr = BLOOD_TRANSLATIONS[language] || BLOOD_TRANSLATIONS.en;
+
   const [hasSearched, setHasSearched] = useState(true);
   const [voiceQuery, setVoiceQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showTableExplorer, setShowTableExplorer] = useState(false);
   
   const initialSeedData = getInitialBloodResults(initialQuery?.group || 'O-', 2);
+  const [matchResults, setMatchResults] = useState(initialSeedData);
   const [selectedDestination, setSelectedDestination] = useState(initialSeedData.results[0] || null);
 
   // User Live GPS Coordinates
@@ -379,6 +611,16 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   });
   const [isLocating, setIsLocating] = useState(false);
 
+  const [selectedGroup, setSelectedGroup] = useState(initialQuery?.group || 'O-');
+  const [patientName, setPatientName] = useState('');
+  const [hospitalName, setHospitalName] = useState('Government General Hospital (GGH Vijayawada)');
+  const [unitsNeeded, setUnitsNeeded] = useState(2);
+  const [urgencyLevel, setUrgencyLevel] = useState('CRITICAL');
+
+  const [loading, setLoading] = useState(false);
+  const [requestStatus, setRequestStatus] = useState(null);
+  const [activeCourier, setActiveCourier] = useState(null);
+
   const locateUserPosition = () => {
     if (!navigator.geolocation) return;
     setIsLocating(true);
@@ -392,13 +634,21 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
           localStorage.setItem('resqone_user_location', JSON.stringify({ lat: coords[0], lng: coords[1] }));
         } catch (e) {}
         DataService.matchBloodResources(selectedGroup, unitsNeeded, coords[0], coords[1]).then((res) => {
-          if (res) {
+          if (res && res.results && res.results.length > 0) {
             setMatchResults(res);
-            if (res.results && res.results.length > 0) {
-              setSelectedDestination(res.results[0]);
+            setSelectedDestination(res.results[0]);
+          } else {
+            const fallback = getInitialBloodResults(selectedGroup, unitsNeeded);
+            setMatchResults(fallback);
+            if (fallback.results && fallback.results.length > 0) {
+              setSelectedDestination(fallback.results[0]);
             }
           }
-        }).catch((e) => console.warn(e));
+        }).catch((e) => {
+          console.warn('Geolocation match fallback:', e);
+          const fallback = getInitialBloodResults(selectedGroup, unitsNeeded);
+          setMatchResults(fallback);
+        });
       },
       (err) => {
         console.warn('BloodDonorPage geolocation error:', err);
@@ -408,31 +658,38 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
     );
   };
 
-  const [selectedGroup, setSelectedGroup] = useState(initialQuery?.group || 'O-');
-  const [patientName, setPatientName] = useState('');
-  const [hospitalName, setHospitalName] = useState('Government General Hospital (GGH Vijayawada)');
-  const [unitsNeeded, setUnitsNeeded] = useState(2);
-  const [urgencyLevel, setUrgencyLevel] = useState('CRITICAL');
-
-  const [loading, setLoading] = useState(false);
-  const [matchResults, setMatchResults] = useState(initialSeedData);
-  const [requestStatus, setRequestStatus] = useState(null);
-  const [activeCourier, setActiveCourier] = useState(null);
-
   const handleRunCompatibilityMatch = async (groupToMatch = selectedGroup, units = unitsNeeded, query = voiceQuery) => {
     setLoading(true);
     setHasSearched(true);
     try {
       const results = await DataService.matchBloodResources(groupToMatch, units, userCoords[0], userCoords[1]);
-      if (results) {
+      if (results && results.results && results.results.length > 0) {
         setMatchResults(results);
-        if (results?.results && results.results.length > 0) {
-          setSelectedDestination(results.results[0]);
+        setSelectedDestination(results.results[0]);
+      } else {
+        const fallback = getInitialBloodResults(groupToMatch, units);
+        setMatchResults(fallback);
+        if (fallback.results && fallback.results.length > 0) {
+          setSelectedDestination(fallback.results[0]);
         }
       }
-      speakEmergencyInstruction(`Found verified blood banks and compatible donors for ${groupToMatch} nearby.`, language);
+
+      const audioLang = ['te', 'hi', 'ta', 'kn', 'en'].includes(language) ? language : 'en';
+      const audioMessages = {
+        en: `Found verified blood banks and compatible donors for ${groupToMatch} nearby.`,
+        te: `${groupToMatch} రక్తం కోసం సరిపోయే బ్లడ్ బ్యాంకులు మరియు దాతలను కనుగొన్నాము.`,
+        hi: `${groupToMatch} रक्त समूह के लिए ब्लड बैंक और दाता मिल गए हैं।`,
+        ta: `${groupToMatch} இரத்தக் குழுவிற்கான வங்கிகள் மற்றும் நன்கொடையாளர்கள் கண்டறியப்பட்டனர்.`,
+        kn: `${groupToMatch} ರಕ್ತ ಗುಂಪಿಗೆ ಹೊಂದಾಣಿಕೆಯಾಗುವ ಬ್ಲಡ್ ಬ್ಯಾಂಕ್ ಮತ್ತು ದಾನಿಗಳು ಕಂಡುಬಂದಿದ್ದಾರೆ.`
+      };
+      speakEmergencyInstruction(audioMessages[audioLang] || audioMessages.en, audioLang);
     } catch (err) {
       console.error("Error matching blood resources:", err);
+      const fallback = getInitialBloodResults(groupToMatch, units);
+      setMatchResults(fallback);
+      if (fallback.results && fallback.results.length > 0) {
+        setSelectedDestination(fallback.results[0]);
+      }
     } finally {
       setLoading(false);
     }
@@ -546,7 +803,17 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
     queueOfflineReport(payload);
     setRequestStatus(`Emergency Blood SOS dispatched to ${bankOrDonor.name}! Cold-chain courier en route.`);
-    speakEmergencyInstruction(`Blood SOS sent to ${bankOrDonor.name}. Cold chain courier assigned.`, language);
+
+    const audioLang = ['te', 'hi', 'ta', 'kn', 'en'].includes(language) ? language : 'en';
+    const courierAudio = {
+      en: `Blood SOS sent to ${bankOrDonor.name}. Cold chain courier assigned.`,
+      te: `${bankOrDonor.name} కి అత్యవసర బ్లడ్ రిక్వెస్ట్ పంపబడింది. కోల్డ్ చైన్ కొరియర్ బయలుదేరింది.`,
+      hi: `${bankOrDonor.name} को रक्त अनुरोध भेजा गया है। कोल्ड चेन कूरियर रवाना हो गया है।`,
+      ta: `${bankOrDonor.name} க்கு இரத்தக் கோரிக்கை அனுப்பப்பட்டது. அவசர கூரியர் நியமிக்கப்பட்டது.`,
+      kn: `${bankOrDonor.name} ಗೆ ರಕ್ತದ ವಿನಂತಿ ಕಳುಹಿಸಲಾಗಿದೆ. ಕೋಲ್ಡ್ ಚೈನ್ ಕೊರಿಯರ್ ನಿಯೋಜಿಸಲಾಗಿದೆ.`
+    };
+    speakEmergencyInstruction(courierAudio[audioLang] || courierAudio.en, audioLang);
+
     setTimeout(() => setRequestStatus(null), 6000);
   };
 
@@ -556,17 +823,22 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   };
 
   const handleResetSearch = () => {
-    setHasSearched(false);
+    setHasSearched(true);
     setVoiceQuery('');
-    setMatchResults(null);
+    const freshData = getInitialBloodResults('O-', 2);
+    setMatchResults(freshData);
+    setSelectedGroup('O-');
+    setUnitsNeeded(2);
     setActiveCourier(null);
     setRequestStatus(null);
     setShowTableExplorer(false);
-    setSelectedDestination(null);
+    if (freshData.results && freshData.results.length > 0) {
+      setSelectedDestination(freshData.results[0]);
+    }
   };
 
   const compatibleDonorsList = VERIFIED_COMMUNITY_DONORS.filter((d) => {
-    if (!matchResults) return false;
+    if (!matchResults?.compatibleGroups) return true;
     return matchResults.compatibleGroups.includes(d.group);
   });
 
@@ -590,27 +862,26 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
           <div className="min-w-0">
             <div className="flex items-center space-x-1.5 flex-wrap">
               <h2 className="text-xs sm:text-sm font-black text-white tracking-wide truncate">
-                {t('blood_title') || 'Smart ABO/Rh Blood Donor Matcher'}
+                {tr.title}
               </h2>
               <span className="bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase shrink-0">
-                NHP LIVE
+                {tr.nhpLive}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 line-clamp-1">
-              {language === 'te' ? 'నిజ సమయ రక్త సరిపోలిక మరియు కోల్డ్-చైన్ కొరియర్ నెట్‌వర్క్' : 'Deterministic ABO compatibility & cold-chain donor matching'}
+              {tr.subtitle}
             </p>
           </div>
         </div>
 
-        {hasSearched && (
-          <button
-            onClick={handleResetSearch}
-            className="px-3 py-1.5 bg-[#050A14] hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-white/[0.08] transition-colors flex items-center space-x-1 self-start sm:self-auto cursor-pointer shrink-0"
-          >
-            <XCircle className="w-3.5 h-3.5 text-red-400" />
-            <span>{language === 'te' ? 'కొత్త అభ్యర్థన' : 'New Request'}</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleResetSearch}
+          className="px-3 py-1.5 bg-[#050A14] hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl text-xs font-bold border border-white/[0.08] transition-colors flex items-center space-x-1 self-start sm:self-auto cursor-pointer shrink-0"
+        >
+          <RefreshCw className="w-3.5 h-3.5 text-red-400" />
+          <span>{tr.newRequest}</span>
+        </button>
       </div>
 
       {/* 2. Interactive Search & Request Box */}
@@ -619,7 +890,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
         {/* Recipient Blood Group Selector */}
         <div>
           <label className="text-xs font-black uppercase tracking-wider text-slate-300 block mb-2">
-            {language === 'te' ? 'బాధితుడి రక్త గ్రూప్‌ను ఎంచుకోండి:' : (t('select_blood_group') || 'Select Recipient Blood Group:')}
+            {tr.selectGroup}
           </label>
           <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
             {bloodGroups.map((grp) => (
@@ -646,7 +917,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
             type="text"
             value={voiceQuery}
             onChange={(e) => setVoiceQuery(e.target.value)}
-            placeholder={language === 'te' ? 'రక్తం అవసరాన్ని మాట్లాడండి లేదా టైప్ చేయండి...' : (t('voice_blood_prompt') || "Type or speak blood request (e.g. 'Need 2 units of O- blood in Vijayawada')...")}
+            placeholder={tr.voicePrompt}
             className="w-full bg-[#050A14] border border-slate-800 rounded-2xl pl-4 pr-12 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500 shadow-inner"
           />
           <button
@@ -665,7 +936,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-[11px] font-bold text-slate-300 block mb-1">
-              {language === 'te' ? 'కావాల్సిన యూనిట్లు:' : 'Units Needed:'}
+              {tr.unitsNeeded}
             </label>
             <input
               type="number"
@@ -679,7 +950,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
           <div>
             <label className="text-[11px] font-bold text-slate-300 block mb-1">
-              {language === 'te' ? 'ఆసుపత్రి / చిరునామా:' : 'Target Hospital / Location:'}
+              {tr.targetHospital}
             </label>
             <input
               type="text"
@@ -691,18 +962,19 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
         </div>
 
         <button
+          type="button"
           onClick={() => handleRunCompatibilityMatch(selectedGroup, unitsNeeded)}
           disabled={loading}
           className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 text-white font-black py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-2xl shadow-red-950 cursor-pointer active:scale-95 transition-all"
         >
           {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           <span>
-            {language === 'te' ? `${selectedGroup} రక్త దాతలను మరియు బ్లడ్ బ్యాంక్‌లను వెతకండి` : `RUN REAL-TIME ${selectedGroup} DONOR & BLOOD BANK MATCH`}
+            {loading ? tr.searching : `${tr.runMatch} (${selectedGroup})`}
           </span>
         </button>
       </div>
 
-      {/* 3. Output Results Display */}
+      {/* 3. Output Results Display (Guaranteed non-null state) */}
       {matchResults && (
         <div className="space-y-4">
           
@@ -710,17 +982,17 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
           <div className="p-4 rounded-3xl bg-[#080E1C] border border-red-500/40 shadow-2xl space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/30">
-                ABO/Rh COMPATIBILITY PROTOCOL
+                {tr.protocol}
               </span>
               <span className="text-xs font-bold text-emerald-400 font-mono">
-                {matchResults?.compatibleGroups?.join(', ')} Compatible
+                {matchResults?.compatibleGroups?.join(', ')} {tr.compatible}
               </span>
             </div>
             <h3 className="text-sm font-black text-white">
               Recipient: <span className="text-red-400">{selectedGroup}</span> • Eligible Donors: <span className="text-emerald-400">{matchResults?.compatibleGroups?.join(' | ')}</span>
             </h3>
             <p className="text-[11px] text-slate-300 italic">
-              💡 Universal donor O- can be safely transfused to all ABO/Rh blood groups in acute hemorrhagic emergencies.
+              {tr.universalNote}
             </p>
           </div>
 
@@ -730,13 +1002,11 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
               <div>
                 <h3 className="text-xs font-black text-white flex items-center space-x-2">
                   <MapPin className="w-3.5 h-3.5 text-red-500" />
-                  <span>
-                    {language === 'te' ? 'బ్లడ్ బ్యాంక్ & దాతల సామీప్య మ్యాప్' : 'Live Blood Banks & Donors Proximity Map'}
-                  </span>
+                  <span>{tr.mapTitle}</span>
                 </h3>
                 {selectedDestination && (
                   <p className="text-[11px] text-amber-300 font-mono mt-0.5">
-                    🚗 Active Destination: <span className="font-bold text-white">{selectedDestination.name}</span>
+                    🚗 {tr.activeDestination} <span className="font-bold text-white">{selectedDestination.name}</span>
                   </p>
                 )}
               </div>
@@ -749,12 +1019,12 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                   className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md self-start sm:self-auto cursor-pointer"
                 >
                   <Navigation className="w-3.5 h-3.5" />
-                  <span>{language === 'te' ? 'గూగుల్ మ్యాప్స్ దిశలు' : 'Open in Google Maps'}</span>
+                  <span>{tr.openGoogleMaps}</span>
                 </a>
               )}
             </div>
 
-            <div className="h-[300px] sm:h-[400px] rounded-2xl overflow-hidden border border-white/10">
+            <div className="h-[320px] sm:h-[420px] rounded-2xl overflow-hidden border border-white/10">
               <BloodDonationMapComponent 
                 patientCoords={userCoords}
                 selectedGroup={selectedGroup} 
@@ -763,6 +1033,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                 onSelectDestination={handleSelectRouteToDestination}
                 onLocateUser={locateUserPosition}
                 isLocating={isLocating}
+                language={language}
               />
             </div>
           </div>
@@ -779,14 +1050,14 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-emerald-300 font-black text-xs">
                     <Truck className="w-4 h-4 text-emerald-400" />
-                    <span>EMERGENCY CRYOCARRIER DISPATCHED • ID: {activeCourier.courierId}</span>
+                    <span>{tr.courierDispatched} • ID: {activeCourier.courierId}</span>
                   </div>
                   <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">
                     ETA: {activeCourier.eta}
                   </span>
                 </div>
                 <p className="text-xs text-white">
-                  Transporting <span className="font-bold text-red-400">{activeCourier.units} Units of {activeCourier.bloodGroup}</span> from {activeCourier.bankName} to {hospitalName}.
+                  {tr.transporting} <span className="font-bold text-red-400">{activeCourier.units} Units of {activeCourier.bloodGroup}</span> {tr.from} {activeCourier.bankName} {tr.to} {hospitalName}.
                 </p>
                 <div className="text-[10px] text-emerald-200 font-mono">
                   Driver: {activeCourier.driver} • {activeCourier.tempBoxStatus}
@@ -798,7 +1069,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
           {/* Ranked Blood Banks & Regional Reserve Stock */}
           <div className="space-y-3">
             <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider px-1">
-              {language === 'te' ? 'బ్లడ్ బ్యాంకులు మరియు రిజర్వ్ నిల్వలు' : 'Ranked Blood Banks & Regional Reserve Stock'} ({matchResults?.results?.length || 0})
+              {tr.banksHeading} ({matchResults?.results?.length || 0})
             </h3>
 
             <div className="space-y-3">
@@ -832,7 +1103,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className="bg-amber-500/20 text-amber-300 text-[10px] font-mono font-black px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                          {bank.matchScore}% MATCH
+                          {bank.matchScore}% {tr.matchScore}
                         </span>
                         {isSelected && (
                           <span className="bg-amber-500 text-slate-950 text-[8px] font-mono font-black px-1.5 py-0.5 rounded">
@@ -844,8 +1115,8 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
                     {/* Stock Badges */}
                     <div className="flex flex-wrap items-center gap-1 bg-[#050A14] p-2 rounded-2xl border border-slate-800/80">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase mr-1">Units:</span>
-                      {Object.entries(bank.stockBreakdown || {}).map(([grp, count]) => (
+                      <span className="text-[9px] font-bold text-slate-400 uppercase mr-1">{tr.units}</span>
+                      {Object.entries(bank.stockBreakdown || bank.blood_stock || {}).map(([grp, count]) => (
                         <span 
                           key={grp}
                           className={`text-[9px] px-2 py-0.5 rounded-md font-mono font-bold ${
@@ -862,13 +1133,14 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                     {/* Action Buttons: 3 Clean Equal Columns with Concise Labels */}
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 w-full">
                       <button
+                        type="button"
                         onClick={() => handleSelectRouteToDestination(bank)}
                         className={`py-2 px-1 rounded-xl font-bold text-xs flex items-center justify-center space-x-1 border transition-all cursor-pointer ${
                           isSelected ? 'bg-amber-500 text-slate-950 border-amber-400 font-black' : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/30'
                         }`}
                       >
                         <Route className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{language === 'te' ? 'రూట్' : 'Route'}</span>
+                        <span className="truncate">{tr.route}</span>
                       </button>
 
                       <a
@@ -877,15 +1149,16 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                         title="Call Blood Bank Directly"
                       >
                         <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span className="truncate">{language === 'te' ? 'కాల్' : 'Call'}</span>
+                        <span className="truncate">{tr.call}</span>
                       </a>
 
                       <button
+                        type="button"
                         onClick={() => handleDispatchBloodAlert(bank)}
                         className="bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 text-white font-black py-2 px-1 rounded-xl text-xs flex items-center justify-center space-x-1 shadow-lg cursor-pointer active:scale-95"
                       >
                         <Truck className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{language === 'te' ? 'కొరియర్' : 'Courier'}</span>
+                        <span className="truncate">{tr.courier}</span>
                       </button>
                     </div>
                   </div>
@@ -897,7 +1170,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
           {/* Verified Community Donors List */}
           <div className="space-y-3">
             <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider px-1">
-              {language === 'te' ? 'ధృవీకరించబడిన ప్రత్యక్ష రక్త దాతలు' : 'Verified Live Community Donors'} ({compatibleDonorsList.length})
+              {tr.donorsHeading} ({compatibleDonorsList.length})
             </h3>
 
             <div className="space-y-3">
@@ -928,19 +1201,20 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                       </div>
 
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                        {donor.lastDonation}
+                        {donor.lastDonation || tr.eligible}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 w-full">
                       <button
+                        type="button"
                         onClick={() => handleSelectRouteToDestination(donor)}
                         className={`py-2 px-1 rounded-xl text-xs font-bold border flex items-center justify-center space-x-1 cursor-pointer transition-all ${
                           isSelected ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-amber-500/30'
                         }`}
                       >
                         <Route className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{language === 'te' ? 'రూట్' : 'Route'}</span>
+                        <span className="truncate">{tr.route}</span>
                       </button>
 
                       <a
@@ -948,15 +1222,16 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
                         className="py-2 px-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center space-x-1 border border-slate-700 cursor-pointer"
                       >
                         <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span className="truncate">{language === 'te' ? 'కాల్' : 'Call'}</span>
+                        <span className="truncate">{tr.call}</span>
                       </a>
 
                       <button
+                        type="button"
                         onClick={() => handleDispatchBloodAlert(donor)}
                         className="py-2 px-1 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold text-xs flex items-center justify-center space-x-1 shadow-md cursor-pointer active:scale-95"
                       >
                         <Send className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{language === 'te' ? 'కొరియర్' : 'Courier'}</span>
+                        <span className="truncate">{tr.courier}</span>
                       </button>
                     </div>
                   </div>
@@ -968,6 +1243,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
           {/* Optional Table Explorer Toggle Button */}
           <div className="text-center pt-2">
             <button
+              type="button"
               onClick={() => setShowTableExplorer(!showTableExplorer)}
               className="text-xs text-slate-400 hover:text-white font-mono underline cursor-pointer"
             >
