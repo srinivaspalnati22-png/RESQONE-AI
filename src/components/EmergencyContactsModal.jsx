@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, UserPlus, Trash2, X, Phone, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Users, UserPlus, Trash2, X, Phone, ShieldCheck, CheckCircle2, MessageSquare, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { generateWhatsAppUrl } from '../services/sos_service';
 
 export function EmergencyContactsModal({ isOpen, onClose }) {
   const { t } = useLanguage();
-  const { familyContacts, updateFamilyContacts } = useAuth();
+  const { user, familyContacts, updateFamilyContacts } = useAuth();
   const [contacts, setContacts] = useState(familyContacts || []);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -118,35 +119,57 @@ export function EmergencyContactsModal({ isOpen, onClose }) {
           ) : (
             <div className="text-xs text-emerald-400 bg-emerald-950/40 p-3 rounded-2xl border border-emerald-800/60 flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-              <span>Full 5/5 Emergency Safety Net Configured! Automatic location alerts ready.</span>
+              <span>Full 5/5 Emergency Safety Net Configured! Automated zero-touch SMS & WhatsApp enabled.</span>
             </div>
           )}
 
           {/* Contact List */}
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {contacts.map((c, idx) => (
-              <div
-                key={c.id || idx}
-                className="flex items-center justify-between p-3 rounded-2xl bg-[#050A14] border border-slate-800 hover:border-slate-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-red-950/80 border border-red-800/80 flex items-center justify-center text-red-400 font-bold text-xs">
-                    #{idx + 1}
+            {contacts.map((c, idx) => {
+              const testWaUrl = generateWhatsAppUrl(c, {
+                victimName: user?.name || 'Srinivas Palnati',
+                bloodGroup: user?.bloodGroup || 'O+',
+                address: 'NRI Institute of Technology, Pothavarappadu, Vijayawada'
+              });
+
+              return (
+                <div
+                  key={c.id || idx}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-[#050A14] border border-slate-800 hover:border-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-red-950/80 border border-red-800/80 flex items-center justify-center text-red-400 font-bold text-xs">
+                      #{idx + 1}
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-white">{c.name}</h5>
+                      <p className="text-[11px] text-slate-400 font-mono">{c.phone} • <span className="text-red-400 font-semibold">{c.relation}</span></p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-white">{c.name}</h5>
-                    <p className="text-[11px] text-slate-400 font-mono">{c.phone} • <span className="text-red-400 font-semibold">{c.relation}</span></p>
+
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={testWaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-800 text-emerald-300 text-[10px] font-bold border border-emerald-700/60 flex items-center gap-1 transition-colors"
+                      title="Test WhatsApp Alert to this contact"
+                    >
+                      <span>Test WhatsApp</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="p-2 text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+                      title="Delete Contact"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  className="p-2 text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
-                  title="Delete Contact"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="pt-3 border-t border-slate-800 flex justify-end">

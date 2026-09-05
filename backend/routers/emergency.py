@@ -1,10 +1,40 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
-from backend.models.schemas import EmergencyReportRequest, AIExplainability, EmergencyReport
+from backend.models.schemas import (
+    EmergencyReportRequest,
+    AIExplainability,
+    EmergencyReport,
+    FamilyNotificationRequest,
+    FamilyNotificationResponse
+)
 from backend.services.ai_service import AIService
 from backend.services.supabase_service import SupabaseService
+from backend.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/api/emergency", tags=["Emergency Copilot"])
+
+@router.post("/notify-family", response_model=FamilyNotificationResponse)
+def notify_family_emergency(req: FamilyNotificationRequest):
+    """
+    Automated Zero-Touch Family Dispatch Endpoint:
+    Automatically transmits emergency SMS and WhatsApp notifications to all 5
+    registered family members without requiring manual user touch.
+    Pairs with Twilio and Fast2SMS with automated failover and simulation audit.
+    """
+    try:
+        contacts_data = [c.dict() for c in req.contacts]
+        result = NotificationService.dispatch_family_emergency(
+            victim_name=req.victim_name or "Emergency Citizen",
+            blood_group=req.blood_group or "O+",
+            address=req.address or "Vijayawada Highway Corridor",
+            lat=req.location_lat or 16.5167,
+            lng=req.location_lng or 80.6500,
+            contacts=contacts_data,
+            tracking_url=req.tracking_url
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Family dispatch error: {str(e)}")
 
 @router.post("/classify", response_model=AIExplainability)
 def classify_emergency(req: EmergencyReportRequest):

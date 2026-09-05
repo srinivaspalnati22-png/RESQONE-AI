@@ -110,3 +110,37 @@ class ActivityLog(BaseModel):
     action: Optional[str] = "TELEMETRY"
     metadata: Optional[Dict[str, Any]] = {}
     created_at: Optional[str] = None
+
+class FamilyContactItem(BaseModel):
+    id: Optional[str] = None
+    name: str
+    phone: str
+    relation: Optional[str] = "Family"
+    notify_on_sos: Optional[bool] = True
+
+class FamilyNotificationRequest(BaseModel):
+    victim_name: Optional[str] = "Emergency Citizen"
+    blood_group: Optional[str] = "O+"
+    location_lat: Optional[float] = 16.5167
+    location_lng: Optional[float] = 80.6500
+    address: Optional[str] = "Vijayawada Highway Corridor"
+    tracking_url: Optional[str] = None
+    emergency_type: Optional[str] = "CRITICAL_SOS"
+    contacts: List[FamilyContactItem]
+
+class FamilyDispatchRecipientResult(BaseModel):
+    name: str
+    phone: str
+    relation: str
+    sms_status: str
+    whatsapp_status: str
+    timestamp: str
+
+class FamilyNotificationResponse(BaseModel):
+    success: bool
+    total_contacts: int
+    sms_sent_count: int
+    whatsapp_sent_count: int
+    gateway_used: str
+    recipients: List[FamilyDispatchRecipientResult]
+    message_preview: str

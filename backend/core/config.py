@@ -14,4 +14,11 @@ class Settings:
     APP_NAME: str = "RESQONE AI+ Intelligence Platform"
     VERSION: str = "1.0.0"
 
+    # Automated Zero-Touch SMS & WhatsApp Gateway Configuration
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")
+    TWILIO_WHATSAPP_NUMBER: str = os.getenv("TWILIO_WHATSAPP_NUMBER", "")
+    FAST2SMS_API_KEY: str = os.getenv("FAST2SMS_API_KEY", "")
+
 settings = Settings()
