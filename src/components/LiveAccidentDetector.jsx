@@ -965,6 +965,45 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           </div>
         </form>
 
+        {/* Search Results Dropdown — appears when user types or submits */}
+        {searchOpen && searchResults.length > 0 && (
+          <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-[#0B1220] border border-[#1a73e8]/40 rounded-2xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
+            <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {language === 'te' ? 'గమ్యస్థానాలు' : language === 'hi' ? 'गंतव्य' : 'Route Destinations'} ({searchResults.length})
+              </span>
+              <button type="button" onClick={() => setSearchOpen(false)} className="text-slate-500 hover:text-white text-xs cursor-pointer">✕</button>
+            </div>
+            {searchResults.map((result, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  handleSelectDestination(result);
+                  setSearchOpen(false);
+                }}
+                className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[#1a73e8]/10 border-b border-white/5 last:border-0 transition-colors cursor-pointer"
+              >
+                <span className="text-base shrink-0 mt-0.5">
+                  {result.type === 'hospital' ? '🏥' : result.type === 'airport' ? '✈️' : result.type === 'landmark' ? '🏛️' : '📍'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-white leading-snug line-clamp-1">
+                    {result.name.split(',')[0]}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                    {result.name.split(',').slice(1, 3).join(',').trim() || result.name}
+                  </p>
+                </div>
+                <span className="text-[10px] text-[#1a73e8] font-bold shrink-0 ml-auto mt-0.5 flex items-center gap-0.5">
+                  <Route className="w-3 h-3" />
+                  <span className="hidden sm:inline">Route</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Quick Suggestion Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           <button

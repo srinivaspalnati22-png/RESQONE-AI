@@ -298,37 +298,53 @@ function BloodDonationMapComponent({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Initialize Map
+  // Initialize Map — with proper cleanup on unmount to prevent Leaflet double-init crash
   useEffect(() => {
     if (!mapDivRef.current) return;
 
-    if (!mapInstance.current) {
-      if (mapDivRef.current._leaflet_id) {
-        mapDivRef.current._leaflet_id = null;
-      }
-
+    // Force-clear any leftover Leaflet internal state from previous mounts
+    if (mapDivRef.current._leaflet_id) {
       try {
-        const map = L.map(mapDivRef.current, {
-          center: patientCoords,
-          zoom: 13,
-          zoomControl: true,
-          attributionControl: false,
-          dragging: !isMobile,
-          tap: !isMobile
-        });
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          className: 'leaflet-dark-mode',
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        markersGroupRef.current = L.layerGroup().addTo(map);
-        mapInstance.current = map;
-      } catch (mapErr) {
-        console.warn('[BloodDonationMap init]', mapErr);
-      }
+        const existingMap = mapInstance.current || L.map(mapDivRef.current);
+        existingMap.remove();
+      } catch (_) {}
+      mapDivRef.current._leaflet_id = null;
+      mapInstance.current = null;
     }
+
+    try {
+      const map = L.map(mapDivRef.current, {
+        center: patientCoords,
+        zoom: 13,
+        zoomControl: true,
+        attributionControl: false,
+        dragging: !isMobile,
+        tap: !isMobile
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        className: 'leaflet-dark-mode',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      markersGroupRef.current = L.layerGroup().addTo(map);
+      mapInstance.current = map;
+    } catch (mapErr) {
+      console.warn('[BloodDonationMap init]', mapErr);
+    }
+
+    // CRITICAL: Destroy Leaflet map on unmount to allow clean remounts
+    return () => {
+      try {
+        if (mapInstance.current) {
+          mapInstance.current.remove();
+          mapInstance.current = null;
+          markersGroupRef.current = null;
+          routePolylineRef.current = null;
+        }
+      } catch (_) {}
+    };
   }, []);
 
   // Dynamic touch dragging toggle for mobile screen scroll protection
