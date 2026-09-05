@@ -605,14 +605,14 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
   const tr = BLOOD_TRANSLATIONS[language] || BLOOD_TRANSLATIONS.en;
 
-  const [hasSearched, setHasSearched] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false);
   const [voiceQuery, setVoiceQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showTableExplorer, setShowTableExplorer] = useState(false);
   
-  const initialSeedData = getInitialBloodResults(initialQuery?.group || 'O-', 2);
-  const [matchResults, setMatchResults] = useState(initialSeedData);
-  const [selectedDestination, setSelectedDestination] = useState(initialSeedData.results[0] || null);
+  // Start with null — results only show AFTER user clicks Search or selects blood group
+  const [matchResults, setMatchResults] = useState(null);
+  const [selectedDestination, setSelectedDestination] = useState(null);
 
   // User Live GPS Coordinates
   const [userCoords, setUserCoords] = useState(() => {
@@ -711,13 +711,13 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
     }
   };
 
+  // Selecting a group only highlights it — user must click Run Match button for results
   const handleSelectGroup = (grp) => {
     setSelectedGroup(grp);
-    handleRunCompatibilityMatch(grp, unitsNeeded, voiceQuery);
   };
 
   useEffect(() => {
-    handleRunCompatibilityMatch(selectedGroup, unitsNeeded, voiceQuery);
+    // Only locate GPS silently on mount, DO NOT auto-run match
     locateUserPosition();
     return () => stopAllAudio();
   }, []);
@@ -727,6 +727,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
       const grp = initialQuery.group || 'O-';
       setSelectedGroup(grp);
       if (initialQuery.query) setVoiceQuery(initialQuery.query);
+      // If coming from external navigation with a query, auto-run once
       handleRunCompatibilityMatch(grp, 2, initialQuery.query || '');
       if (onClearQuery) onClearQuery();
     }
@@ -839,18 +840,15 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   };
 
   const handleResetSearch = () => {
-    setHasSearched(true);
+    setHasSearched(false);
     setVoiceQuery('');
-    const freshData = getInitialBloodResults('O-', 2);
-    setMatchResults(freshData);
+    setMatchResults(null);   // Clear results — require user to search again
+    setSelectedDestination(null);
     setSelectedGroup('O-');
     setUnitsNeeded(2);
     setActiveCourier(null);
     setRequestStatus(null);
     setShowTableExplorer(false);
-    if (freshData.results && freshData.results.length > 0) {
-      setSelectedDestination(freshData.results[0]);
-    }
   };
 
   const compatibleDonorsList = VERIFIED_COMMUNITY_DONORS.filter((d) => {
@@ -990,7 +988,30 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
         </button>
       </div>
 
-      {/* 3. Output Results Display (Guaranteed non-null state) */}
+      {/* 3. Empty State — shown before user searches */}
+      {!matchResults && (
+        <div className="flex flex-col items-center justify-center py-10 px-6 rounded-3xl bg-[#080E1C] border border-dashed border-red-500/30 text-center space-y-3">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-red-600/20 to-rose-600/10 border border-red-500/30 flex items-center justify-center mb-1">
+            <Droplet className="w-8 h-8 text-red-400" />
+          </div>
+          <h3 className="text-sm font-black text-white">
+            {language === 'te' ? 'రక్త గ్రూప్ ఎంచుకుని శోధించండి' : language === 'hi' ? 'रक्त समूह चुनें और खोजें' : language === 'ta' ? 'இரத்த வகையைத் தேர்ந்தெடுக்கவும்' : language === 'kn' ? 'ರಕ್ತದ ಗುಂಪನ್ನು ಆಯ್ಕೆಮಾಡಿ' : 'Select Blood Group & Search'}
+          </h3>
+          <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+            {language === 'te' ? 'పైన రక్త గ్రూప్ బటన్‌ ఎంచుకుని "రక్త దాతలను వెతకండి" నొక్కండి' : language === 'hi' ? 'ऊपर रक्त समूह चुनें और "डोनर खोजें" बटन दबाएं' : language === 'ta' ? 'மேலே இரத்த வகையை தேர்ந்தெடுத்து தேடு பொத்தானை அழுத்தவும்' : language === 'kn' ? 'ಮೇಲೆ ರಕ್ತದ ಗುಂಪನ್ನು ಆಯ್ಕೆಮಾಡಿ ಮತ್ತು ಹುಡುಕು ಒತ್ತಿರಿ' : 'Choose a blood group above and press RUN MATCH to find donors & blood banks near you'}
+          </p>
+          <button
+            type="button"
+            onClick={() => handleRunCompatibilityMatch(selectedGroup, unitsNeeded)}
+            className="mt-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 text-white font-black text-xs rounded-2xl flex items-center gap-2 shadow-lg shadow-red-950 cursor-pointer hover:from-red-500 transition-all"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>{language === 'te' ? `${selectedGroup} రక్తం వెతకండి` : language === 'hi' ? `${selectedGroup} खोजें` : language === 'ta' ? `${selectedGroup} தேடு` : language === 'kn' ? `${selectedGroup} ಹುಡುಕಿ` : `Find ${selectedGroup} Donors Now`}</span>
+          </button>
+        </div>
+      )}
+
+      {/* 3b. Output Results Display — only shown after user searches */}
       {matchResults && (
         <div className="space-y-4">
           

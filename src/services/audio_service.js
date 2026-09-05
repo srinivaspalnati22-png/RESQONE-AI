@@ -355,11 +355,12 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
   }
 };
 
-// Global lifecycle hooks
+// Global lifecycle hooks — stop audio only when user genuinely leaves the page
+// NOTE: 'blur' is intentionally NOT included here — it fires on every button click
+// and kills speech before it even starts.
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', stopAllAudio);
   window.addEventListener('pagehide', stopAllAudio);
-  window.addEventListener('blur', stopAllAudio);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopAllAudio();

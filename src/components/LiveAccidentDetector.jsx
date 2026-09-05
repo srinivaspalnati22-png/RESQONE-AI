@@ -553,17 +553,52 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           lng: parseFloat(item.lon),
           type: item.type || 'place'
         }));
-        setSearchResults(formatted);
-        setSearchOpen(true);
+        
+        // Auto-route directly if only 1 result, OR if user typed something specific
+        if (formatted.length === 1) {
+          // Direct route — no need to show dropdown
+          setIsSearching(false);
+          handleSelectDestination(formatted[0]);
+          return;
+        } else {
+          // Multiple results — show dropdown to let user pick
+          setSearchResults(formatted);
+          setSearchOpen(true);
+        }
       } else {
+        // No Nominatim result — try quick suggestions, auto-route to first match
         const filtered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        setSearchResults(filtered);
-        setSearchOpen(true);
+        if (filtered.length === 1) {
+          setIsSearching(false);
+          handleSelectDestination(filtered[0]);
+          return;
+        } else if (filtered.length > 0) {
+          setSearchResults(filtered);
+          setSearchOpen(true);
+        } else {
+          // Last resort: route to the first suggestion that partially matches
+          const anyMatch = SEARCH_SUGGESTIONS.find(s => 
+            s.name.toLowerCase().split(' ').some(word => searchQuery.toLowerCase().includes(word))
+          );
+          if (anyMatch) {
+            setIsSearching(false);
+            handleSelectDestination(anyMatch);
+            return;
+          }
+          setSearchResults(SEARCH_SUGGESTIONS);
+          setSearchOpen(true);
+        }
       }
     } catch {
       const filtered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      setSearchResults(filtered);
-      setSearchOpen(true);
+      if (filtered.length > 0) {
+        setSearchResults(filtered);
+        setSearchOpen(true);
+      } else {
+        // Fallback: show all suggestions
+        setSearchResults(SEARCH_SUGGESTIONS);
+        setSearchOpen(true);
+      }
     } finally {
       setIsSearching(false);
     }
