@@ -249,6 +249,9 @@ $$M_{\text{ABO/Rh}}(\text{Type}_d, \text{Type}_v) = 1 \quad \text{AND} \quad d_{
                 assigned_hospital: hospital }
 ```
 
+![Unified RESQONE-AI+ Command Dashboard](figures/screenshot_dashboard_live.png)
+*Fig. 6. Unified RESQONE-AI+ command dashboard integrating real-time incident mapping, live rescue fleet status, and multi-agency emergency intelligence.*
+
 ---
 
 ## V. EXPERIMENTAL EVALUATION AND RESULTS

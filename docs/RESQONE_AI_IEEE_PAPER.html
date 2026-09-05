@@ -211,10 +211,11 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: 170px;
+    max-height: 155px;
     display: block;
     margin: 0 auto;
     object-fit: contain;
+    background: #0a0f1d;
   }
   .img-frame.paired {
     display: flex;
@@ -224,7 +225,8 @@
   .img-frame.paired img {
     width: 50%;
     max-height: 105px;
-    object-fit: cover;
+    object-fit: contain;
+    background: #0a0f1d;
   }
   .fig-caption {
     font-size: 7.6pt;
@@ -549,9 +551,9 @@
   <div class="figure-container">
     <div class="img-frame paired">
       <img src="figures/screenshot_crash_telemetry.png" alt="Crash Telemetry">
-      <img src="figures/screenshot_accident_countdown.png" alt="5-Second Abort Countdown">
+      <img src="figures/screenshot_crash_abort_modal.png" alt="4.85G Sensor Impact Abort Modal">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 3.</span> Autonomous kinematic crash telemetry interface and finite-state logic: (left) real-time tri-axial G-force and Kalman jerk vector monitoring; (right) 5-second emergency safety-abort countdown modal.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 3.</span> Autonomous kinematic crash telemetry interface: (left) continuous tri-axial G-force and Kalman jerk vector monitoring; (right) autonomous emergency alert state-machine displaying 4.85 G impact spike, 68.4&deg; rollover angle, and safety-abort countdown.</div>
   </div>
 
   <h3 class="subsec-heading">B. Natural-Language Triage and Explainability Formulation</h3>
@@ -583,10 +585,10 @@
 
   <div class="figure-container">
     <div class="img-frame paired">
-      <img src="figures/screenshot_snakebite_ai.png" alt="Species Identification">
-      <img src="figures/screenshot_snakebite_hospitals_map.png" alt="Cold Chain AVS Map">
+      <img src="figures/screenshot_snakebite_classifier.png" alt="MobileNet Neural Vision 2.0 Species Classifier">
+      <img src="figures/screenshot_snakebite_diagnosis_report.png" alt="AI Neural Vision Recognition Report & AVS Reservation">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 4.</span> Multimodal AI triage interface: (left) species-specific snakebite envenomation analysis and WHO protocol dosage recommendations; (right) live tertiary hospital cold-chain antivenom stock map.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 4.</span> Multimodal envenomation AI triage: (left) MobileNetV2 neural vision interface with syndromic symptom checkboxes for India's Big Four species; (right) diagnostic output report showing 98.9% confidence, neurotoxic classification, and automated tertiary AVS reservation.</div>
   </div>
 
   <h3 class="subsec-heading">C. Spatial Routing and Hospital–Donor Matching</h3>
@@ -631,10 +633,10 @@
 
   <div class="figure-container">
     <div class="img-frame paired">
-      <img src="figures/screenshot_accident_alert_dispatched.png" alt="108 CAD Auto Alert">
+      <img src="figures/screenshot_cad_corridor_dispatch.png" alt="108 CAD Green Corridor Route Map">
       <img src="figures/screenshot_mission_incident_feed.png" alt="Hospital Incident Feed">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 6.</span> Command Mesh in Action: (left) automated 108 CAD ambulance dispatch alert with green-corridor pre-emption; (right) hospital trauma-bay real-time admission incident feed.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 6.</span> Multi-agency command mesh in action: (left) automated 108 CAD ambulance dispatch showing real-time NH-16 transit telemetry and 4-intersection green corridor pre-emption; (right) hospital trauma-bay real-time admission incident feed.</div>
   </div>
 
   <h3 class="subsec-heading">B. Core Algorithms</h3>
@@ -681,9 +683,9 @@
 
   <div class="figure-container">
     <div class="img-frame">
-      <img src="figures/screenshot_dashboard.png" alt="Unified ResQOne Dashboard">
+      <img src="figures/screenshot_dashboard_live.png" alt="Unified ResQOne-AI+ Command Dashboard">
     </div>
-    <div class="fig-caption"><span class="fig-label">Fig. 7.</span> Unified ResQOne-AI+ command dashboard integrating real-time incident mapping, ambulance telemetry, and multi-agency responder status.</div>
+    <div class="fig-caption"><span class="fig-label">Fig. 7.</span> Unified RESQONE-AI+ command dashboard integrating real-time incident mapping, live rescue fleet status, and multi-agency emergency intelligence.</div>
   </div>
 
   <h2 class="sec-heading" style="margin-top:2px;">V. Experimental Evaluation and Results</h2>
