@@ -69,8 +69,11 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     return 'Acquiring Live GPS Location...';
   });
 
-  const [gpsAccuracy, setGpsAccuracy] = useState(3.0);
-  const [gpsLocked, setGpsLocked] = useState(true);
+  const [gpsAccuracy, setGpsAccuracy] = useState(15.0);
+  const [gpsLocked, setGpsLocked] = useState(false);
+  const [isRealGpsLocked, setIsRealGpsLocked] = useState(false);
+  const [gpsPermissionStatus, setGpsPermissionStatus] = useState('prompt'); // 'prompt' | 'granted' | 'denied'
+  const [gpsStatusMessage, setGpsStatusMessage] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [isSettingCustomOrigin, setIsSettingCustomOrigin] = useState(false);
   const [originSearchQuery, setOriginSearchQuery] = useState('');
@@ -199,116 +202,111 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
-  // ================= 1. REAL DEVICE HARDWARE GPS + FAST IP GEOLOCATION =================
-  const fetchLiveGPS = () => {
+  // ================= 1. REAL DEVICE HARDWARE GPS + FALLBACK =================
+  const requestRealDeviceGps = (isUserClick = true) => {
     setIsLocating(true);
-    let gpsLockedSuccess = false;
+    setGpsStatusMessage(null);
 
-    // Fast multi-source IP Geolocation fallback (resolves within ~250ms so user never waits on blank coordinates)
-    const runFastIpGeolocation = async () => {
-      try {
-        const bdcPromise = fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', { signal: AbortSignal.timeout(3000) })
-          .then(r => r.json())
-          .then(d => {
-            if (d && d.latitude && d.longitude) {
-              const locality = d.locality || d.city || 'Live Location';
-              const sub = d.principalSubdivision || 'Andhra Pradesh';
-              return { lat: d.latitude, lng: d.longitude, address: `${locality}, ${sub}` };
-            }
-            throw new Error('No bdc data');
-          });
+    if (!navigator.geolocation) {
+      setGpsStatusMessage('Geolocation is not supported by your browser.');
+      setIsLocating(false);
+      return;
+    }
 
-        const ipwhoisPromise = fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) })
-          .then(r => r.json())
-          .then(d => {
-            if (d && d.success && d.latitude && d.longitude) {
-              const locality = d.city || d.region || 'Live Location';
-              const sub = d.region || d.country || 'Andhra Pradesh';
-              return { lat: d.latitude, lng: d.longitude, address: `${locality}, ${sub}` };
-            }
-            throw new Error('No ipwhois data');
-          });
-
-        const geo = await Promise.any([bdcPromise, ipwhoisPromise]);
-        if (geo && !gpsLockedSuccess) {
-          setLiveCoords([geo.lat, geo.lng]);
-          setLiveAddress(geo.address);
-          setGpsAccuracy(300);
-          setGpsLocked(true);
-          localStorage.setItem('resqone_live_address', geo.address);
-          localStorage.setItem('resqone_live_coords', JSON.stringify([geo.lat, geo.lng]));
-          reverseGeocode(geo.lat, geo.lng);
-
-          if (mapInstanceRef.current) {
-            mapInstanceRef.current.setView([geo.lat, geo.lng], 16, { animate: true });
-            setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
-          }
-        }
-      } catch (e) {
-        console.warn('[IP Geolocation Note]:', e?.message);
-      } finally {
-        if (!navigator.geolocation) {
-          setIsLocating(false);
-        }
-      }
-    };
-
-    // Run IP geolocation immediately so coordinates appear within ~250ms
-    runFastIpGeolocation();
-
-    if (!navigator.geolocation) return;
-
-    // Concurrently attempt precision device GPS
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        gpsLockedSuccess = true;
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const acc = Math.round(pos.coords.accuracy || 3);
+
         setLiveCoords([lat, lng]);
         setGpsAccuracy(acc);
         setGpsLocked(true);
+        setIsRealGpsLocked(true);
+        setGpsPermissionStatus('granted');
         setIsLocating(false);
+        setGpsStatusMessage(null);
+
         localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
         reverseGeocode(lat, lng);
 
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.setView([lat, lng], 17, { animate: true });
+          mapInstanceRef.current.setView([lat, lng], 18, { animate: true });
           setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
         }
-      },
-      () => {
-        // Fallback to relaxed accuracy if high accuracy times out or is unsupported
-        navigator.geolocation.getCurrentPosition(
-          (pos2) => {
-            gpsLockedSuccess = true;
-            const lat = pos2.coords.latitude;
-            const lng = pos2.coords.longitude;
-            setLiveCoords([lat, lng]);
-            setGpsAccuracy(Math.round(pos2.coords.accuracy || 25));
-            setGpsLocked(true);
-            setIsLocating(false);
-            localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
-            reverseGeocode(lat, lng);
 
-            if (mapInstanceRef.current) {
-              mapInstanceRef.current.setView([lat, lng], 16, { animate: true });
-              setTimeout(() => mapInstanceRef.current?.invalidateSize(), 150);
-            }
-          },
-          (err) => {
-            console.warn('[Device GPS Unavailable, retaining fast IP Geolocation]:', err.message);
-            setIsLocating(false);
-          },
-          { enableHighAccuracy: false, timeout: 3500, maximumAge: 60000 }
-        );
+        if (isUserClick) {
+          speakEmergencyInstruction(
+            language === 'te' 
+              ? 'రియల్ మొబైల్ GPS విజయవంతంగా కనెక్ట్ అయింది.' 
+              : language === 'hi' 
+                ? 'रियल मोबाइल जीपीएस सफलतापूर्वक कनेक्ट हुआ।' 
+                : 'Real mobile GPS connected successfully.',
+            language
+          );
+        }
       },
-      { enableHighAccuracy: true, timeout: 3500, maximumAge: 0 }
+      (err) => {
+        console.warn('[GPS Hardware Request]:', err);
+        setIsLocating(false);
+        if (err.code === 1) {
+          setGpsPermissionStatus('denied');
+          setGpsStatusMessage('Location permission denied. Tap the lock/tune icon in your address bar to Allow.');
+        } else if (err.code === 2) {
+          setGpsStatusMessage('GPS position unavailable. Ensure Location/GPS toggle is ON in phone settings.');
+        } else if (err.code === 3) {
+          setGpsStatusMessage('GPS satellite search timed out. Try outdoors or near a window.');
+        } else {
+          setGpsStatusMessage(err.message || 'Unable to access device GPS.');
+        }
+
+        // Fallback to IP geolocation if not locked
+        if (!isRealGpsLocked) {
+          fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
+            .then(r => r.json())
+            .then(d => {
+              if (d && d.latitude && d.longitude) {
+                const locality = d.locality || d.city || 'Live Location';
+                const sub = d.principalSubdivision || 'Andhra Pradesh';
+                const addr = `${locality}, ${sub}`;
+                setLiveCoords([d.latitude, d.longitude]);
+                setLiveAddress(addr);
+                setGpsAccuracy(300);
+                reverseGeocode(d.latitude, d.longitude);
+                if (mapInstanceRef.current) {
+                  mapInstanceRef.current.setView([d.latitude, d.longitude], 16, { animate: true });
+                }
+              }
+            })
+            .catch(() => {});
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0
+      }
     );
+  };
+
+  const fetchLiveGPS = () => {
+    requestRealDeviceGps(false);
   };
 
   useEffect(() => {
     fetchLiveGPS();
+
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((status) => {
+        setGpsPermissionStatus(status.state);
+        status.onchange = () => {
+          setGpsPermissionStatus(status.state);
+          if (status.state === 'granted') {
+            requestRealDeviceGps(false);
+          }
+        };
+      }).catch(() => {});
+    }
 
     let watchId = null;
     if (navigator.geolocation) {
@@ -556,11 +554,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   }, [liveCoords]);
 
   const handleRecenter = () => {
-    fetchLiveGPS();
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView(liveCoords, 18, { animate: true });
-      mapInstanceRef.current.invalidateSize();
-    }
+    requestRealDeviceGps(true);
   };
 
   // ================= 3. SET EXACT ORIGIN =================
@@ -962,9 +956,11 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
                   ? isUserMoving 
                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse'
                     : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                  : isRealGpsLocked
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                    : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
               }`}>
-                {isDriveActive ? (isUserMoving ? 'DRIVING' : '0 KM/H') : 'GPS LOCKED'}
+                {isDriveActive ? (isUserMoving ? 'DRIVING' : '0 KM/H') : (isRealGpsLocked ? `REAL GPS ±${gpsAccuracy}m` : 'GPS PENDING')}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 truncate">
@@ -987,15 +983,76 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           </button>
           
           <button
-            onClick={handleRecenter}
+            onClick={() => requestRealDeviceGps(true)}
             disabled={isLocating}
             className="px-2.5 py-1.5 rounded-xl bg-[#1a73e8] hover:bg-blue-600 text-white cursor-pointer shadow-md flex items-center justify-center gap-1 text-xs font-bold shrink-0"
           >
             {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
-            <span>{language === 'te' ? 'లొకేట్' : language === 'hi' ? 'स्थान' : language === 'ta' ? 'கண்டறி' : language === 'kn' ? 'ಪತ್ತೆಮಾಡಿ' : 'Locate'}</span>
+            <span>{language === 'te' ? 'మొబైల్ GPS' : language === 'hi' ? 'मोबाइल जीपीएस' : language === 'ta' ? 'GPS அனுமதி' : language === 'kn' ? 'ಜಿಪಿಎಸ್' : 'Mobile GPS'}</span>
           </button>
         </div>
       </div>
+
+      {/* REAL MOBILE GPS PERMISSION ACTION BANNER */}
+      {!isRealGpsLocked && (
+        <motion.div 
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 rounded-2xl bg-gradient-to-r from-blue-950/95 via-slate-900/95 to-cyan-950/95 border border-cyan-500/40 shadow-2xl space-y-2.5"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 flex items-center justify-center shrink-0">
+                <LocateFixed className="w-5 h-5 text-cyan-400 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs font-black text-white flex items-center gap-1.5 flex-wrap">
+                  <span>{language === 'te' ? 'రియల్ మొబైల్ GPS పర్మిషన్' : language === 'hi' ? 'सटीक मोबाइल जीपीएस अनुमति' : 'Real Mobile Device GPS Connection'}</span>
+                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">TAP TO ALLOW</span>
+                </h4>
+                <p className="text-[10px] text-slate-300 line-clamp-2">
+                  {language === 'te' 
+                    ? 'మీ ఖచ్చితమైన లైవ్ రోడ్డు లొకేషన్ మరియు స్పీడోమీటర్ కోసం క్రింది బటన్ నొక్కి మొబైల్ లొకేషన్ పర్మిషన్ Allow చేయండి.' 
+                    : language === 'hi' 
+                      ? 'सटीक सड़क स्थान और लाइव स्पीडोमीटर के लिए नीचे दिए गए बटन पर टैप करके जीपीएस अनुमति दें।'
+                      : 'Tap below to trigger the mobile browser GPS prompt and lock onto your exact device coordinates.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => requestRealDeviceGps(true)}
+              disabled={isLocating}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center space-x-2 shadow-lg shadow-cyan-950/80 cursor-pointer active:scale-95 transition-all shrink-0 ring-2 ring-cyan-400/40"
+            >
+              {isLocating ? <Loader2 className="w-4 h-4 animate-spin text-slate-950" /> : <Crosshair className="w-4 h-4 text-slate-950" />}
+              <span>{language === 'te' ? 'మొబైల్ GPS పర్మిషన్ ఇవ్వండి' : language === 'hi' ? 'जीपीएस अनुमति दें' : 'ACCESS REAL MOBILE GPS'}</span>
+            </button>
+          </div>
+
+          {gpsStatusMessage && (
+            <div className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/30 p-2 rounded-xl flex items-center space-x-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>{gpsStatusMessage}</span>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {isRealGpsLocked && (
+        <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold shadow-md">
+          <div className="flex items-center space-x-2 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <span className="truncate">{language === 'te' ? `🟢 మొబైల్ హార్డ్‌వేర్ GPS కనెక్ట్ అయింది (±${gpsAccuracy}m)` : language === 'hi' ? `🟢 मोबाइल हार्डवेयर जीपीएस लॉक (±${gpsAccuracy}m)` : `🟢 REAL MOBILE GPS ACTIVE (±${gpsAccuracy}m)`}</span>
+          </div>
+          <button
+            onClick={() => requestRealDeviceGps(true)}
+            className="text-[10px] text-cyan-300 hover:text-white underline cursor-pointer shrink-0 font-sans"
+          >
+            {language === 'te' ? 'రిఫ్రెష్ GPS' : language === 'hi' ? 'रिफ्रेश जीपीएस' : 'Refresh GPS'}
+          </button>
+        </div>
+      )}
 
       {/* CHANGE ORIGIN MODAL */}
       <AnimatePresence>
