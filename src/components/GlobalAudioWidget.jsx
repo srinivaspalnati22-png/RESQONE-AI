@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Play, Check, Globe } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Play, Check, Globe, Siren, Bell, Radio } from 'lucide-react';
 import { speakEmergencyInstruction, stopAllAudio, getAudioMuted, toggleAudioMute } from '../services/audio_service';
+import { simulateCommunityDisasterAlert, requestNotificationPermission } from '../services/broadcast_service';
 import { useLanguage } from '../context/LanguageContext';
 
 export const GlobalAudioWidget = () => {
@@ -110,15 +111,25 @@ export const GlobalAudioWidget = () => {
           <Play className="w-3 h-3 fill-current" />
           <span className="hidden sm:inline">Test Voice</span>
         </button>
+
+        {/* Government Disaster Siren Test Trigger */}
+        <button
+          onClick={() => simulateCommunityDisasterAlert()}
+          title="Simulate Government Disaster / Cyclone-Style Emergency Alert Broadcast"
+          className="px-2 py-1 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-all shadow-md shadow-red-950/80 animate-pulse"
+        >
+          <Siren className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Disaster Alert</span>
+        </button>
       </div>
 
       {/* Expanded Multi-Language Audio Test Drawer */}
       {isOpen && (
-        <div className="absolute bottom-12 left-0 w-72 bg-[#0B1220] border border-blue-500/40 rounded-2xl shadow-2xl p-3 space-y-2.5 mb-1 backdrop-blur-2xl">
+        <div className="absolute bottom-12 left-0 w-80 bg-[#0B1220] border border-blue-500/40 rounded-2xl shadow-2xl p-3 space-y-2.5 mb-1 backdrop-blur-2xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <div className="flex items-center gap-1.5">
               <Globe className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs font-bold text-white">Voice Guidance Testing</span>
+              <span className="text-xs font-bold text-white">Voice & Disaster Broadcast</span>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
@@ -129,7 +140,7 @@ export const GlobalAudioWidget = () => {
           </div>
 
           <p className="text-[10px] text-slate-400 leading-snug">
-            Tap any language below to preview instant speech synthesis and natural audio output:
+            Tap any language below to preview instant speech synthesis across Telugu, Hindi, Tamil, Kannada, and English:
           </p>
 
           <div className="grid grid-cols-2 gap-1.5">
@@ -163,6 +174,38 @@ export const GlobalAudioWidget = () => {
               🔊 "{activeSpeechText}"
             </div>
           )}
+
+          {/* Government Disaster / Cyclone-Style Siren & Mesh Broadcast Simulation */}
+          <div className="pt-2 border-t border-white/10 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-red-400">
+                <Radio className="w-3.5 h-3.5 animate-pulse" />
+                <span>Disaster Alert Broadcast</span>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-mono font-bold">
+                EAS 853Hz Siren
+              </span>
+            </div>
+
+            <button
+              onClick={() => {
+                simulateCommunityDisasterAlert();
+                setIsOpen(false);
+              }}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-red-950/80 transition-all active:scale-95"
+            >
+              <Siren className="w-4 h-4 animate-bounce" />
+              <span>Simulate Disaster Alert Broadcast</span>
+            </button>
+
+            <button
+              onClick={requestNotificationPermission}
+              className="w-full py-1.5 px-2 rounded-xl bg-slate-850 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center gap-1.5 cursor-pointer border border-white/10"
+            >
+              <Bell className="w-3 h-3 text-amber-400" />
+              <span>Enable Background Alert Notifications</span>
+            </button>
+          </div>
 
           <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[9px] text-slate-500">
             <span>Dual Engine: Web Speech + TTS Stream</span>

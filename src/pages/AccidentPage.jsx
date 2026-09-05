@@ -10,6 +10,7 @@ import { Vehicle3DSimulation } from '../components/Vehicle3DSimulation';
 import { LiveAccidentDetector } from '../components/LiveAccidentDetector';
 import { AccidentRescueWorkflow } from '../components/AccidentRescueWorkflow';
 import { useLanguage } from '../context/LanguageContext';
+import { broadcastDisasterAlert } from '../services/broadcast_service.js';
 
 export const AccidentPage = () => {
   const { language, t } = useLanguage();
@@ -20,6 +21,26 @@ export const AccidentPage = () => {
   const handleAccidentConfirmed = (details) => {
     setActiveCrashDetails(details);
     setIsDispatched(true);
+
+    // Broadcast Government Disaster Alert across all devices & logged-in members
+    try {
+      broadcastDisasterAlert({
+        id: `crash-${Date.now()}`,
+        victimName: 'Emergency Citizen (Live Crash)',
+        victimPhone: '+91 94401 23401',
+        bloodGroup: details?.medicalTelemetry?.bloodGroup || 'O+',
+        locationName: details?.locationName || 'Vijayawada Highway Corridor',
+        lat: details?.coords ? details.coords[0] : 16.5167,
+        lng: details?.coords ? details.coords[1] : 80.6500,
+        severity: 'CRITICAL_HIGH_IMPACT',
+        impactG: details?.impactG || 4.85,
+        speedAtImpact: details?.speedBeforeImpact || 76,
+        medicalNotes: `Crash impact detected (${details?.impactG || 4.85}G). Unresponsive driver telemetry. CAD 108 units dispatched.`
+      });
+    } catch (err) {
+      console.warn('Disaster broadcast trigger error:', err);
+    }
+
     // Smooth scroll down directly to the Live Interactive Rescue Map
     setTimeout(() => {
       const el = document.getElementById('rescue-mission-workflow');

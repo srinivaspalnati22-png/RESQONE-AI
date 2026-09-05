@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { broadcastDisasterAlert } from './broadcast_service.js';
 
 export const DEFAULT_5_FAMILY_CONTACTS = [
   { id: 'fc-1', name: 'Ramesh Varma (Father)', relation: 'Father', phone: '+91 94401 23401', notify_on_sos: true, notifyOnCrash: true },
@@ -284,6 +285,23 @@ export const triggerEmergencySOS = async (
     ...contact,
     url: generateWhatsAppUrl(contact, { victimName, bloodGroup, address, lat: userLat, lng: userLng, trackingUrl })
   }));
+
+  // Stage 5: Universal Government Disaster / Cyclone-Style Broadcast to All Installed / Logged-in Devices
+  try {
+    broadcastDisasterAlert({
+      id: sosId,
+      victimName,
+      bloodGroup,
+      locationName: address,
+      lat: userLat,
+      lng: userLng,
+      severity: 'CRITICAL_HIGH_IMPACT',
+      impactG: 4.85,
+      medicalNotes: `Automated Critical SOS dispatched. Emergency CAD 108 units notified. All family contacts and registered community members alerted.`
+    });
+  } catch (bErr) {
+    console.warn('[SOS] Broadcast disaster alert exception:', bErr);
+  }
 
   return {
     sosId,

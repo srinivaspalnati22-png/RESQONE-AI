@@ -102,6 +102,96 @@ export const playAttentionChime = (tone = 'info') => {
   }
 };
 
+// Active disaster siren oscillators
+let activeSirenNodes = null;
+
+// Government EAS Emergency Alert Buzz & Disaster Siren Synthesizer
+export const playDisasterAlertSiren = (durationSeconds = 8) => {
+  if (isAudioMuted) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    // Stop any existing siren first
+    stopDisasterAlertSiren();
+
+    // Mobile vibration pattern (strobe disaster vibration)
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate([700, 200, 700, 200, 1200, 300, 700, 200]);
+      } catch {}
+    }
+
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.4, now);
+    masterGain.connect(ctx.destination);
+
+    // 1. Primary EAS tone: 853 Hz (International EAS standard)
+    const osc1 = ctx.createOscillator();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(853, now);
+
+    // 2. Secondary EAS tone: 960 Hz (Creates the urgent buzzing discordance)
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sawtooth';
+    osc2.frequency.setValueAtTime(960, now);
+
+    // 3. Low Frequency Oscillator (LFO) for pulsing buzz modulation (4 Hz)
+    const lfo = ctx.createOscillator();
+    lfo.type = 'square';
+    lfo.frequency.setValueAtTime(4.0, now);
+
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.setValueAtTime(0.25, now);
+
+    lfo.connect(lfoGain.gain);
+
+    const toneGain = ctx.createGain();
+    toneGain.gain.setValueAtTime(0.25, now);
+
+    osc1.connect(toneGain);
+    osc2.connect(toneGain);
+    toneGain.connect(lfoGain);
+    lfoGain.connect(masterGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    lfo.start(now);
+
+    activeSirenNodes = {
+      oscillators: [osc1, osc2, lfo],
+      gains: [masterGain, toneGain, lfoGain],
+      stopTime: now + durationSeconds
+    };
+
+    // Auto-stop after specified duration
+    setTimeout(() => {
+      stopDisasterAlertSiren();
+    }, durationSeconds * 1000);
+
+  } catch (err) {
+    console.warn('[AudioService] Disaster siren synthesis skipped:', err);
+  }
+};
+
+export const stopDisasterAlertSiren = () => {
+  if (activeSirenNodes) {
+    try {
+      activeSirenNodes.oscillators.forEach(osc => {
+        try { osc.stop(); osc.disconnect(); } catch {}
+      });
+      activeSirenNodes.gains.forEach(g => {
+        try { g.disconnect(); } catch {}
+      });
+    } catch {}
+    activeSirenNodes = null;
+  }
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    try { navigator.vibrate(0); } catch {}
+  }
+};
+
 // Autoplay unlocker on first user interaction
 export const unlockAudio = () => {
   if (isAudioUnlocked) return;

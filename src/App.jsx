@@ -8,6 +8,7 @@ import { BottomNav } from './components/BottomNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { BackgroundVideo } from './components/BackgroundVideo';
 import { AccidentAlertModal } from './components/AccidentAlertModal';
+import { GovernmentEmergencyAlertModal } from './components/GovernmentEmergencyAlertModal';
 import { NotificationPermissionBanner } from './components/NotificationPermissionBanner';
 import { accidentDetector } from './services/AccidentDetectionService';
 import { LandingPage } from './pages/LandingPage';
@@ -327,6 +328,9 @@ function AppContent() {
           setActiveTab('accident');
         }}
       />
+
+      {/* Full-Screen Government Disaster / Cyclone-Style Community Emergency Alert Modal */}
+      <GovernmentEmergencyAlertModal />
     </div>
   );
 }
