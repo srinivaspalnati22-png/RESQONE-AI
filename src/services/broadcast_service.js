@@ -66,6 +66,40 @@ export const getMyPushEndpoint = () => {
 };
 
 /**
+ * Returns the currently signed-in user's profile details (Email / Password or Google OAuth)
+ */
+export const getLoggedInUserProfile = () => {
+  if (typeof window === 'undefined') {
+    return { id: 'anonymous', name: 'Emergency Citizen', phone: '+91 94401 23401', bloodGroup: 'O+', email: '' };
+  }
+  try {
+    const raw = localStorage.getItem('resqone_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      const name = u.name || u.full_name || (u.email ? u.email.split('@')[0] : null);
+      if (name) {
+        return {
+          id: u.id || localStorage.getItem('resqone_user_id') || 'anonymous',
+          name: name,
+          phone: u.phone || localStorage.getItem('resqone_user_phone') || '+91 94401 23401',
+          bloodGroup: u.blood_group || u.bloodGroup || localStorage.getItem('resqone_user_blood') || 'O+',
+          email: u.email || ''
+        };
+      }
+    }
+  } catch {}
+
+  const savedName = localStorage.getItem('resqone_user_name');
+  return {
+    id: localStorage.getItem('resqone_user_id') || 'anonymous',
+    name: savedName || 'Emergency Citizen',
+    phone: localStorage.getItem('resqone_user_phone') || '+91 94401 23401',
+    bloodGroup: localStorage.getItem('resqone_user_blood') || 'O+',
+    email: localStorage.getItem('resqone_user_email') || ''
+  };
+};
+
+/**
  * Send an OS system notification via ServiceWorker or Desktop Notification API
  */
 export const showSystemNotification = (alertData) => {
@@ -77,13 +111,13 @@ export const showSystemNotification = (alertData) => {
 
   if (category === 'BLOOD_URGENT') {
     title = `🩸 URGENT BLOOD NEEDED: ${alertData.bloodGroup || 'O+'}`;
-    body = `Urgent blood crisis at ${alertData.locationName || 'Hospital'}. Compatible donors needed immediately!`;
+    body = `Urgent blood crisis for ${alertData.victimName} at ${alertData.locationName || 'Hospital'}. Donors needed immediately!`;
   } else if (category === 'SNAKEBITE') {
     title = `🐍 SNAKEBITE EMERGENCY: ${alertData.species || 'Venomous Snake'}`;
-    body = `Snakebite victim at ${alertData.locationName || 'Live GPS'}. Antivenom hospital route alerted.`;
+    body = `Snakebite victim ${alertData.victimName} at ${alertData.locationName || 'Live GPS'}. Antivenom hospital route alerted.`;
   } else if (category === 'SOS_BEACON') {
     title = `⚡ EMERGENCY SOS BEACON: ${alertData.victimName || 'Citizen'}`;
-    body = `Distress beacon triggered at ${alertData.locationName || 'Live GPS'}. 108 CAD ambulance alerted.`;
+    body = `Distress beacon triggered by ${alertData.victimName} at ${alertData.locationName || 'Live GPS'}. 108 CAD alerted.`;
   }
 
   const options = {
@@ -132,19 +166,34 @@ export const broadcastDisasterAlert = async (alertPayload) => {
   const alertId = alertPayload.id || `alert-${Date.now()}`;
   const myDeviceId = getMyDeviceId();
   const myEndpoint = getMyPushEndpoint();
-  const myUserId = typeof window !== 'undefined' ? localStorage.getItem('resqone_user_id') : null;
+  const currentUser = getLoggedInUserProfile();
+
+  const myUserId = alertPayload.victimUserId || currentUser.id || 'anonymous';
   const category = (alertPayload.category || 'ACCIDENT').toUpperCase();
+
+  // Prefer user's real registered/Google name over generic placeholders!
+  let victimName = alertPayload.victimName || alertPayload.victim_name;
+  if (!victimName || 
+      victimName.toLowerCase().includes('emergency citizen') || 
+      victimName.toLowerCase().includes('emergency patient') || 
+      victimName.toLowerCase().includes('citizen in distress')) {
+    victimName = currentUser.name || 'Emergency Citizen';
+  }
+
+  const victimPhone = alertPayload.victimPhone || alertPayload.victim_phone || currentUser.phone || '+91 94401 23401';
+  const bloodGroup = alertPayload.bloodGroup || alertPayload.blood_group || currentUser.bloodGroup || 'O+';
 
   const enrichedAlert = {
     id: alertId,
     category: category,
     timestamp: new Date().toISOString(),
     timeStr: new Date().toLocaleTimeString(),
-    victimName: alertPayload.victimName || alertPayload.victim_name || 'Emergency Citizen',
-    victimUserId: alertPayload.victimUserId || myUserId || 'anonymous',
+    victimName: victimName,
+    victimPhone: victimPhone,
+    victimUserId: myUserId,
     senderDeviceId: myDeviceId,
     senderEndpoint: myEndpoint,
-    bloodGroup: alertPayload.bloodGroup || alertPayload.blood_group || 'O+',
+    bloodGroup: bloodGroup,
     locationName: alertPayload.locationName || alertPayload.location_name || 'National Highway 16 Corridor',
     lat: alertPayload.lat || 16.5068,
     lng: alertPayload.lng || 80.6561,
@@ -154,7 +203,7 @@ export const broadcastDisasterAlert = async (alertPayload) => {
     species: alertPayload.species || null,
     hospitalName: alertPayload.hospitalName || null,
     unitsNeeded: alertPayload.unitsNeeded || 2,
-    medicalNotes: alertPayload.medicalNotes || 'Critical emergency reported. Immediate rescue needed.',
+    medicalNotes: alertPayload.medicalNotes || `Emergency ${category} reported for ${victimName}. Immediate rescue needed.`,
     isSimulation: !!alertPayload.isSimulation
   };
 

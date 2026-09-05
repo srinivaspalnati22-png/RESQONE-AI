@@ -33,6 +33,9 @@ export function NotificationPermissionBanner() {
 
     if ('Notification' in window) {
       setNotifPermission(Notification.permission);
+      if (Notification.permission === 'granted') {
+        registerDeviceForBackgroundPush();
+      }
     }
 
     // 4. Capture native PWA install prompt

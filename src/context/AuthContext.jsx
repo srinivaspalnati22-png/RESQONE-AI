@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { registerDeviceForBackgroundPush } from '../services/push_subscription_service.js';
 
 const SUPABASE_URL = "https://uguzspnutzjntqxixyiu.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_9AX3c8QaOfM7h-akKbw2MQ_FF0f5h7v";
@@ -81,13 +82,17 @@ export const AuthProvider = ({ children }) => {
 
     const hasContactsConfigured = existingUser?.hasSetupEmergencyContacts || authUser.user_metadata?.has_setup_contacts || false;
 
+    const resolvedName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || existingUser?.name || authUser.email?.split('@')[0] || 'User';
+    const resolvedPhone = authUser.user_metadata?.phone || authUser.phone || existingUser?.phone || '+91-9876543210';
+    const resolvedBlood = authUser.user_metadata?.blood_group || existingUser?.blood_group || 'O-';
+
     const userObj = {
       id: authUser.id,
       email: authUser.email,
-      name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || existingUser?.name || authUser.email?.split('@')[0] || 'User',
+      name: resolvedName,
       role: authUser.user_metadata?.role || existingUser?.role || 'user',
-      blood_group: authUser.user_metadata?.blood_group || existingUser?.blood_group || 'O-',
-      phone: authUser.user_metadata?.phone || authUser.phone || existingUser?.phone || '+91-9876543210',
+      blood_group: resolvedBlood,
+      phone: resolvedPhone,
       medical_notes: authUser.user_metadata?.medical_notes || existingUser?.medical_notes || '',
       avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || existingUser?.avatar_url || null,
       auth_provider: authUser.app_metadata?.provider || 'google',
@@ -95,8 +100,16 @@ export const AuthProvider = ({ children }) => {
     };
     setUser(userObj);
     localStorage.setItem('resqone_user', JSON.stringify(userObj));
+    localStorage.setItem('resqone_user_id', userObj.id);
+    localStorage.setItem('resqone_user_name', userObj.name);
+    localStorage.setItem('resqone_user_phone', userObj.phone);
+    localStorage.setItem('resqone_user_blood', userObj.blood_group);
+    localStorage.setItem('resqone_user_email', userObj.email || '');
     setIsOnboarded(true);
     localStorage.setItem('resqone_is_onboarded', 'true');
+
+    // Register push subscription with real user name & ID
+    registerDeviceForBackgroundPush(userObj);
   };
 
   // Save user profile + family contacts to Supabase 'users' table
@@ -130,6 +143,12 @@ export const AuthProvider = ({ children }) => {
     if (customUser) {
       setUser(customUser);
       localStorage.setItem('resqone_user', JSON.stringify(customUser));
+      if (customUser.name) localStorage.setItem('resqone_user_name', customUser.name);
+      if (customUser.phone) localStorage.setItem('resqone_user_phone', customUser.phone);
+      if (customUser.blood_group) localStorage.setItem('resqone_user_blood', customUser.blood_group);
+      if (customUser.email) localStorage.setItem('resqone_user_email', customUser.email);
+      if (customUser.id) localStorage.setItem('resqone_user_id', customUser.id);
+      registerDeviceForBackgroundPush(customUser);
     }
     if (contacts) {
       setFamilyContacts(contacts);

@@ -12,7 +12,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService, calculateHaversineKm } from '../services/data_service';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
-import { broadcastDisasterAlert } from '../services/broadcast_service';
+import { broadcastDisasterAlert, getLoggedInUserProfile } from '../services/broadcast_service';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import bloodBanksMaster from '../data/blood_banks.json';
 
@@ -807,13 +807,16 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
     setActiveCourier(courierPayload);
 
+    const currentUser = getLoggedInUserProfile();
+    const effectivePatientName = patientName || currentUser?.name || 'Emergency Patient';
+
     const payload = {
       id: `bld-req-${Date.now().toString().slice(-4)}`,
       type: 'BLOOD_REQUEST',
       severity: urgencyLevel,
       blood_group: selectedGroup,
       units_needed: unitsNeeded,
-      patient_name: patientName || 'Emergency Patient',
+      patient_name: effectivePatientName,
       hospital_name: hospitalName,
       target_resource: bankOrDonor.name,
       timestamp: new Date().toISOString()
@@ -825,15 +828,16 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
     try {
       broadcastDisasterAlert({
         category: 'BLOOD_URGENT',
-        victimName: patientName || 'Emergency Patient',
-        bloodGroup: selectedGroup,
+        victimName: effectivePatientName,
+        victimPhone: currentUser?.phone || '+91 94401 23401',
+        bloodGroup: selectedGroup || currentUser?.bloodGroup || 'O+',
         unitsNeeded: unitsNeeded,
         hospitalName: hospitalName || bankOrDonor.name,
         locationName: hospitalName || bankOrDonor.name || 'Emergency Regional Blood Bank',
         lat: userCoords[0],
         lng: userCoords[1],
         severity: urgencyLevel || 'CRITICAL',
-        medicalNotes: `Immediate ${selectedGroup} blood transfusion required (${unitsNeeded} units). Cold-chain courier active.`
+        medicalNotes: `Immediate ${selectedGroup} blood transfusion required for ${effectivePatientName} (${unitsNeeded} units). Cold-chain courier active.`
       });
     } catch (bErr) {
       console.warn('[BloodAlert] Broadcast disaster alert exception:', bErr);

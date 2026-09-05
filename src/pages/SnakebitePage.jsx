@@ -15,7 +15,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
-import { broadcastDisasterAlert } from '../services/broadcast_service';
+import { broadcastDisasterAlert, getLoggedInUserProfile } from '../services/broadcast_service';
 import snakeSpeciesData from '../data/snake_species.json';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import { classifySnakeImage } from '../services/snake_vision_ai';
@@ -628,6 +628,9 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   };
 
   const handleDispatchAntivenomRequest = (hospital) => {
+    const currentUser = getLoggedInUserProfile();
+    const effectiveVictimName = currentUser?.name ? `${currentUser.name} (Snakebite)` : 'Emergency Snakebite Citizen';
+
     const payload = {
       id: `snk-sos-${Date.now().toString().slice(-4)}`,
       type: 'SNAKEBITE_AVS_REQUEST',
@@ -644,14 +647,16 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
     try {
       broadcastDisasterAlert({
         category: 'SNAKEBITE',
-        victimName: 'Emergency Snakebite Citizen',
+        victimName: effectiveVictimName,
+        victimPhone: currentUser?.phone || '+91 94401 23401',
+        bloodGroup: currentUser?.bloodGroup || 'O+',
         species: assessment?.species?.common_name || 'Venomous Snake',
         hospitalName: hospital.name,
         locationName: hospital.name || 'Emergency Antivenom Center',
         lat: userCoords[0],
         lng: userCoords[1],
         severity: 'CRITICAL',
-        medicalNotes: `Snakebite envenomation alert: ${assessment?.species?.common_name || 'Venomous Snake'}. ${assessment?.species?.avs_vials_needed || 10} Polyvalent AVS vials reserved at ${hospital.name}. CAD 108 ambulance en route.`
+        medicalNotes: `Snakebite envenomation alert for ${effectiveVictimName}: ${assessment?.species?.common_name || 'Venomous Snake'}. ${assessment?.species?.avs_vials_needed || 10} Polyvalent AVS vials reserved at ${hospital.name}. CAD 108 ambulance en route.`
       });
     } catch (bErr) {
       console.warn('[SnakebiteAlert] Broadcast disaster alert exception:', bErr);

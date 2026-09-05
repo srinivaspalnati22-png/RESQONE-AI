@@ -39,26 +39,30 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: '🚨 CRITICAL RESCUE ALERT', message: event.data ? event.data.text() : 'Emergency alert reported near you!' };
+    data = { title: '🚨 CRITICAL RESCUE ALERT', body: event.data ? event.data.text() : 'Emergency alert reported near you!' };
   }
 
   const title = data.title || '🚨 RESQONE EMERGENCY DISASTER ALERT';
   const victim = data.victimName || 'Citizen in Distress';
   const location = data.locationName || 'Live GPS Corridor';
+  const body = data.body || `⚠️ ${victim} requires immediate rescue at ${location}. Tap to open live navigation route.`;
+  const trackingUrl = data.trackingUrl || `/?disaster_alert=true&category=${(data.category || 'accident').toLowerCase()}&alert_id=${data.alertId || Date.now()}`;
 
   const options = {
-    body: `⚠️ ${victim} requires immediate rescue at ${location}. Tap to view live location & navigation.`,
+    body: body,
     icon: '/resqone_logo.jpg',
     badge: '/resqone_logo.jpg',
-    vibrate: [800, 200, 800, 200, 1200, 300, 800],
-    tag: 'resqone-disaster-alert',
+    vibrate: data.vibrate || [1000, 250, 1000, 250, 1500, 300, 1000],
+    tag: `resqone-disaster-${data.alertId || Date.now()}`,
     renotify: true,
     requireInteraction: true,
+    silent: false,
+    timestamp: Date.now(),
     data: {
-      url: data.trackingUrl || `/?disaster_alert=true&alert_id=${Date.now()}`,
+      url: trackingUrl,
       alertData: data
     },
-    actions: [
+    actions: data.actions || [
       { action: 'navigate', title: '📍 View Live Route' },
       { action: 'call', title: '📞 Call 108 Emergency' }
     ]

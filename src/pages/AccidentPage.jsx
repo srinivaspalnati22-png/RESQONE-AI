@@ -10,7 +10,7 @@ import { Vehicle3DSimulation } from '../components/Vehicle3DSimulation';
 import { LiveAccidentDetector } from '../components/LiveAccidentDetector';
 import { AccidentRescueWorkflow } from '../components/AccidentRescueWorkflow';
 import { useLanguage } from '../context/LanguageContext';
-import { broadcastDisasterAlert } from '../services/broadcast_service.js';
+import { broadcastDisasterAlert, getLoggedInUserProfile } from '../services/broadcast_service.js';
 
 export const AccidentPage = () => {
   const { language, t } = useLanguage();
@@ -22,21 +22,24 @@ export const AccidentPage = () => {
     setActiveCrashDetails(details);
     setIsDispatched(true);
 
+    const currentUser = getLoggedInUserProfile();
+    const victimDisplayName = currentUser?.name ? `${currentUser.name} (Live Crash)` : 'Emergency Citizen (Live Crash)';
+
     // Broadcast Government Disaster Alert across all devices & logged-in members
     try {
       broadcastDisasterAlert({
         id: `crash-${Date.now()}`,
         category: 'ACCIDENT',
-        victimName: 'Emergency Citizen (Live Crash)',
-        victimPhone: '+91 94401 23401',
-        bloodGroup: details?.medicalTelemetry?.bloodGroup || 'O+',
+        victimName: victimDisplayName,
+        victimPhone: currentUser?.phone || '+91 94401 23401',
+        bloodGroup: details?.medicalTelemetry?.bloodGroup || currentUser?.bloodGroup || 'O+',
         locationName: details?.locationName || 'Vijayawada Highway Corridor',
         lat: details?.coords ? details.coords[0] : 16.5167,
         lng: details?.coords ? details.coords[1] : 80.6500,
         severity: 'CRITICAL_HIGH_IMPACT',
         impactG: details?.impactG || 4.85,
         speedAtImpact: details?.speedBeforeImpact || 76,
-        medicalNotes: `Crash impact detected (${details?.impactG || 4.85}G). Unresponsive driver telemetry. CAD 108 units dispatched.`
+        medicalNotes: `Crash impact detected (${details?.impactG || 4.85}G). Unresponsive driver telemetry for ${currentUser?.name || 'Citizen'}. CAD 108 units dispatched.`
       });
     } catch (err) {
       console.warn('Disaster broadcast trigger error:', err);

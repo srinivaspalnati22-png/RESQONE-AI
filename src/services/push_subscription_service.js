@@ -16,6 +16,47 @@ export function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
+export function getMyDeviceId() {
+  if (typeof window === 'undefined') return 'server';
+  let id = localStorage.getItem('resqone_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+    localStorage.setItem('resqone_device_id', id);
+  }
+  return id;
+}
+
+export function getKnownSubscriptions() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const list = JSON.parse(localStorage.getItem('resqone_known_subs') || '[]');
+    const mySub = localStorage.getItem('resqone_push_sub');
+    if (mySub) {
+      const parsedMy = JSON.parse(mySub);
+      if (!list.some(s => s.endpoint === parsedMy.endpoint)) {
+        list.push(parsedMy);
+      }
+    }
+    return list;
+  } catch {
+    return [];
+  }
+}
+
+export function saveKnownSubscription(sub) {
+  if (typeof window === 'undefined' || !sub || !sub.endpoint) return;
+  try {
+    const list = getKnownSubscriptions();
+    const idx = list.findIndex(s => s.endpoint === sub.endpoint);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...sub };
+    } else {
+      list.push(sub);
+    }
+    localStorage.setItem('resqone_known_subs', JSON.stringify(list));
+  } catch {}
+}
+
 /**
  * Automatically registers this device for 24/7 background Web Push notifications.
  * Allows the device to receive lockscreen disaster alerts even when the app is completely closed.
@@ -46,6 +87,10 @@ export async function registerDeviceForBackgroundPush(userProfile = null) {
       console.log('[PushService] Created new PushManager subscription:', subscription.endpoint);
     }
 
+    const myDeviceId = getMyDeviceId();
+    const resolvedName = userProfile?.name || localStorage.getItem('resqone_user_name') || 'Community Member';
+    const resolvedId = userProfile?.id || localStorage.getItem('resqone_user_id') || 'anonymous';
+
     const subJson = subscription.toJSON();
     const payload = {
       endpoint: subJson.endpoint,
@@ -53,13 +98,15 @@ export async function registerDeviceForBackgroundPush(userProfile = null) {
         p256dh: subJson.keys?.p256dh || '',
         auth: subJson.keys?.auth || ''
       },
-      user_id: userProfile?.id || localStorage.getItem('resqone_user_id') || 'anonymous',
-      user_name: userProfile?.name || localStorage.getItem('resqone_user_name') || 'Community Member',
+      device_id: myDeviceId,
+      user_id: resolvedId,
+      user_name: resolvedName,
       platform: window.matchMedia('(display-mode: standalone)').matches ? 'pwa-installed' : 'browser-web',
       timestamp: new Date().toISOString()
     };
 
     // 1. Cache in localStorage
+    saveKnownSubscription(payload);
     localStorage.setItem('resqone_push_sub', JSON.stringify(payload));
     localStorage.setItem('resqone_notif_enabled', 'true');
 
@@ -81,19 +128,14 @@ export async function registerDeviceForBackgroundPush(userProfile = null) {
           endpoint: payload.endpoint,
           p256dh: payload.keys.p256dh,
           auth: payload.keys.auth,
+          device_id: payload.device_id,
           user_id: payload.user_id,
           user_name: payload.user_name,
           platform: payload.platform,
           updated_at: new Date().toISOString()
         }], { onConflict: 'endpoint' });
       } catch (sbErr) {
-        // Fallback to user_activity log if push_subscriptions table is not created yet
-        try {
-          await supabase.from('user_activity').insert([{
-            activity_type: 'device_push_registered',
-            metadata: { endpoint: payload.endpoint, platform: payload.platform }
-          }]);
-        } catch {}
+        // Fallback
       }
     }
 
@@ -118,16 +160,19 @@ export async function dispatchBackgroundPushToAll(alertData) {
   } catch {}
 
   const category = (alertData.category || 'ACCIDENT').toUpperCase();
+  const resolvedVictimName = alertData.victimName || alertData.victim_name || localStorage.getItem('resqone_user_name') || 'Emergency Citizen';
+  const resolvedVictimPhone = alertData.victimPhone || alertData.victim_phone || localStorage.getItem('resqone_user_phone') || '+91 94401 23401';
+  const resolvedVictimId = alertData.victimUserId || localStorage.getItem('resqone_user_id') || 'anonymous';
 
   const payload = {
     alert_id: alertData.id || `alert-${Date.now()}`,
     category: category,
-    victim_name: alertData.victimName || alertData.victim_name || 'Emergency Citizen',
-    victim_phone: alertData.victimPhone || alertData.victim_phone || '+91 94401 23401',
-    victim_user_id: alertData.victimUserId || localStorage.getItem('resqone_user_id') || 'anonymous',
+    victim_name: resolvedVictimName,
+    victim_phone: resolvedVictimPhone,
+    victim_user_id: resolvedVictimId,
     sender_device_id: alertData.senderDeviceId || myDeviceId,
     sender_endpoint: alertData.senderEndpoint || myEndpoint,
-    blood_group: alertData.bloodGroup || alertData.blood_group || 'O+',
+    blood_group: alertData.bloodGroup || alertData.blood_group || localStorage.getItem('resqone_user_blood') || 'O+',
     location_name: alertData.locationName || alertData.location_name || 'Vijayawada Highway Corridor',
     lat: alertData.lat || 16.5167,
     lng: alertData.lng || 80.6500,
@@ -138,7 +183,8 @@ export async function dispatchBackgroundPushToAll(alertData) {
     hospital_name: alertData.hospitalName || null,
     units_needed: alertData.unitsNeeded || 2,
     medical_notes: alertData.medicalNotes || alertData.medical_notes || 'Emergency reported. Immediate rescue needed.',
-    tracking_url: alertData.trackingUrl || `https://resqone-ai.vercel.app/?disaster_alert=true&category=${category.toLowerCase()}&lat=${alertData.lat || 16.5167}&lng=${alertData.lng || 80.6500}`
+    tracking_url: alertData.trackingUrl || `https://resqone-ai.vercel.app/?disaster_alert=true&category=${category.toLowerCase()}&lat=${alertData.lat || 16.5167}&lng=${alertData.lng || 80.6500}`,
+    known_subscriptions: getKnownSubscriptions()
   };
 
   let apiSuccess = false;

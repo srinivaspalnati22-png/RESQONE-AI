@@ -1,7 +1,8 @@
 import os
 import json
 import logging
-from typing import Dict, List, Any
+import tempfile
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 logger = logging.getLogger("resqone.push")
@@ -11,7 +12,17 @@ VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "BJSJTBWLkz84VCK-b6NBaLnJ3h7rrf
 VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "jUZbI3J1Qf3AfRb7FO1_IN4fdLOy9HZ3P7AsyUbyEko")
 VAPID_CLAIMS = {"sub": "mailto:emergency@resqone.ai"}
 
-SUBSCRIPTIONS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "device_subscriptions.json")
+def _get_storage_files() -> List[str]:
+    """Returns persistent file paths for subscriptions (local project folder + /tmp fallback)."""
+    paths = []
+    # 1. Project data directory
+    local_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "device_subscriptions.json")
+    paths.append(local_path)
+    # 2. System temp directory (always writable on Linux, Vercel, AWS Lambda, Docker)
+    tmp_path = os.path.join(tempfile.gettempdir(), "resqone_device_subscriptions.json")
+    if tmp_path not in paths:
+        paths.append(tmp_path)
+    return paths
 
 class PushService:
     _subscriptions: Dict[str, Dict[str, Any]] = {}
@@ -19,26 +30,34 @@ class PushService:
 
     @classmethod
     def _ensure_loaded(cls):
-        if cls._loaded:
+        if cls._loaded and cls._subscriptions:
             return
-        os.makedirs(os.path.dirname(SUBSCRIPTIONS_FILE), exist_ok=True)
-        if os.path.exists(SUBSCRIPTIONS_FILE):
-            try:
-                with open(SUBSCRIPTIONS_FILE, "r", encoding="utf-8") as f:
-                    cls._subscriptions = json.load(f)
-            except Exception as e:
-                logger.warning(f"Failed to load subscriptions file: {e}")
-                cls._subscriptions = {}
+        
+        for filepath in _get_storage_files():
+            if os.path.exists(filepath):
+                try:
+                    with open(filepath, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            cls._subscriptions.update(data)
+                            logger.info(f"Loaded {len(data)} push subscriptions from {filepath}")
+                except Exception as e:
+                    logger.warning(f"Could not read subscriptions from {filepath}: {e}")
         cls._loaded = True
 
     @classmethod
     def _save_subscriptions(cls):
-        try:
-            os.makedirs(os.path.dirname(SUBSCRIPTIONS_FILE), exist_ok=True)
-            with open(SUBSCRIPTIONS_FILE, "w", encoding="utf-8") as f:
-                json.dump(cls._subscriptions, f, indent=2)
-        except Exception as e:
-            logger.warning(f"Failed to persist subscriptions file: {e}")
+        saved = False
+        for filepath in _get_storage_files():
+            try:
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                with open(filepath, "w", encoding="utf-8") as f:
+                    json.dump(cls._subscriptions, f, indent=2)
+                saved = True
+            except Exception as e:
+                logger.debug(f"Save subscriptions skipped for {filepath}: {e}")
+        if not saved:
+            logger.warning("Could not persist subscriptions to disk.")
 
     @classmethod
     def register_device(cls, sub_data: Dict[str, Any]) -> bool:
@@ -197,19 +216,13 @@ class PushService:
                 logger.warning(f"Generic push exception: {e}")
                 failed_count += 1
 
-        for ep in dead_endpoints:
-            cls._subscriptions.pop(ep, None)
-        if dead_endpoints:
-            cls._save_subscriptions()
-
-        return {
-            "success": True,
-            "total_devices": len(cls._subscriptions),
-            "sent_count": sent_count,
-            "failed_count": failed_count,
-            "alert_id": alert_id,
-            "timestamp": datetime.now().isoformat()
-        }
+        # Merge any known subscriptions passed by the caller
+        known_subs = alert_data.get("known_subscriptions")
+        if known_subs and isinstance(known_subs, list):
+            for ks in known_subs:
+                k_ep = ks.get("endpoint")
+                if k_ep and k_ep not in cls._subscriptions:
+                    cls.register_device(ks)
 
         for ep in dead_endpoints:
             cls._subscriptions.pop(ep, None)

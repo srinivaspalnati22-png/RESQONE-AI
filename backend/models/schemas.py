@@ -178,6 +178,7 @@ class BroadcastPushRequest(BaseModel):
     hospital_name: Optional[str] = None
     units_needed: Optional[int] = 2
     tracking_url: Optional[str] = None
+    known_subscriptions: Optional[List[Dict[str, Any]]] = None
 
 class BroadcastPushResponse(BaseModel):
     success: bool

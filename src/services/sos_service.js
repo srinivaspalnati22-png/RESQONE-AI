@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { broadcastDisasterAlert } from './broadcast_service.js';
+import { broadcastDisasterAlert, getLoggedInUserProfile } from './broadcast_service.js';
 
 export const DEFAULT_5_FAMILY_CONTACTS = [
   { id: 'fc-1', name: 'Ramesh Varma (Father)', relation: 'Father', phone: '+91 94401 23401', notify_on_sos: true, notifyOnCrash: true },
@@ -212,8 +212,10 @@ export const triggerEmergencySOS = async (
 ) => {
   const sosId = `sos-${Date.now()}`;
   const trackingUrl = `https://resqone-ai.vercel.app/?sos_track=${sosId}`;
-  const victimName = victimProfile?.name || 'Emergency Citizen';
-  const bloodGroup = victimProfile?.bloodGroup || 'O+';
+  const currentUser = getLoggedInUserProfile();
+  const victimName = victimProfile?.name || currentUser?.name || 'Emergency Citizen';
+  const victimPhone = victimProfile?.phone || currentUser?.phone || '+91 94401 23401';
+  const bloodGroup = victimProfile?.bloodGroup || currentUser?.bloodGroup || 'O+';
 
   // --- STAGE 1: PERMISSION & GPS LOCATION LOCKED ---
   console.log(`[SOS Debug 1] GPS Location Locked: (${userLat}, ${userLng})`);
