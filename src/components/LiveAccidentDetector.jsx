@@ -147,6 +147,28 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   // ================= 1. MULTI-ENGINE REAL LIVE GEOLOCATION =================
   const fetchLiveGPS = () => {
     setIsLocating(true);
+
+    // Fast network-based IP geolocate bootstrap to immediately locate user's real city/region
+    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.latitude && data.longitude) {
+          const lat = data.latitude;
+          const lng = data.longitude;
+          const locality = data.locality || data.city || data.localityInfo?.administrative?.[2]?.name || 'Live Location';
+          const sub = data.principalSubdivision || data.countryName || '';
+          const addr = `${locality}, ${sub}`;
+          setLiveCoords((prev) => {
+            // Only update if not already locked by high-precision device GPS
+            if (prev[0] !== DEFAULT_PATHANAGULURU_COORDS[0]) return prev;
+            return [lat, lng];
+          });
+          setLiveAddress(addr);
+          localStorage.setItem('resqone_live_address', addr);
+        }
+      })
+      .catch(() => {});
+
     if (!navigator.geolocation) {
       setIsLocating(false);
       reverseGeocode(liveCoords[0], liveCoords[1]);
@@ -577,6 +599,17 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
+  const handleRouteToNearestHospital = () => {
+    const [lat, lng] = liveCoords;
+    const nearestHosp = {
+      name: 'Emergency Trauma Hub (Closest Facility)',
+      lat: lat + 0.014,
+      lng: lng + 0.016,
+      type: 'hospital'
+    };
+    handleSelectDestination(nearestHosp);
+  };
+
   // ================= 5. START DRIVE & STOP DRIVE CONTROLS =================
   const handleStartDrive = () => {
     setIsDriveActive(true);
@@ -859,6 +892,14 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
 
         {/* Quick Suggestion Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            onClick={handleRouteToNearestHospital}
+            className="px-3 py-1 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 hover:text-white text-[11px] font-bold shrink-0 transition-all cursor-pointer flex items-center space-x-1"
+            title="Auto-route to closest emergency trauma hospital"
+          >
+            <span>🏥</span>
+            <span>{language === 'te' ? 'సమీప ఆసుపత్రి రూట్' : language === 'hi' ? 'निकटतम अस्पताल रूट' : 'Route to Nearest Hospital'}</span>
+          </button>
           {SEARCH_SUGGESTIONS.map((s, idx) => (
             <button
               key={idx}

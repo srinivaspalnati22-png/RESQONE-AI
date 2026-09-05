@@ -172,28 +172,38 @@ export async function calculateRealRoadRoute(originLat, originLng, destLat, dest
  * @param {string} apiKey
  */
 export function getTileLayerConfig(layerType = 'hybrid', apiKey = getGoogleMapsApiKey()) {
-  if (apiKey) {
-    if (layerType === 'satellite') {
-      return {
-        url: `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=${apiKey}`,
-        attribution: '&copy; Google Maps Satellite',
-        maxZoom: 20
-      };
-    }
-    if (layerType === 'hybrid') {
-      return {
-        url: `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${apiKey}`,
-        attribution: '&copy; Google Maps Hybrid Streets & Satellite',
-        maxZoom: 20
-      };
-    }
-    if (layerType === 'roadmap') {
-      return {
-        url: `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${apiKey}`,
-        attribution: '&copy; Google Maps Road Network',
-        maxZoom: 20
-      };
-    }
+  const keyParam = apiKey ? `&key=${apiKey}` : '';
+
+  if (layerType === 'satellite') {
+    return {
+      url: `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}${keyParam}`,
+      attribution: '&copy; Google Maps Satellite',
+      maxZoom: 20
+    };
+  }
+
+  if (layerType === 'hybrid') {
+    return {
+      url: `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}${keyParam}`,
+      attribution: '&copy; Google Maps Satellite & Streets Hybrid',
+      maxZoom: 20
+    };
+  }
+
+  if (layerType === 'roadmap') {
+    return {
+      url: `https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}${keyParam}`,
+      attribution: '&copy; Google Maps Standard Road Network',
+      maxZoom: 20
+    };
+  }
+
+  if (layerType === 'dark') {
+    return {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      attribution: '&copy; CartoDB & OpenStreetMap',
+      maxZoom: 19
+    };
   }
 
   // Default clean OpenStreetMap
@@ -203,3 +213,4 @@ export function getTileLayerConfig(layerType = 'hybrid', apiKey = getGoogleMapsA
     maxZoom: 19
   };
 }
+
