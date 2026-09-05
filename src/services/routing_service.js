@@ -8,15 +8,29 @@
 const STORAGE_KEY = 'GOOGLE_MAPS_API_KEY';
 
 export const getGoogleMapsApiKey = () => {
+  const envKey = (import.meta.env?.VITE_GOOGLE_MAPS_API_KEY || '').trim();
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && saved.trim().length > 0) return saved.trim();
+    if (envKey) {
+      localStorage.setItem(STORAGE_KEY, envKey);
+      return envKey;
+    }
   }
-  return import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  return envKey;
+};
+
+export const resetGoogleMapsSdk = () => {
+  googleScriptLoadingPromise = null;
+  if (typeof document !== 'undefined') {
+    const existing = document.getElementById('google-maps-sdk-script');
+    if (existing) existing.remove();
+  }
 };
 
 export const setGoogleMapsApiKey = (key) => {
   if (typeof window !== 'undefined') {
+    resetGoogleMapsSdk();
     if (key && key.trim().length > 0) {
       localStorage.setItem(STORAGE_KEY, key.trim());
     } else {
