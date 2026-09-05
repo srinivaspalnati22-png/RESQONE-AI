@@ -184,6 +184,24 @@ function SnakebiteRescueMapComponent({
   );
 }
 
+const FALLBACK_SNAKE_IMAGES = {
+  "Spectacled Cobra": "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=600&auto=format&fit=crop&q=80",
+  "Russell's Viper": "https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600&auto=format&fit=crop&q=80",
+  "Common Krait": "https://images.unsplash.com/photo-1508817628294-5a453fa0b8fb?w=600&auto=format&fit=crop&q=80",
+  "Saw-Scaled Viper": "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=600&auto=format&fit=crop&q=80",
+  "Indian Rat Snake": "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?w=600&auto=format&fit=crop&q=80",
+  "Bamboo Pit Viper": "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=600&auto=format&fit=crop&q=80",
+  "King Cobra": "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=600&auto=format&fit=crop&q=80",
+  "Common Trinket Snake": "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?w=600&auto=format&fit=crop&q=80"
+};
+const DEFAULT_SNAKE_FALLBACK = "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=600&auto=format&fit=crop&q=80";
+
+const handleSnakeImageError = (e, name) => {
+  if (!e || !e.currentTarget) return;
+  e.currentTarget.onerror = null;
+  e.currentTarget.src = (name && FALLBACK_SNAKE_IMAGES[name]) || DEFAULT_SNAKE_FALLBACK;
+};
+
 export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const { t, language } = useLanguage();
   const { queueOfflineReport } = useDemo();
@@ -251,7 +269,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const [scanTelemetry, setScanTelemetry] = useState('');
   const [visionConfidence, setVisionConfidence] = useState(97.4);
   const [detectedMarkers, setDetectedMarkers] = useState([]);
-  const [showSampleGallery, setShowSampleGallery] = useState(false);
+  const [showSampleGallery, setShowSampleGallery] = useState(true);
 
   // Non-Snake Detection Result State
   const [nonSnakeResult, setNonSnakeResult] = useState(null);
@@ -768,6 +786,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                     <img 
                       src={sample.img} 
                       alt={sample.name} 
+                      onError={(e) => handleSnakeImageError(e, sample.name)}
                       className="w-full h-16 object-cover rounded-lg group-hover:scale-105 transition-transform" 
                     />
                     <div className="min-w-0">
@@ -977,7 +996,12 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
             {/* Laser Scrubbed Image Preview */}
             <div className="relative w-full max-w-sm mx-auto aspect-video rounded-2xl overflow-hidden border border-emerald-500/50 bg-black shadow-inner">
-              <img src={capturedImage} alt="Scanning" className="w-full h-full object-cover filter contrast-125" />
+              <img 
+                src={capturedImage} 
+                alt="Scanning" 
+                onError={(e) => handleSnakeImageError(e)}
+                className="w-full h-full object-cover filter contrast-125" 
+              />
               
               {/* Laser Scan Bar Animation */}
               <motion.div
@@ -1025,7 +1049,12 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
             <div className="relative rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-xl bg-black">
-              <img src={capturedImage} alt="Uploaded non-snake" className="w-full h-full min-h-[140px] max-h-[180px] object-cover filter brightness-90" />
+              <img 
+                src={capturedImage} 
+                alt="Uploaded non-snake" 
+                onError={(e) => handleSnakeImageError(e)}
+                className="w-full h-full min-h-[140px] max-h-[180px] object-cover filter brightness-90" 
+              />
               <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[9px] font-mono text-amber-400 font-bold border border-amber-500/40">
                 SCANNED SUBJECT: {nonSnakeResult.detectedObject || 'OBJECT'}
               </div>
@@ -1105,7 +1134,12 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
           {/* Captured Image + Detected Species Summary */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-xl bg-black">
-              <img src={capturedImage} alt="Analyzed Snake" className="w-full h-full min-h-[140px] max-h-[200px] object-cover" />
+              <img 
+                src={capturedImage} 
+                alt="Analyzed Snake" 
+                onError={(e) => handleSnakeImageError(e, assessment.species.common_name)}
+                className="w-full h-full min-h-[140px] max-h-[200px] object-cover" 
+              />
               <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-[9px] font-mono text-emerald-400 font-bold border border-emerald-500/40">
                 SCANNED INPUT
               </div>
@@ -1210,6 +1244,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                 <img
                   src={spec.image_source}
                   alt={spec.common_name}
+                  onError={(e) => handleSnakeImageError(e, spec.common_name)}
                   className="w-16 h-16 rounded-xl object-cover border border-slate-700 shrink-0 group-hover:scale-105 transition-transform"
                 />
                 <div className="min-w-0 flex-1">
@@ -1264,6 +1299,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                   <img
                     src={assessment.species.image_source}
                     alt={assessment.species.common_name}
+                    onError={(e) => handleSnakeImageError(e, assessment.species.common_name)}
                     className="w-20 h-20 rounded-2xl object-cover border-2 border-red-500 shadow-lg shrink-0"
                   />
                   <div className="space-y-1">

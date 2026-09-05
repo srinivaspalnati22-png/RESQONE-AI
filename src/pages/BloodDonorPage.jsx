@@ -313,15 +313,58 @@ function BloodDonationMapComponent({
   );
 }
 
+const getInitialBloodResults = (group = 'O-', units = 2) => {
+  const validGroup = (group || 'O-').toUpperCase();
+  const matrix = {
+    'O-': ['O-'],
+    'O+': ['O-', 'O+'],
+    'A-': ['O-', 'A-'],
+    'A+': ['O-', 'O+', 'A-', 'A+'],
+    'B-': ['O-', 'B-'],
+    'B+': ['O-', 'O+', 'B-', 'B+'],
+    'AB-': ['O-', 'A-', 'B-', 'AB-'],
+    'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+']
+  };
+  const compatibleGroups = matrix[validGroup] || [validGroup];
+  const ranked = bloodBanksMaster.map((b, idx) => {
+    let stockCount = 0;
+    const stockBreakdown = b.inventory_units || b.stock || { 'O+': 20, 'O-': 8, 'A+': 15, 'B+': 12, 'AB+': 5 };
+    compatibleGroups.forEach(grp => {
+      stockCount += (stockBreakdown[grp] || 0);
+    });
+    const distanceKm = b.distanceKm || (1.2 + idx * 0.8);
+    const hasEnoughUnits = stockCount >= units;
+    const matchScore = Math.min(99, Math.round((stockCount / (units * 4)) * 50 + (10 / (distanceKm + 1)) * 50));
+    return {
+      ...b,
+      lat: b.latitude || b.lat || 16.5167,
+      lng: b.longitude || b.lng || 80.6500,
+      distanceKm,
+      stockCount,
+      stockBreakdown,
+      hasEnoughUnits,
+      matchScore
+    };
+  }).sort((a, b) => b.matchScore - a.matchScore);
+
+  return {
+    recipientGroup: validGroup,
+    compatibleGroups,
+    results: ranked
+  };
+};
+
 export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   const { t, language } = useLanguage();
   const { queueOfflineReport, isOnline } = useDemo();
 
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState(true);
   const [voiceQuery, setVoiceQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showTableExplorer, setShowTableExplorer] = useState(false);
-  const [selectedDestination, setSelectedDestination] = useState(null);
+  
+  const initialSeedData = getInitialBloodResults(initialQuery?.group || 'O-', 2);
+  const [selectedDestination, setSelectedDestination] = useState(initialSeedData.results[0] || null);
 
   // User Live GPS Coordinates
   const [userCoords, setUserCoords] = useState(() => {
@@ -365,16 +408,46 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
     );
   };
 
-  useEffect(() => {
-    locateUserPosition();
-    return () => stopAllAudio();
-  }, []);
-
   const [selectedGroup, setSelectedGroup] = useState(initialQuery?.group || 'O-');
   const [patientName, setPatientName] = useState('');
   const [hospitalName, setHospitalName] = useState('Government General Hospital (GGH Vijayawada)');
   const [unitsNeeded, setUnitsNeeded] = useState(2);
   const [urgencyLevel, setUrgencyLevel] = useState('CRITICAL');
+
+  const [loading, setLoading] = useState(false);
+  const [matchResults, setMatchResults] = useState(initialSeedData);
+  const [requestStatus, setRequestStatus] = useState(null);
+  const [activeCourier, setActiveCourier] = useState(null);
+
+  const handleRunCompatibilityMatch = async (groupToMatch = selectedGroup, units = unitsNeeded, query = voiceQuery) => {
+    setLoading(true);
+    setHasSearched(true);
+    try {
+      const results = await DataService.matchBloodResources(groupToMatch, units, userCoords[0], userCoords[1]);
+      if (results) {
+        setMatchResults(results);
+        if (results?.results && results.results.length > 0) {
+          setSelectedDestination(results.results[0]);
+        }
+      }
+      speakEmergencyInstruction(`Found verified blood banks and compatible donors for ${groupToMatch} nearby.`, language);
+    } catch (err) {
+      console.error("Error matching blood resources:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectGroup = (grp) => {
+    setSelectedGroup(grp);
+    handleRunCompatibilityMatch(grp, unitsNeeded, voiceQuery);
+  };
+
+  useEffect(() => {
+    handleRunCompatibilityMatch(selectedGroup, unitsNeeded, voiceQuery);
+    locateUserPosition();
+    return () => stopAllAudio();
+  }, []);
 
   useEffect(() => {
     if (initialQuery) {
@@ -385,28 +458,6 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
       if (onClearQuery) onClearQuery();
     }
   }, [initialQuery]);
-
-  const [loading, setLoading] = useState(false);
-  const [matchResults, setMatchResults] = useState(null);
-  const [requestStatus, setRequestStatus] = useState(null);
-  const [activeCourier, setActiveCourier] = useState(null);
-
-  const handleRunCompatibilityMatch = async (groupToMatch = selectedGroup, units = unitsNeeded, query = voiceQuery) => {
-    setLoading(true);
-    setHasSearched(true);
-    try {
-      const results = await DataService.matchBloodResources(groupToMatch, units, userCoords[0], userCoords[1]);
-      setMatchResults(results);
-      if (results?.results && results.results.length > 0) {
-        setSelectedDestination(results.results[0]);
-      }
-      speakEmergencyInstruction(`Found verified blood banks and compatible donors for ${groupToMatch} nearby.`, language);
-    } catch (err) {
-      console.error("Error matching blood resources:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleStartVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -575,7 +626,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
               <button
                 key={grp}
                 type="button"
-                onClick={() => setSelectedGroup(grp)}
+                onClick={() => handleSelectGroup(grp)}
                 className={`py-2 px-2 sm:py-2.5 sm:px-3 rounded-2xl font-mono font-black text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center space-x-1 ${
                   selectedGroup === grp
                     ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-xl shadow-red-950/80 ring-2 ring-red-400'

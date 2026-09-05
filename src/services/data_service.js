@@ -32,15 +32,21 @@ export function calculateHaversineKm(lat1, lon1, lat2, lon2) {
   return parseFloat((R * c).toFixed(2));
 }
 
+// Timeout helper to ensure Supabase never hangs UI on paused/cold instances
+const queryWithTimeout = async (promise, timeoutMs = 800) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase query timeout')), timeoutMs))
+  ]);
+};
+
 export const DataService = {
   // Fetch hospitals from Supabase or fallback
   async getHospitals(userLat = 16.5167, userLng = 80.6500, filters = {}) {
     let data = null;
     try {
       if (supabase) {
-        const { data: dbData, error } = await supabase
-          .from('hospitals')
-          .select('*');
+        const { data: dbData, error } = await queryWithTimeout(supabase.from('hospitals').select('*'), 800);
         if (!error && dbData && dbData.length > 0) {
           data = dbData;
         }
@@ -98,15 +104,14 @@ export const DataService = {
   },
 
   // Fetch blood banks & match with hard rules
-  async matchBloodResources(recipientBloodGroup, unitsNeeded = 1, userLat = 16.5167, userLng = 80.6500) {
-    const compatibleGroups = BLOOD_COMPATIBILITY_MATRIX[recipientBloodGroup.toUpperCase()] || [recipientBloodGroup];
+  async matchBloodResources(recipientBloodGroup = 'O-', unitsNeeded = 1, userLat = 16.5167, userLng = 80.6500) {
+    const validGroup = (recipientBloodGroup || 'O-').toUpperCase();
+    const compatibleGroups = BLOOD_COMPATIBILITY_MATRIX[validGroup] || [validGroup];
 
     let banks = null;
     try {
       if (supabase) {
-        const { data: dbData, error } = await supabase
-          .from('blood_banks')
-          .select('*');
+        const { data: dbData, error } = await queryWithTimeout(supabase.from('blood_banks').select('*'), 800);
         if (!error && dbData && dbData.length > 0) {
           banks = dbData;
         }
@@ -193,9 +198,7 @@ export const DataService = {
     let speciesList = null;
     try {
       if (supabase) {
-        const { data: dbData, error } = await supabase
-          .from('snake_species')
-          .select('*');
+        const { data: dbData, error } = await queryWithTimeout(supabase.from('snake_species').select('*'), 800);
         if (!error && dbData && dbData.length > 0) {
           speciesList = dbData;
         }
@@ -227,6 +230,12 @@ export const DataService = {
       } else {
         matchedSpecies = speciesList[0]; // Default decision support archetype
       }
+    }
+
+    // Ensure matchedSpecies always has a valid image_source
+    const seedFallback = snakeSpeciesSeed.find(s => s.id === matchedSpecies.id || s.common_name.toLowerCase() === matchedSpecies.common_name?.toLowerCase()) || snakeSpeciesSeed[0];
+    if (!matchedSpecies.image_source) {
+      matchedSpecies.image_source = seedFallback.image_source;
     }
 
     // Risk and urgency determination
