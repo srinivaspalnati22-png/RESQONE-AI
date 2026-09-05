@@ -1,9 +1,11 @@
 import os
 from dotenv import load_dotenv
 
-# Load .ENV file from root directory
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.ENV')
-load_dotenv(dotenv_path)
+# Load .env and .env.local files from root directory
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+load_dotenv(os.path.join(root_dir, '.env'))
+load_dotenv(os.path.join(root_dir, '.env.local'))
+load_dotenv(os.path.join(root_dir, '.ENV'))
 
 class Settings:
     SUPABASE_PROJECT_ID: str = os.getenv("SUPABASE_PROJECT_ID", "wxucgspsyekiwbxjjrnw")
@@ -20,5 +22,12 @@ class Settings:
     TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")
     TWILIO_WHATSAPP_NUMBER: str = os.getenv("TWILIO_WHATSAPP_NUMBER", "")
     FAST2SMS_API_KEY: str = os.getenv("FAST2SMS_API_KEY", "")
+
+    # Automated Emergency Email Gateway Configuration
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASS: str = os.getenv("SMTP_PASS", "")
+    EMERGENCY_ALERT_EMAILS: str = os.getenv("EMERGENCY_ALERT_EMAILS", "")
 
 settings = Settings()
