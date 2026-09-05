@@ -109,10 +109,24 @@ export async function registerDeviceForBackgroundPush(userProfile = null) {
  * Delivers directly to users' lock screens and system trays even when their app is closed!
  */
 export async function dispatchBackgroundPushToAll(alertData) {
+  let myDeviceId = null;
+  let myEndpoint = null;
+  try {
+    myDeviceId = localStorage.getItem('resqone_device_id') || null;
+    const rawSub = localStorage.getItem('resqone_push_sub');
+    if (rawSub) myEndpoint = JSON.parse(rawSub).endpoint;
+  } catch {}
+
+  const category = (alertData.category || 'ACCIDENT').toUpperCase();
+
   const payload = {
     alert_id: alertData.id || `alert-${Date.now()}`,
+    category: category,
     victim_name: alertData.victimName || alertData.victim_name || 'Emergency Citizen',
     victim_phone: alertData.victimPhone || alertData.victim_phone || '+91 94401 23401',
+    victim_user_id: alertData.victimUserId || localStorage.getItem('resqone_user_id') || 'anonymous',
+    sender_device_id: alertData.senderDeviceId || myDeviceId,
+    sender_endpoint: alertData.senderEndpoint || myEndpoint,
     blood_group: alertData.bloodGroup || alertData.blood_group || 'O+',
     location_name: alertData.locationName || alertData.location_name || 'Vijayawada Highway Corridor',
     lat: alertData.lat || 16.5167,
@@ -120,8 +134,11 @@ export async function dispatchBackgroundPushToAll(alertData) {
     severity: alertData.severity || 'CRITICAL_HIGH_IMPACT',
     impact_g: alertData.impactG || alertData.impact_g || 4.85,
     speed_at_impact: alertData.speedAtImpact || alertData.speed_at_impact || 76.0,
-    medical_notes: alertData.medicalNotes || alertData.medical_notes || 'High-speed vehicle collision detected. Immediate rescue needed.',
-    tracking_url: alertData.trackingUrl || `https://resqone-ai.vercel.app/?disaster_alert=true&lat=${alertData.lat || 16.5167}&lng=${alertData.lng || 80.6500}`
+    species: alertData.species || null,
+    hospital_name: alertData.hospitalName || null,
+    units_needed: alertData.unitsNeeded || 2,
+    medical_notes: alertData.medicalNotes || alertData.medical_notes || 'Emergency reported. Immediate rescue needed.',
+    tracking_url: alertData.trackingUrl || `https://resqone-ai.vercel.app/?disaster_alert=true&category=${category.toLowerCase()}&lat=${alertData.lat || 16.5167}&lng=${alertData.lng || 80.6500}`
   };
 
   let apiSuccess = false;

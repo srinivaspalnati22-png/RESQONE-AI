@@ -290,6 +290,7 @@ export const triggerEmergencySOS = async (
   try {
     broadcastDisasterAlert({
       id: sosId,
+      category: 'SOS_BEACON',
       victimName,
       bloodGroup,
       locationName: address,

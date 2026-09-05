@@ -50,6 +50,7 @@ class PushService:
         cls._subscriptions[endpoint] = {
             "endpoint": endpoint,
             "keys": sub_data.get("keys", {}),
+            "device_id": sub_data.get("device_id") or f"dev_{hash(endpoint) & 0xffffffff}",
             "user_id": sub_data.get("user_id", "anonymous"),
             "user_name": sub_data.get("user_name", "Community Member"),
             "platform": sub_data.get("platform", "web-pwa"),
@@ -68,8 +69,9 @@ class PushService:
     def broadcast_emergency_push(cls, alert_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Transmits RFC 8291/8292 encrypted Web Push notifications to all registered
-        application users. The user's operating system (Android, iOS, Windows)
-        displays a high-priority heads-up alert with disaster buzz vibration EVEN IF
+        application users EXCEPT THE VICTIM'S OWN PHONE.
+        The other users' operating systems (Android, iOS, Windows)
+        display a high-priority heads-up alert with disaster buzz vibration EVEN IF
         THE APPLICATION IS COMPLETELY CLOSED OR PHONE IS LOCKED IN POCKET.
         """
         cls._ensure_loaded()
@@ -85,27 +87,71 @@ class PushService:
                 "error": "pywebpush not installed"
             }
 
+        category = alert_data.get("category", "ACCIDENT").upper()
         victim_name = alert_data.get("victim_name", "Emergency Citizen")
         blood_group = alert_data.get("blood_group", "O+")
         location_name = alert_data.get("location_name", "Vijayawada Highway Corridor")
         lat = alert_data.get("lat", 16.5167)
         lng = alert_data.get("lng", 80.6500)
         impact_g = alert_data.get("impact_g", 4.85)
+        species = alert_data.get("species")
+        hospital_name = alert_data.get("hospital_name")
+        units_needed = alert_data.get("units_needed", 2)
         alert_id = alert_data.get("alert_id") or f"alert-{int(datetime.now().timestamp())}"
-        tracking_url = alert_data.get("tracking_url") or f"https://resqone-ai.vercel.app/?disaster_alert=true&alert_id={alert_id}&lat={lat}&lng={lng}"
+        tracking_url = alert_data.get("tracking_url") or f"https://resqone-ai.vercel.app/?disaster_alert=true&category={category}&alert_id={alert_id}&lat={lat}&lng={lng}"
+
+        # Victim Exclusion Identifiers
+        sender_endpoint = alert_data.get("sender_endpoint")
+        sender_device_id = alert_data.get("sender_device_id")
+        victim_user_id = alert_data.get("victim_user_id")
+
+        # Category-Specific Titles & Messages
+        if category == "BLOOD_URGENT":
+            title = f"🩸 CRITICAL BLOOD SOS: {blood_group} NEEDED"
+            body = f"Urgent blood crisis for {victim_name} ({units_needed} units). Hospital: {hospital_name or location_name}. Tap to respond!"
+            actions = [
+                {"action": "navigate", "title": "🩸 View Blood Route"},
+                {"action": "call", "title": "📞 Call Blood Center"}
+            ]
+        elif category == "SNAKEBITE":
+            title = f"🐍 SNAKEBITE RESCUE: {species or 'Venomous Bite'}"
+            body = f"Snakebite reported at {location_name}. Nearest antivenom center dispatched. Tap to view location!"
+            actions = [
+                {"action": "navigate", "title": "🏥 View Antivenom Route"},
+                {"action": "call", "title": "📞 Call 108 Emergency"}
+            ]
+        elif category == "SOS_BEACON":
+            title = f"🚨 EMERGENCY SOS BEACON: {victim_name}"
+            body = f"Urgent distress beacon activated at {location_name} ({blood_group}). CAD 108 dispatched. Tap to assist!"
+            actions = [
+                {"action": "navigate", "title": "📍 View Victim Route"},
+                {"action": "call", "title": "📞 Call 108 Emergency"}
+            ]
+        else: # ACCIDENT
+            title = f"🚨 HIGH-SPEED CRASH ALERT: {victim_name}"
+            body = f"Severe collision at {location_name} ({blood_group}). Impact: {impact_g}G. Tap to open live route & assist!"
+            actions = [
+                {"action": "navigate", "title": "📍 View Live Route"},
+                {"action": "call", "title": "📞 Call 108 Emergency"}
+            ]
 
         payload = {
-            "title": f"🚨 EMERGENCY RESCUE ALERT: {victim_name}",
-            "body": f"CRITICAL ACCIDENT at {location_name} ({blood_group}). Impact: {impact_g}G. Tap to open live route & assist!",
+            "title": title,
+            "body": body,
+            "category": category,
             "victimName": victim_name,
             "bloodGroup": blood_group,
             "locationName": location_name,
             "lat": lat,
             "lng": lng,
             "impactG": impact_g,
+            "species": species,
+            "hospitalName": hospital_name,
             "alertId": alert_id,
             "trackingUrl": tracking_url,
+            "senderDeviceId": sender_device_id,
             "vibrate": [1000, 200, 1000, 200, 1500, 300, 1000],
+            "actions": actions,
             "timestamp": datetime.now().isoformat()
         }
 
@@ -115,6 +161,20 @@ class PushService:
         dead_endpoints = []
 
         for endpoint, sub in cls._subscriptions.items():
+            # ==============================================================
+            # CRITICAL RULE: DO NOT SHOW ALERT NOTIFICATION ON VICTIM'S PHONE!
+            # The victim triggered the emergency; send ONLY to OTHER users!
+            # ==============================================================
+            if sender_endpoint and endpoint == sender_endpoint:
+                logger.info(f"Skipping victim's own push endpoint: {endpoint[:30]}...")
+                continue
+            if sender_device_id and sub.get("device_id") == sender_device_id:
+                logger.info(f"Skipping victim's device ID: {sender_device_id}")
+                continue
+            if victim_user_id and sub.get("user_id") == victim_user_id and victim_user_id != "anonymous":
+                logger.info(f"Skipping victim's user ID: {victim_user_id}")
+                continue
+
             try:
                 sub_info = {
                     "endpoint": endpoint,
@@ -136,6 +196,20 @@ class PushService:
             except Exception as e:
                 logger.warning(f"Generic push exception: {e}")
                 failed_count += 1
+
+        for ep in dead_endpoints:
+            cls._subscriptions.pop(ep, None)
+        if dead_endpoints:
+            cls._save_subscriptions()
+
+        return {
+            "success": True,
+            "total_devices": len(cls._subscriptions),
+            "sent_count": sent_count,
+            "failed_count": failed_count,
+            "alert_id": alert_id,
+            "timestamp": datetime.now().isoformat()
+        }
 
         for ep in dead_endpoints:
             cls._subscriptions.pop(ep, None)

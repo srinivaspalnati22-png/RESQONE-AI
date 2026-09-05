@@ -12,6 +12,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService, calculateHaversineKm } from '../services/data_service';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
+import { broadcastDisasterAlert } from '../services/broadcast_service';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import bloodBanksMaster from '../data/blood_banks.json';
 
@@ -819,6 +820,25 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
     };
 
     queueOfflineReport(payload);
+
+    // Broadcast emergency blood request to ALL other community users (excluding victim)
+    try {
+      broadcastDisasterAlert({
+        category: 'BLOOD_URGENT',
+        victimName: patientName || 'Emergency Patient',
+        bloodGroup: selectedGroup,
+        unitsNeeded: unitsNeeded,
+        hospitalName: hospitalName || bankOrDonor.name,
+        locationName: hospitalName || bankOrDonor.name || 'Emergency Regional Blood Bank',
+        lat: userCoords[0],
+        lng: userCoords[1],
+        severity: urgencyLevel || 'CRITICAL',
+        medicalNotes: `Immediate ${selectedGroup} blood transfusion required (${unitsNeeded} units). Cold-chain courier active.`
+      });
+    } catch (bErr) {
+      console.warn('[BloodAlert] Broadcast disaster alert exception:', bErr);
+    }
+
     setRequestStatus(`Emergency Blood SOS dispatched to ${bankOrDonor.name}! Cold-chain courier en route.`);
 
     const audioLang = ['te', 'hi', 'ta', 'kn', 'en'].includes(language) ? language : 'en';

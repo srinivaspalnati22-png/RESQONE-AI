@@ -43,15 +43,51 @@ export const getNotificationPermissionStatus = () => {
   return Notification.permission;
 };
 
+export const getMyDeviceId = () => {
+  if (typeof window === 'undefined') return 'unknown_device';
+  let id = localStorage.getItem('resqone_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now();
+    localStorage.setItem('resqone_device_id', id);
+  }
+  return id;
+};
+
+export const getMyPushEndpoint = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('resqone_push_sub');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return parsed.endpoint || null;
+    }
+  } catch {}
+  return null;
+};
+
 /**
  * Send an OS system notification via ServiceWorker or Desktop Notification API
  */
 export const showSystemNotification = (alertData) => {
   if (typeof window === 'undefined') return;
 
-  const title = `🚨 CRITICAL EMERGENCY ALERT: ${alertData.victimName || 'Citizen in Distress'}`;
+  const category = (alertData.category || 'ACCIDENT').toUpperCase();
+  let title = `🚨 EMERGENCY RESCUE ALERT: ${alertData.victimName || 'Citizen in Distress'}`;
+  let body = `CRITICAL ALERT at ${alertData.locationName || 'Live Highway Corridor'}. Tap to assist!`;
+
+  if (category === 'BLOOD_URGENT') {
+    title = `🩸 URGENT BLOOD NEEDED: ${alertData.bloodGroup || 'O+'}`;
+    body = `Urgent blood crisis at ${alertData.locationName || 'Hospital'}. Compatible donors needed immediately!`;
+  } else if (category === 'SNAKEBITE') {
+    title = `🐍 SNAKEBITE EMERGENCY: ${alertData.species || 'Venomous Snake'}`;
+    body = `Snakebite victim at ${alertData.locationName || 'Live GPS'}. Antivenom hospital route alerted.`;
+  } else if (category === 'SOS_BEACON') {
+    title = `⚡ EMERGENCY SOS BEACON: ${alertData.victimName || 'Citizen'}`;
+    body = `Distress beacon triggered at ${alertData.locationName || 'Live GPS'}. 108 CAD ambulance alerted.`;
+  }
+
   const options = {
-    body: `⚠️ Severe Crash at ${alertData.locationName || 'Live Highway Corridor'} (${alertData.distanceKm ? `${alertData.distanceKm}km away` : 'Nearby'}). Tap to view live location.`,
+    body,
     icon: '/resqone_logo.jpg',
     badge: '/resqone_logo.jpg',
     vibrate: [800, 200, 800, 200, 1200, 300, 800],
@@ -59,7 +95,7 @@ export const showSystemNotification = (alertData) => {
     renotify: true,
     requireInteraction: true,
     data: {
-      url: `/?disaster_alert=true&alert_id=${alertData.id || Date.now()}`,
+      url: `/?disaster_alert=true&category=${category}&alert_id=${alertData.id || Date.now()}`,
       alertData
     }
   };
@@ -86,31 +122,48 @@ export const showSystemNotification = (alertData) => {
 };
 
 /**
- * Broadcast an emergency disaster alert to all users, tabs, and installed devices
+ * Broadcast an emergency disaster alert to all other users, tabs, and installed devices
+ * 
+ * CRITICAL RULE:
+ * - Alerts are transmitted to ALL OTHER USERS across the community.
+ * - The victim's own phone is EXCLUDED from receiving this community responder alert popup.
  */
 export const broadcastDisasterAlert = async (alertPayload) => {
   const alertId = alertPayload.id || `alert-${Date.now()}`;
+  const myDeviceId = getMyDeviceId();
+  const myEndpoint = getMyPushEndpoint();
+  const myUserId = typeof window !== 'undefined' ? localStorage.getItem('resqone_user_id') : null;
+  const category = (alertPayload.category || 'ACCIDENT').toUpperCase();
+
   const enrichedAlert = {
     id: alertId,
+    category: category,
     timestamp: new Date().toISOString(),
     timeStr: new Date().toLocaleTimeString(),
-    victimName: alertPayload.victimName || 'Suresh Varma',
-    victimPhone: alertPayload.victimPhone || '+91 94401 23403',
-    bloodGroup: alertPayload.bloodGroup || 'O+ Universal',
-    relation: alertPayload.relation || 'Registered Family Member',
-    locationName: alertPayload.locationName || 'National Highway 16, Vijayawada',
+    victimName: alertPayload.victimName || alertPayload.victim_name || 'Emergency Citizen',
+    victimUserId: alertPayload.victimUserId || myUserId || 'anonymous',
+    senderDeviceId: myDeviceId,
+    senderEndpoint: myEndpoint,
+    bloodGroup: alertPayload.bloodGroup || alertPayload.blood_group || 'O+',
+    locationName: alertPayload.locationName || alertPayload.location_name || 'National Highway 16 Corridor',
     lat: alertPayload.lat || 16.5068,
     lng: alertPayload.lng || 80.6561,
-    severity: alertPayload.severity || 'CRITICAL_HIGH_IMPACT',
+    severity: alertPayload.severity || 'CRITICAL',
     impactG: alertPayload.impactG || 4.85,
     speedAtImpact: alertPayload.speedAtImpact || 78,
-    medicalNotes: alertPayload.medicalNotes || 'Severe blunt trauma detected. Automatic CAD dispatch initiated.'
+    species: alertPayload.species || null,
+    hospitalName: alertPayload.hospitalName || null,
+    unitsNeeded: alertPayload.unitsNeeded || 2,
+    medicalNotes: alertPayload.medicalNotes || 'Critical emergency reported. Immediate rescue needed.',
+    isSimulation: !!alertPayload.isSimulation
   };
 
-  // 1. Store in localStorage for instant retrieval across sessions
+  // 1. Dispatch Web Push to ALL registered devices (backend excludes victim's phone!)
   try {
-    localStorage.setItem('resqone_active_disaster_alert', JSON.stringify(enrichedAlert));
-  } catch {}
+    dispatchBackgroundPushToAll(enrichedAlert);
+  } catch (pushErr) {
+    console.warn('[BroadcastService] Background push dispatch exception:', pushErr);
+  }
 
   // 2. Broadcast across all browser tabs via BroadcastChannel
   if (meshChannel) {
@@ -119,7 +172,7 @@ export const broadcastDisasterAlert = async (alertPayload) => {
     } catch {}
   }
 
-  // 3. Broadcast to Supabase Realtime (reaches all internet-connected devices)
+  // 3. Broadcast to Supabase Realtime (reaches all other devices across the web)
   if (supabase) {
     try {
       const channel = supabase.channel('resqone_emergency_broadcast');
@@ -133,26 +186,15 @@ export const broadcastDisasterAlert = async (alertPayload) => {
     }
   }
 
-  // 4. Trigger system push notification with vibration locally
-  showSystemNotification(enrichedAlert);
-
-  // 4b. Dispatch Web Push to ALL registered devices (wakes up devices even when app is closed!)
-  try {
-    dispatchBackgroundPushToAll(enrichedAlert);
-  } catch (pushErr) {
-    console.warn('[BroadcastService] Background push dispatch exception:', pushErr);
-  }
-
-  // 5. Sound the Government EAS Disaster Siren and vibrate device
-  playDisasterAlertSiren(8);
-
-  // 6. Multilingual voice alert announcement
-  const spokenText = `Critical emergency alert! High impact vehicle accident reported for ${enrichedAlert.victimName} at ${enrichedAlert.locationName}. Immediate rescue required.`;
-  speakEmergencyInstruction(spokenText);
-
-  // 7. Fire local custom window event to open Full-Screen Alert Modal
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('resqone_disaster_alert', { detail: enrichedAlert }));
+  // 4. CRITICAL: DONT SHOW ALERT ON VICTIM PHONE!
+  // If user explicitly ran a simulation to test the responder UI, show it.
+  // In real emergency, the victim's phone stays on their own rescue screen!
+  if (enrichedAlert.isSimulation) {
+    showSystemNotification(enrichedAlert);
+    playDisasterAlertSiren(8);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('resqone_disaster_alert', { detail: enrichedAlert }));
+    }
   }
 
   return enrichedAlert;
@@ -179,22 +221,32 @@ export const dismissDisasterAlert = () => {
 };
 
 /**
- * Subscribe to incoming disaster broadcasts from other devices / tabs
+ * Subscribe this client to incoming disaster alerts from other users
  */
 export const subscribeToDisasterAlerts = (onAlertReceived, onDismissed) => {
   if (typeof window === 'undefined') return () => {};
 
-  // 1. Check if there is already an active alert in localStorage
+  const handleIncomingAlert = (alert) => {
+    if (!alert) return;
+    const myId = getMyDeviceId();
+    // CRITICAL: Filter out alerts originating from THIS device (victim's phone)
+    if (!alert.isSimulation && alert.senderDeviceId && alert.senderDeviceId === myId) {
+      console.log('[BroadcastService] Self-originated alert filtered on victim device.');
+      return;
+    }
+
+    playDisasterAlertSiren(8);
+    showSystemNotification(alert);
+    onAlertReceived(alert);
+  };
+
+  // 1. Check local session cache for active alert from other users
   try {
     const saved = localStorage.getItem('resqone_active_disaster_alert');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // If alert occurred within the last 15 minutes, show it
-      const diffMin = (Date.now() - new Date(parsed.timestamp).getTime()) / (1000 * 60);
-      if (diffMin < 15) {
+      if (parsed.senderDeviceId !== getMyDeviceId()) {
         onAlertReceived(parsed);
-      } else {
-        localStorage.removeItem('resqone_active_disaster_alert');
       }
     }
   } catch {}
@@ -202,9 +254,7 @@ export const subscribeToDisasterAlerts = (onAlertReceived, onDismissed) => {
   // 2. Listen for BroadcastChannel events (local mesh)
   const handleMeshMessage = (event) => {
     if (event.data?.type === 'EMERGENCY_DISASTER_ALERT') {
-      playDisasterAlertSiren(8);
-      showSystemNotification(event.data.payload);
-      onAlertReceived(event.data.payload);
+      handleIncomingAlert(event.data.payload);
     } else if (event.data?.type === 'DISMISS_DISASTER_ALERT') {
       stopDisasterAlertSiren();
       if (onDismissed) onDismissed();
@@ -215,7 +265,7 @@ export const subscribeToDisasterAlerts = (onAlertReceived, onDismissed) => {
     meshChannel.addEventListener('message', handleMeshMessage);
   }
 
-  // 3. Listen for window custom events
+  // 3. Listen for window custom events (simulations / direct clicks)
   const handleWindowEvent = (e) => {
     onAlertReceived(e.detail);
   };
@@ -226,14 +276,12 @@ export const subscribeToDisasterAlerts = (onAlertReceived, onDismissed) => {
   window.addEventListener('resqone_disaster_alert', handleWindowEvent);
   window.addEventListener('resqone_disaster_alert_dismissed', handleDismissEvent);
 
-  // 4. Listen for Supabase Realtime events (cross-device cloud mesh)
+  // 4. Listen for Supabase Realtime events (cloud mesh from other users)
   if (supabase) {
     try {
       realtimeChannel = supabase.channel('resqone_emergency_broadcast')
         .on('broadcast', { event: 'EMERGENCY_DISASTER_ALERT' }, (payload) => {
-          playDisasterAlertSiren(8);
-          showSystemNotification(payload.payload);
-          onAlertReceived(payload.payload);
+          handleIncomingAlert(payload.payload);
         })
         .subscribe();
     } catch {}
@@ -255,6 +303,7 @@ export const subscribeToDisasterAlerts = (onAlertReceived, onDismissed) => {
 export const simulateCommunityDisasterAlert = (userCoords = [16.5068, 80.6561], victimName = 'Suresh Varma (Brother)') => {
   return broadcastDisasterAlert({
     id: `sim-disaster-${Date.now()}`,
+    category: 'ACCIDENT',
     victimName: victimName,
     victimPhone: '+91 94401 23403',
     bloodGroup: 'O+ Universal',
@@ -265,6 +314,7 @@ export const simulateCommunityDisasterAlert = (userCoords = [16.5068, 80.6561], 
     severity: 'CRITICAL_HIGH_IMPACT',
     impactG: 5.12,
     speedAtImpact: 82,
-    medicalNotes: 'Severe high-speed collision detected. Physical rollover risk. All community members and 108 responders alerted.'
+    medicalNotes: 'Severe high-speed collision detected. Physical rollover risk. All community members and 108 responders alerted.',
+    isSimulation: true
   });
 };

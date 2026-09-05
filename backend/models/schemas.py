@@ -152,6 +152,7 @@ class DeviceSubscriptionKeys(BaseModel):
 class DeviceSubscriptionRequest(BaseModel):
     endpoint: str
     keys: DeviceSubscriptionKeys
+    device_id: Optional[str] = None
     user_id: Optional[str] = "anonymous"
     user_name: Optional[str] = "Community Member"
     platform: Optional[str] = "web-pwa"
@@ -159,8 +160,12 @@ class DeviceSubscriptionRequest(BaseModel):
 
 class BroadcastPushRequest(BaseModel):
     alert_id: Optional[str] = None
+    category: Optional[str] = "ACCIDENT"  # 'ACCIDENT' | 'BLOOD_URGENT' | 'SNAKEBITE' | 'SOS_BEACON'
     victim_name: Optional[str] = "Emergency Citizen"
     victim_phone: Optional[str] = "+91 94401 23401"
+    victim_user_id: Optional[str] = None
+    sender_device_id: Optional[str] = None
+    sender_endpoint: Optional[str] = None
     blood_group: Optional[str] = "O+"
     location_name: Optional[str] = "Vijayawada Highway Corridor"
     lat: Optional[float] = 16.5167
@@ -168,7 +173,10 @@ class BroadcastPushRequest(BaseModel):
     severity: Optional[str] = "CRITICAL_HIGH_IMPACT"
     impact_g: Optional[float] = 4.85
     speed_at_impact: Optional[float] = 76.0
-    medical_notes: Optional[str] = "Severe vehicle impact detected. CAD 108 units dispatched."
+    medical_notes: Optional[str] = "Emergency reported. CAD 108 units dispatched."
+    species: Optional[str] = None
+    hospital_name: Optional[str] = None
+    units_needed: Optional[int] = 2
     tracking_url: Optional[str] = None
 
 class BroadcastPushResponse(BaseModel):
@@ -178,4 +186,5 @@ class BroadcastPushResponse(BaseModel):
     failed_count: int
     alert_id: str
     timestamp: str
+
 

@@ -26,6 +26,7 @@ export const AccidentPage = () => {
     try {
       broadcastDisasterAlert({
         id: `crash-${Date.now()}`,
+        category: 'ACCIDENT',
         victimName: 'Emergency Citizen (Live Crash)',
         victimPhone: '+91 94401 23401',
         bloodGroup: details?.medicalTelemetry?.bloodGroup || 'O+',

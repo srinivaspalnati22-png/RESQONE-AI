@@ -15,6 +15,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
+import { broadcastDisasterAlert } from '../services/broadcast_service';
 import snakeSpeciesData from '../data/snake_species.json';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import { classifySnakeImage } from '../services/snake_vision_ai';
@@ -638,6 +639,24 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
     };
 
     queueOfflineReport(payload);
+
+    // Broadcast snakebite envenomation alert to ALL other community users (excluding victim)
+    try {
+      broadcastDisasterAlert({
+        category: 'SNAKEBITE',
+        victimName: 'Emergency Snakebite Citizen',
+        species: assessment?.species?.common_name || 'Venomous Snake',
+        hospitalName: hospital.name,
+        locationName: hospital.name || 'Emergency Antivenom Center',
+        lat: userCoords[0],
+        lng: userCoords[1],
+        severity: 'CRITICAL',
+        medicalNotes: `Snakebite envenomation alert: ${assessment?.species?.common_name || 'Venomous Snake'}. ${assessment?.species?.avs_vials_needed || 10} Polyvalent AVS vials reserved at ${hospital.name}. CAD 108 ambulance en route.`
+      });
+    } catch (bErr) {
+      console.warn('[SnakebiteAlert] Broadcast disaster alert exception:', bErr);
+    }
+
     setAlertSent(`Emergency Antivenom ICU Alert & 10 Vials reserved at ${hospital.name}! 108 Ambulance en route.`);
     speakEmergencyInstruction(`Antivenom reserved at ${hospital.name}. Medical ambulance en route.`, language);
     setTimeout(() => setAlertSent(null), 6000);
