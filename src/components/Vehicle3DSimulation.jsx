@@ -791,97 +791,95 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
   return (
     <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl space-y-4 p-3.5 sm:p-6 relative">
       
-      {/* 1. Header Bar: Vehicle Switcher & Telemetry */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
-        
-        {/* Vehicle Selection Chips & Full Scenario Runner */}
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          <div className="flex items-center space-x-2 bg-[#050A14] p-1.5 rounded-2xl border border-slate-800">
+      {/* 1. Header Bar: Responsive Mobile & Desktop Layout */}
+      <div className="flex flex-col gap-2.5 border-b border-slate-800 pb-3">
+        {/* Row 1: Segmented Vehicle Switcher & Telemetry Chips */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="grid grid-cols-3 sm:flex items-center gap-1.5 bg-[#050A14] p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
             <button
               onClick={() => setVehicleType('car')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center space-x-2 transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 vehicleType === 'car' 
                   ? 'bg-cyan-600 text-slate-950 shadow-lg shadow-cyan-950/60 ring-2 ring-cyan-400/50' 
-                  : 'text-slate-400 hover:text-white bg-slate-900/60'
+                  : 'text-slate-400 hover:text-white bg-slate-900/40'
               }`}
             >
-              <img src="/images/car.jpg" alt="3D Sports Car" className="w-5 h-5 rounded-md object-cover border border-slate-700 shrink-0" />
-              <span>Sports Car</span>
+              <img src="/images/car.jpg" alt="3D Sports Car" className="w-4 h-4 rounded object-cover border border-slate-700 shrink-0" />
+              <span className="truncate">Sports Car</span>
             </button>
 
             <button
               onClick={() => setVehicleType('bike')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center space-x-2 transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 vehicleType === 'bike' 
                   ? 'bg-cyan-600 text-slate-950 shadow-lg shadow-cyan-950/60 ring-2 ring-cyan-400/50' 
-                  : 'text-slate-400 hover:text-white bg-slate-900/60'
+                  : 'text-slate-400 hover:text-white bg-slate-900/40'
               }`}
             >
-              <img src="/images/bike.jpg" alt="3D Superbike" className="w-5 h-5 rounded-md object-cover border border-slate-700 shrink-0" />
-              <span>Superbike</span>
+              <img src="/images/bike.jpg" alt="3D Superbike" className="w-4 h-4 rounded object-cover border border-slate-700 shrink-0" />
+              <span className="truncate">Superbike</span>
             </button>
 
             <button
               onClick={() => setVehicleType('ambulance')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center space-x-2 transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                 vehicleType === 'ambulance' 
                   ? 'bg-red-600 text-white shadow-lg shadow-red-950/60 ring-2 ring-red-400/50' 
-                  : 'text-slate-400 hover:text-white bg-slate-900/60'
+                  : 'text-slate-400 hover:text-white bg-slate-900/40'
               }`}
             >
-              <img src="/images/aum.jpg" alt="3D Ambulance" className="w-5 h-5 rounded-md object-cover border border-slate-700 shrink-0" />
-              <span>Ambulance</span>
+              <img src="/images/aum.jpg" alt="3D Ambulance" className="w-4 h-4 rounded object-cover border border-slate-700 shrink-0" />
+              <span className="truncate">Ambulance</span>
             </button>
           </div>
 
-          {/* 1-Tap Full Autonomous Scenario Launcher */}
-          <button
-            onClick={handleStartAutonomousScenario}
-            className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-xs font-black flex items-center space-x-1.5 cursor-pointer shadow-lg shadow-cyan-950/80 active:scale-95 transition-all"
-            title="Start realistic scenario: Normal drive -> cross limits -> spoken alert -> decision -> rescue"
-          >
-            <Zap className="w-4 h-4 fill-white" />
-            <span>🚀 Run Full Scenario: Drive → Alert → Decision</span>
-          </button>
+          {/* 360° Orbit, Speed, G-Force, Reset Buttons */}
+          <div className="flex items-center justify-between sm:justify-end gap-1.5 flex-wrap">
+            <button
+              onClick={() => setIsAutoOrbit(!isAutoOrbit)}
+              className={`px-2.5 py-1.5 rounded-xl border flex items-center space-x-1 text-xs font-bold transition-all cursor-pointer ${
+                isAutoOrbit 
+                  ? 'bg-cyan-600 text-slate-950 border-cyan-400 shadow-md animate-pulse' 
+                  : 'bg-[#050A14] text-slate-300 border-slate-700 hover:text-white'
+              }`}
+              title="Toggle Continuous 360° Camera Orbit"
+            >
+              <Orbit className="w-3.5 h-3.5" />
+              <span className="text-[11px]">360° Orbit</span>
+            </button>
+
+            <div className="bg-[#050A14] px-2.5 py-1.5 rounded-xl border border-slate-800 flex items-center space-x-1 text-xs font-mono font-bold text-white">
+              <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{speed} km/h</span>
+            </div>
+
+            <div className={`px-2.5 py-1.5 rounded-xl border flex items-center space-x-1 text-xs font-mono font-bold ${
+              gForce > 3.0 
+                ? 'bg-red-950/90 border-red-500 text-red-400 animate-pulse' 
+                : 'bg-[#050A14] border-slate-800 text-emerald-400'
+            }`}>
+              <Activity className="w-3.5 h-3.5" />
+              <span>{gForce} G</span>
+            </div>
+
+            <button
+              onClick={handleReset}
+              className="p-1.5 bg-[#050A14] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition-colors cursor-pointer shrink-0"
+              title="Reset Simulation"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
-        {/* 360° Orbit Button, Speed, G-Force */}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setIsAutoOrbit(!isAutoOrbit)}
-            className={`px-3 py-1.5 rounded-xl border flex items-center space-x-1.5 text-xs font-bold transition-all cursor-pointer ${
-              isAutoOrbit 
-                ? 'bg-cyan-600 text-slate-950 border-cyan-400 shadow-md animate-pulse' 
-                : 'bg-[#050A14] text-slate-300 border-slate-700 hover:text-white'
-            }`}
-            title="Toggle Continuous 360° Camera Orbit"
-          >
-            <Orbit className="w-3.5 h-3.5" />
-            <span>360° Orbit</span>
-          </button>
-
-          <div className="bg-[#050A14] px-3 py-1.5 rounded-xl border border-slate-800 flex items-center space-x-1.5 text-xs font-mono font-bold text-white">
-            <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{speed} km/h</span>
-          </div>
-
-          <div className={`px-3 py-1.5 rounded-xl border flex items-center space-x-1.5 text-xs font-mono font-bold ${
-            gForce > 3.0 
-              ? 'bg-red-950/90 border-red-500 text-red-400 animate-pulse' 
-              : 'bg-[#050A14] border-slate-800 text-emerald-400'
-          }`}>
-            <Activity className="w-3.5 h-3.5" />
-            <span>{gForce} G</span>
-          </div>
-
-          <button
-            onClick={handleReset}
-            className="p-2 bg-[#050A14] hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-xl transition-colors cursor-pointer"
-            title="Reset Simulation"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Row 2: Scenario Launcher Banner */}
+        <button
+          onClick={handleStartAutonomousScenario}
+          className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-xs font-black flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-cyan-950/80 active:scale-95 transition-all"
+        >
+          <Zap className="w-4 h-4 fill-white" />
+          <span>🚀 Run Scenario: Drive → Speeding → Voice Alert → Collision</span>
+        </button>
       </div>
 
       {/* 2. 3D Viewport - START BACK VIEW + FULL 360° ROTATION */}

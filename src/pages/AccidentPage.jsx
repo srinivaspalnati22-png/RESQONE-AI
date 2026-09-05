@@ -62,20 +62,18 @@ export const AccidentPage = () => {
       return 'Real-time GPS road map, speedometer thresholds, G-force impact & live driving detector';
     }
     if (activeMode === 'google_maps') {
-      return 'Official Google Maps JavaScript SDK, HTML5 Geolocation watchPosition, DirectionsService & DirectionsRenderer turn panel';
+      return 'Turn-by-turn live navigation, fastest hospital routing & Google Maps SDK integration';
     }
-    return t('sim_subtitle') || '3D WebGL Highway decision support simulation with collision dynamics';
+    return t('sim_desc') || 'Physics collision engine, vehicle telemetry & emergency rescue simulations';
   };
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-      className="w-full max-w-full overflow-x-hidden pb-28 pt-2 px-2 sm:px-4 space-y-4 font-sans"
+      exit={{ opacity: 0 }}
+      className="space-y-4 max-w-7xl mx-auto px-2 sm:px-4"
     >
-      
       {/* Page Header with Mode Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
         <div className="flex items-center space-x-2.5 min-w-0">
@@ -88,7 +86,7 @@ export const AccidentPage = () => {
                 {getHeaderTitle()}
               </h2>
               <span className="bg-red-600/20 text-red-400 border border-red-500/40 text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase shrink-0">
-                {activeMode === 'google_maps' ? 'GOOGLE SDK ACTIVE' : language === 'te' ? 'సెన్సార్లు ఆన్' : language === 'hi' ? 'सक्रिय सेंसर' : 'ACTIVE SENSORS'}
+                {activeMode === 'google_maps' ? 'GOOGLE SDK ACTIVE' : activeMode === '3d_simulation' ? '3D SIMULATION' : language === 'te' ? 'సెన్సార్లు ఆన్' : language === 'hi' ? 'सक्रिय सेंसर' : 'ACTIVE SENSORS'}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 line-clamp-2 sm:line-clamp-1">
@@ -98,16 +96,16 @@ export const AccidentPage = () => {
         </div>
 
         {/* 3-Way Mode Switcher Tabs */}
-        <div className="grid grid-cols-3 sm:flex items-center bg-[#050A14] p-1 rounded-2xl border border-white/[0.08] w-full sm:w-auto shrink-0 gap-1 sm:gap-0">
+        <div className="grid grid-cols-3 sm:flex items-center bg-[#050A14] p-1 rounded-2xl border border-white/[0.08] w-full sm:w-auto shrink-0 gap-1 sm:gap-1">
           <button
             onClick={() => setActiveMode('live_detection')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`px-2 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1 sm:space-x-1.5 ${
               activeMode === 'live_detection'
                 ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Satellite className="w-3.5 h-3.5" />
+            <Satellite className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">
               {language === 'te' ? 'లైవ్ డ్రైవ్' : language === 'hi' ? 'लाइव ड्राइव' : 'Live Drive'}
             </span>
@@ -115,25 +113,25 @@ export const AccidentPage = () => {
 
           <button
             onClick={() => setActiveMode('google_maps')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`px-2 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1 sm:space-x-1.5 ${
               activeMode === 'google_maps'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Route className="w-3.5 h-3.5" />
+            <Route className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Google Maps</span>
           </button>
 
           <button
             onClick={() => setActiveMode('3d_simulation')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`px-2 sm:px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1 sm:space-x-1.5 ${
               activeMode === '3d_simulation'
                 ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Car className="w-3.5 h-3.5" />
+            <Car className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">
               {language === 'te' ? '3D క్రాష్' : language === 'hi' ? '3D क्रैश' : '3D Crash'}
             </span>

@@ -147,30 +147,9 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
-  // ================= 1. MULTI-ENGINE REAL LIVE GEOLOCATION =================
+  // ================= 1. REAL DEVICE HARDWARE GEOLOCATION =================
   const fetchLiveGPS = () => {
     setIsLocating(true);
-
-    // Fast network-based IP geolocate bootstrap to immediately locate user's real city/region
-    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.latitude && data.longitude) {
-          const lat = data.latitude;
-          const lng = data.longitude;
-          const locality = data.locality || data.city || data.localityInfo?.administrative?.[2]?.name || 'Live Location';
-          const sub = data.principalSubdivision || data.countryName || '';
-          const addr = `${locality}, ${sub}`;
-          setLiveCoords((prev) => {
-            // Only update if not already locked by high-precision device GPS
-            if (prev[0] !== DEFAULT_PATHANAGULURU_COORDS[0]) return prev;
-            return [lat, lng];
-          });
-          setLiveAddress(addr);
-          localStorage.setItem('resqone_live_address', addr);
-        }
-      })
-      .catch(() => {});
 
     if (!navigator.geolocation) {
       setIsLocating(false);

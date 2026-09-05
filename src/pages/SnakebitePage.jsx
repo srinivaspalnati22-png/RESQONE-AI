@@ -20,11 +20,21 @@ import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import { classifySnakeImage } from '../services/snake_vision_ai';
 
 // Standalone Map Component for Victim + Antivenom Hospitals with Active Route Rendering
-function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospitals = [], speciesName = 'Venomous Snake', selectedHospital = null, onSelectHospital }) {
+function SnakebiteRescueMapComponent({ 
+  victimCoords = [16.5167, 80.6500], 
+  hospitals = [], 
+  speciesName = 'Venomous Snake', 
+  selectedHospital = null, 
+  onSelectHospital,
+  onLocateUser,
+  isLocating = false
+}) {
   const mapDivRef = useRef(null);
   const mapInstance = useRef(null);
+  const markersGroupRef = useRef(null);
   const routePolylineRef = useRef(null);
 
+  // Initialize Map
   useEffect(() => {
     if (!mapDivRef.current) return;
 
@@ -35,7 +45,7 @@ function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospit
 
       try {
         const map = L.map(mapDivRef.current, {
-          center: [16.5175, 80.6470],
+          center: victimCoords,
           zoom: 13,
           zoomControl: true,
           attributionControl: false
@@ -47,77 +57,86 @@ function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospit
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Victim Pin
-        const victimIcon = L.divIcon({
-          className: 'custom-victim-marker',
-          html: `
-            <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-              <div style="width: 38px; height: 38px; border-radius: 12px; background: rgba(127, 29, 29, 0.95); border: 2px solid #ef4444; box-shadow: 0 0 22px rgba(239, 68, 68, 0.95); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 18px;">
-                🐍
-              </div>
-              <div style="margin-top: 2px; background: rgba(5, 10, 20, 0.95); color: #f87171; font-size: 8px; font-weight: 900; padding: 2px 4px; border-radius: 4px; border: 1px solid #ef4444; white-space: nowrap;">
-                VICTIM (${speciesName})
-              </div>
-            </div>
-          `,
-          iconSize: [120, 60],
-          iconAnchor: [60, 30]
-        });
-        L.marker(victimCoords, { icon: victimIcon, zIndexOffset: 1000 }).addTo(map);
-
-        const defaultHospitals = [
-          { name: 'Government General Hospital (GGH)', avs: 150, icu: 12, lat: 16.5167, lng: 80.6500, phone: '+91-866-2472777', address: 'Gunadala, Vijayawada' },
-          { name: 'Ramesh Hospitals Emergency Center', avs: 85, icu: 15, lat: 16.5083, lng: 80.6417, phone: '+91-866-2488888', address: 'Ring Road, Vijayawada' },
-          { name: 'Manipal Hospital Vijayawada', avs: 60, icu: 8, lat: 16.4833, lng: 80.6000, phone: '+91-866-6649999', address: 'Tadepalli, Vijayawada Highway' },
-          { name: 'Ayush Hospitals Trauma Bay', avs: 40, icu: 6, lat: 16.5250, lng: 80.6350, phone: '+91-866-2544444', address: 'Suryaraopet, Vijayawada' }
-        ];
-
-        const hospitalList = hospitals.length > 0 ? hospitals : defaultHospitals;
-
-        hospitalList.forEach((hosp) => {
-          const lat = hosp.latitude || hosp.lat || 16.5167;
-          const lng = hosp.longitude || hosp.lng || 80.6500;
-          const avsCount = hosp.antivenom_stock || hosp.avs || 120;
-          const isSelected = selectedHospital && (selectedHospital.name === hosp.name);
-
-          const hospIcon = L.divIcon({
-            className: 'custom-avs-hosp-marker',
-            html: `
-              <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
-                <div style="width: ${isSelected ? '38px' : '32px'}; height: ${isSelected ? '38px' : '32px'}; border-radius: 10px; background: ${isSelected ? 'linear-gradient(135deg, #0e7490, #06b6d4)' : 'linear-gradient(135deg, #083344, #0e7490)'}; border: 2px solid ${isSelected ? '#67e8f9' : '#22d3ee'}; box-shadow: 0 0 16px ${isSelected ? 'rgba(34, 211, 238, 1)' : 'rgba(34, 211, 238, 0.6)'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: ${isSelected ? '18px' : '16px'};">
-                  🏥
-                </div>
-                <div style="margin-top: 2px; background: rgba(5, 10, 20, 0.95); color: #22d3ee; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 4px; border: 1px solid #0891b2; white-space: nowrap;">
-                  ${hosp.name.split(' ')[0]} (${avsCount} AVS)
-                </div>
-              </div>
-            `,
-            iconSize: [100, 50],
-            iconAnchor: [50, 25]
-          });
-
-          const marker = L.marker([lat, lng], { icon: hospIcon }).addTo(map);
-          marker.on('click', () => {
-            if (onSelectHospital) onSelectHospital(hosp);
-          });
-        });
-
+        markersGroupRef.current = L.layerGroup().addTo(map);
         mapInstance.current = map;
       } catch (mapErr) {
-        console.warn('[SnakebiteRescueMap]', mapErr);
+        console.warn('[SnakebiteRescueMap init]', mapErr);
       }
     }
+  }, []);
 
-    // Update Route Line dynamically when hospital is selected
-    if (mapInstance.current) {
-      if (routePolylineRef.current) {
-        mapInstance.current.removeLayer(routePolylineRef.current);
-        routePolylineRef.current = null;
-      }
+  // Update Markers & Route whenever victimCoords, hospitals, or selectedHospital change
+  useEffect(() => {
+    if (!mapInstance.current || !markersGroupRef.current) return;
 
-      const destHospital = selectedHospital || (hospitals.length > 0 ? hospitals[0] : { lat: 16.5167, lng: 80.6500 });
-      const destLat = destHospital.latitude || destHospital.lat || 16.5167;
-      const destLng = destHospital.longitude || destHospital.lng || 80.6500;
+    // Clear previous markers
+    markersGroupRef.current.clearLayers();
+
+    // 1. Add Victim Pin
+    const victimIcon = L.divIcon({
+      className: 'custom-victim-marker',
+      html: `
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(127, 29, 29, 0.95); border: 2px solid #ef4444; box-shadow: 0 0 22px rgba(239, 68, 68, 0.95); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 20px;">
+            📍
+          </div>
+          <div style="margin-top: 2px; background: rgba(5, 10, 20, 0.95); color: #f87171; font-size: 8px; font-weight: 900; padding: 2px 5px; border-radius: 4px; border: 1px solid #ef4444; white-space: nowrap;">
+            YOU (${speciesName})
+          </div>
+        </div>
+      `,
+      iconSize: [120, 60],
+      iconAnchor: [60, 30]
+    });
+    L.marker(victimCoords, { icon: victimIcon, zIndexOffset: 1000 }).addTo(markersGroupRef.current);
+
+    // 2. Add Hospital Markers
+    const defaultHospitals = [
+      { name: 'Government General Hospital (GGH)', avs: 150, icu: 12, lat: victimCoords[0] + 0.012, lng: victimCoords[1] + 0.008, phone: '+91-866-2472777', address: 'Emergency Regional Trauma Bay' },
+      { name: 'District Emergency Center', avs: 85, icu: 15, lat: victimCoords[0] - 0.015, lng: victimCoords[1] - 0.009, phone: '+91-866-2488888', address: 'Antivenom Response Hub' },
+      { name: 'Metro Trauma Critical Care', avs: 60, icu: 8, lat: victimCoords[0] + 0.022, lng: victimCoords[1] - 0.014, phone: '+91-866-6649999', address: 'Highway Emergency Unit' }
+    ];
+
+    const hospitalList = hospitals.length > 0 ? hospitals : defaultHospitals;
+
+    hospitalList.forEach((hosp) => {
+      const lat = hosp.latitude || hosp.lat || (victimCoords[0] + 0.012);
+      const lng = hosp.longitude || hosp.lng || (victimCoords[1] + 0.008);
+      const avsCount = hosp.antivenom_stock || hosp.avs || 120;
+      const isSelected = selectedHospital && (selectedHospital.name === hosp.name);
+
+      const hospIcon = L.divIcon({
+        className: 'custom-avs-hosp-marker',
+        html: `
+          <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+            <div style="width: ${isSelected ? '38px' : '32px'}; height: ${isSelected ? '38px' : '32px'}; border-radius: 10px; background: ${isSelected ? 'linear-gradient(135deg, #0e7490, #06b6d4)' : 'linear-gradient(135deg, #083344, #0e7490)'}; border: 2px solid ${isSelected ? '#67e8f9' : '#22d3ee'}; box-shadow: 0 0 16px ${isSelected ? 'rgba(34, 211, 238, 1)' : 'rgba(34, 211, 238, 0.6)'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: ${isSelected ? '18px' : '16px'};">
+              🏥
+            </div>
+            <div style="margin-top: 2px; background: rgba(5, 10, 20, 0.95); color: #22d3ee; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 4px; border: 1px solid #0891b2; white-space: nowrap;">
+              ${hosp.name.split(' ')[0]} (${avsCount} AVS)
+            </div>
+          </div>
+        `,
+        iconSize: [100, 50],
+        iconAnchor: [50, 25]
+      });
+
+      const marker = L.marker([lat, lng], { icon: hospIcon }).addTo(markersGroupRef.current);
+      marker.on('click', () => {
+        if (onSelectHospital) onSelectHospital(hosp);
+      });
+    });
+
+    // 3. Update Polyline Route
+    if (routePolylineRef.current) {
+      mapInstance.current.removeLayer(routePolylineRef.current);
+      routePolylineRef.current = null;
+    }
+
+    const destHospital = selectedHospital || hospitalList[0];
+    if (destHospital) {
+      const destLat = destHospital.latitude || destHospital.lat || (victimCoords[0] + 0.012);
+      const destLng = destHospital.longitude || destHospital.lng || (victimCoords[1] + 0.008);
 
       const midLat = (victimCoords[0] + destLat) / 2 + 0.002;
       const midLng = (victimCoords[1] + destLng) / 2 - 0.001;
@@ -134,23 +153,34 @@ function SnakebiteRescueMapComponent({ victimCoords = [16.5167, 80.6500], hospit
         lineCap: 'round'
       }).addTo(mapInstance.current);
 
-      mapInstance.current.fitBounds([victimCoords, [destLat, destLng]], { padding: [40, 40] });
+      mapInstance.current.fitBounds([victimCoords, [destLat, destLng]], { padding: [45, 45], maxZoom: 15 });
     }
 
     const t1 = setTimeout(() => {
       if (mapInstance.current) mapInstance.current.invalidateSize();
-    }, 200);
+    }, 250);
 
-    return () => {
-      clearTimeout(t1);
-    };
+    return () => clearTimeout(t1);
   }, [victimCoords, hospitals, speciesName, selectedHospital]);
 
   return (
-    <div 
-      ref={mapDivRef} 
-      className="w-full h-full min-h-[320px] sm:min-h-[440px] rounded-3xl z-0" 
-    />
+    <div className="relative w-full h-full min-h-[320px] sm:min-h-[440px] rounded-3xl overflow-hidden">
+      <div 
+        ref={mapDivRef} 
+        className="w-full h-full z-0" 
+      />
+      {onLocateUser && (
+        <button
+          onClick={onLocateUser}
+          disabled={isLocating}
+          className="absolute top-3 right-3 z-[400] px-3 py-1.5 rounded-xl bg-[#050A14]/90 hover:bg-[#081528] text-cyan-400 hover:text-white border border-cyan-500/40 text-xs font-black shadow-xl flex items-center space-x-1.5 transition-all backdrop-blur-md cursor-pointer active:scale-95"
+          title="Detect Current GPS Location"
+        >
+          <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
+          <span>{isLocating ? 'Locating...' : 'My GPS'}</span>
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -170,6 +200,46 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const [showDatasetTable, setShowDatasetTable] = useState(false);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [allNearbyHospitals, setAllNearbyHospitals] = useState([]);
+
+  // User Live GPS Coordinates
+  const [userCoords, setUserCoords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('resqone_user_location');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.lat && parsed.lng) return [parsed.lat, parsed.lng];
+      }
+    } catch (e) {}
+    return [16.5167, 80.6500];
+  });
+  const [isLocating, setIsLocating] = useState(false);
+
+  const locateUserPosition = (explicit = false) => {
+    if (!navigator.geolocation) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const coords = [Number(latitude.toFixed(5)), Number(longitude.toFixed(5))];
+        setUserCoords(coords);
+        setIsLocating(false);
+        try {
+          localStorage.setItem('resqone_user_location', JSON.stringify({ lat: coords[0], lng: coords[1] }));
+        } catch (e) {}
+        DataService.getHospitals(coords[0], coords[1], { requiresAntivenom: true }).then((hosps) => {
+          if (hosps && hosps.length > 0) {
+            setAllNearbyHospitals(hosps);
+            setSelectedHospital(hosps[0]);
+          }
+        }).catch((e) => console.warn(e));
+      },
+      (err) => {
+        console.warn('SnakebitePage geolocation error:', err);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   // Camera & Image AI Vision State
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -197,7 +267,8 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    DataService.getHospitals(16.5167, 80.6500).then((hosps) => {
+    locateUserPosition();
+    DataService.getHospitals(userCoords[0], userCoords[1], { requiresAntivenom: true }).then((hosps) => {
       setAllNearbyHospitals(hosps);
       if (hosps.length > 0) setSelectedHospital(hosps[0]);
     }).catch((e) => console.warn(e));
@@ -402,7 +473,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
       // Perform assessment linking to nearest antivenom hospital
       try {
-        const result = await DataService.assessSnakebite(targetSpecies.common_name, selectedSymptoms, 16.5167, 80.6500);
+        const result = await DataService.assessSnakebite(targetSpecies.common_name, selectedSymptoms, userCoords[0], userCoords[1]);
         if (result && result.species) {
           setAssessment(result);
           if (result.hospitals && result.hospitals.length > 0) {
@@ -441,7 +512,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
     if (allNearbyHospitals.length === 0) {
       try {
-        const hosps = await DataService.getHospitals(16.5167, 80.6500);
+        const hosps = await DataService.getHospitals(userCoords[0], userCoords[1], { requiresAntivenom: true });
         setAllNearbyHospitals(hosps);
         if (hosps.length > 0) setSelectedHospital(hosps[0]);
       } catch (err) {
@@ -465,7 +536,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
     try {
       const combinedText = `${queryText || ''} ${(symptomsToUse || []).join(' ')}`;
-      const result = await DataService.assessSnakebite(combinedText, symptomsToUse, 16.5167, 80.6500);
+      const result = await DataService.assessSnakebite(combinedText, symptomsToUse, userCoords[0], userCoords[1]);
       if (result && result.species) {
         setAssessment(result);
         if (result.hospitals && result.hospitals.length > 0) {
@@ -1269,7 +1340,7 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
               {selectedHospital && (
                 <a
-                  href={`https://www.google.com/maps/dir/?api=1&origin=16.5167,80.6500&destination=${selectedHospital.latitude || selectedHospital.lat || 16.5167},${selectedHospital.longitude || selectedHospital.lng || 80.6500}`}
+                  href={`https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${selectedHospital.latitude || selectedHospital.lat || 16.5167},${selectedHospital.longitude || selectedHospital.lng || 80.6500}`}
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md self-start sm:self-auto cursor-pointer"
@@ -1282,10 +1353,13 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
             <div className="h-[300px] sm:h-[400px] rounded-2xl overflow-hidden border border-slate-800">
               <SnakebiteRescueMapComponent 
+                victimCoords={userCoords}
                 speciesName={assessment?.species?.common_name || 'Snake Encounter'} 
                 hospitals={activeHospitalsList}
                 selectedHospital={selectedHospital}
                 onSelectHospital={handleSelectRouteToHospital}
+                onLocateUser={locateUserPosition}
+                isLocating={isLocating}
               />
             </div>
           </div>

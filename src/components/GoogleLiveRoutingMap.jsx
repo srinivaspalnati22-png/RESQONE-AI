@@ -65,8 +65,8 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
   const [mapTheme, setMapTheme] = useState('dark'); // 'dark' | 'standard'
   const [routeSummary, setRouteSummary] = useState(null);
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
-  const [isSimulatingDrive, setIsSimulatingDrive] = useState(false);
   const [nearbyHospitals, setNearbyHospitals] = useState([]);
+  const [mobileViewTab, setMobileViewTab] = useState('map'); // 'map' | 'turns'
 
   // 1. Load Google Maps SDK
   useEffect(() => {
@@ -179,19 +179,6 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
   const panToCurrentLocation = useCallback(() => {
     setIsLocating(true);
 
-    // Fast network IP fallback bootstrap
-    fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.latitude && data.longitude) {
-          const lat = data.latitude;
-          const lng = data.longitude;
-          setCurrentPos({ lat, lng });
-          reverseGeocode(lat, lng);
-        }
-      })
-      .catch(() => {});
-
     if (!navigator.geolocation) {
       setIsLocating(false);
       return;
@@ -204,7 +191,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           lng: pos.coords.longitude
         };
         setCurrentPos(coords);
-        setGpsAccuracy(Math.round(pos.coords.accuracy));
+        setGpsAccuracy(Math.round(pos.coords.accuracy || 5));
         setIsLocating(false);
         reverseGeocode(coords.lat, coords.lng);
 
@@ -219,14 +206,15 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           updateHospitalMarkers(mapInstanceRef.current, coords);
         }
       },
-      () => {
+      (err) => {
+        console.warn('[GPS Geolocation Notice]', err.message);
         setIsLocating(false);
-        // Retry with relaxed parameters
+        // Fallback to relaxed parameters if immediate high accuracy timed out
         navigator.geolocation.getCurrentPosition(
           (pos2) => {
             const coords2 = { lat: pos2.coords.latitude, lng: pos2.coords.longitude };
             setCurrentPos(coords2);
-            setGpsAccuracy(Math.round(pos2.coords.accuracy));
+            setGpsAccuracy(Math.round(pos2.coords.accuracy || 15));
             reverseGeocode(coords2.lat, coords2.lng);
             if (mapInstanceRef.current) {
               mapInstanceRef.current.panTo(coords2);
@@ -237,7 +225,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
         );
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }, [reverseGeocode, updateHospitalMarkers]);
 
@@ -247,16 +235,27 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
 
     const maps = window.google.maps;
 
-    // Create Map
+    // Create Map with mobile-optimized touch gestures
     const map = new maps.Map(mapContainerRef.current, {
       zoom: 15,
       center: currentPos,
       disableDefaultUI: false,
-      mapTypeControl: true,
+      mapTypeControl: false, // Prevent giant dropdown box covering mobile screen
       streetViewControl: false,
-      fullscreenControl: true,
+      fullscreenControl: false,
       zoomControl: true,
+      gestureHandling: 'greedy', // Seamless 1-finger panning on mobile touchscreens
       styles: mapTheme === 'dark' ? GOOGLE_DARK_MODE_STYLE : null
+    });
+    mapInstanceRef.current = map;
+
+    // Allow user to click anywhere on Google Map to fine-tune/lock exact live location
+    map.addListener('click', (e) => {
+      const clickedCoords = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      setCurrentPos(clickedCoords);
+      if (userMarkerRef.current) userMarkerRef.current.setPosition(clickedCoords);
+      reverseGeocode(clickedCoords.lat, clickedCoords.lng);
+      updateHospitalMarkers(map, clickedCoords);
     });
     mapInstanceRef.current = map;
 
@@ -619,10 +618,34 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
         </div>
       )}
 
+      {/* Mobile Tab Switcher (Visible only on mobile screens) */}
+      <div className="flex lg:hidden bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs font-bold w-full">
+        <button
+          onClick={() => setMobileViewTab('map')}
+          className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileViewTab === 'map' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          <span>Interactive Map</span>
+        </button>
+        <button
+          onClick={() => setMobileViewTab('turns')}
+          className={`flex-1 py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileViewTab === 'turns' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Route className="w-3.5 h-3.5" />
+          <span>Turn Steps ({routeSummary?.stepsCount || 0})</span>
+        </button>
+      </div>
+
       {/* Main Map & Step-by-Step Directions Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Google Maps Canvas */}
-        <div className="lg:col-span-2 relative w-full h-[340px] sm:h-[460px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
+        <div className={`lg:col-span-2 relative w-full h-[360px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner ${
+          mobileViewTab === 'turns' ? 'hidden lg:block' : 'block'
+        }`}>
           <div ref={mapContainerRef} className="w-full h-full" />
           
           {/* Loading Indicator */}
@@ -635,7 +658,9 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
         </div>
 
         {/* Google Directions Sidebar Panel */}
-        <div className="relative w-full h-[260px] sm:h-[460px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-3 sm:p-4 flex flex-col space-y-2">
+        <div className={`relative w-full h-[360px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-3 sm:p-4 flex flex-col space-y-2 ${
+          mobileViewTab === 'map' ? 'hidden lg:flex' : 'flex'
+        }`}>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between border-b border-slate-800 pb-2 shrink-0">
             <span>Turn-by-Turn Navigation</span>
             <span className="text-[10px] text-blue-400 font-mono">DirectionsRenderer</span>

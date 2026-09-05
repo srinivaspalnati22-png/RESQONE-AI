@@ -98,13 +98,21 @@ const VERIFIED_COMMUNITY_DONORS = [
 ];
 
 // Standalone Map Component
-function BloodDonationMapComponent({ selectedGroup, donors, selectedDestination, onSelectDestination }) {
+function BloodDonationMapComponent({ 
+  patientCoords = [16.5167, 80.6500],
+  selectedGroup, 
+  donors, 
+  selectedDestination, 
+  onSelectDestination,
+  onLocateUser,
+  isLocating = false
+}) {
   const mapDivRef = useRef(null);
   const mapInstance = useRef(null);
+  const markersGroupRef = useRef(null);
   const routePolylineRef = useRef(null);
 
-  const patientCoords = [16.5167, 80.6500];
-
+  // Initialize Map
   useEffect(() => {
     if (!mapDivRef.current) return;
 
@@ -115,7 +123,7 @@ function BloodDonationMapComponent({ selectedGroup, donors, selectedDestination,
 
       try {
         const map = L.map(mapDivRef.current, {
-          center: [16.5180, 80.6450],
+          center: patientCoords,
           zoom: 13,
           zoomControl: true,
           attributionControl: false
@@ -127,87 +135,137 @@ function BloodDonationMapComponent({ selectedGroup, donors, selectedDestination,
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        const patientIcon = L.divIcon({
-          className: 'custom-patient-marker',
-          html: `
-            <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-              <div style="width: 38px; height: 38px; border-radius: 12px; background: rgba(127, 29, 29, 0.95); border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); display: flex; align-items: center; justify-content: center; color: #f87171; font-size: 18px;">
-                📍
-              </div>
-              <div style="margin-top: 3px; background: rgba(5, 10, 20, 0.95); color: #f87171; font-size: 8px; font-weight: 900; padding: 2px 4px; border-radius: 4px; border: 1px solid #ef4444; white-space: nowrap;">
-                PATIENT (${selectedGroup})
-              </div>
-            </div>
-          `,
-          iconSize: [120, 60],
-          iconAnchor: [60, 30]
-        });
-        L.marker(patientCoords, { icon: patientIcon, zIndexOffset: 1000 }).addTo(map);
-
-        const bloodBanks = [
-          { name: 'Red Cross Blood Bank & Component Center', units: 18, lat: 16.5175, lng: 80.6488, phone: '+91-866-2571234', address: 'Opp. GGH Hospital, Hanumanpet, Vijayawada' },
-          { name: 'GGH Regional Blood Bank & Cryo-Storage', units: 28, lat: 16.5167, lng: 80.6500, phone: '+91-866-2472777', address: 'Government General Hospital Campus, Gunadala, Vijayawada' },
-          { name: 'Manipal Hospital Blood Center', units: 9, lat: 16.4833, lng: 80.6000, phone: '+91-8645-280000', address: 'Sector 7, Tadepalli, Guntur-Vijayawada Highway' },
-          { name: 'Rotary Central Blood Bank & Component Center', units: 14, lat: 16.5180, lng: 80.6420, phone: '+91-866-2432222', address: 'Governorpet, Vijayawada' },
-          { name: 'Ramesh Hospitals Blood Bank', units: 12, lat: 16.5083, lng: 80.6417, phone: '+91-866-2488888', address: 'ITIE Compound, Ring Road, Vijayawada' }
-        ];
-
-        bloodBanks.forEach((b) => {
-          const bankIcon = L.divIcon({
-            className: 'custom-bank-marker',
-            html: `
-              <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
-                <div style="width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #064e3b, #022c22); border: 2px solid #34d399; box-shadow: 0 0 14px rgba(16, 185, 129, 0.8); display: flex; align-items: center; justify-content: center; color: #34d399; font-size: 16px;">
-                  🏥
-                </div>
-                <div style="margin-top: 2px; background: rgba(2, 44, 34, 0.95); color: #34d399; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 4px; border: 1px solid #10b981; white-space: nowrap;">
-                  ${b.name.split(' ')[0]} (${b.units}U)
-                </div>
-              </div>
-            `,
-            iconSize: [100, 50],
-            iconAnchor: [50, 25]
-          });
-          const m = L.marker([b.lat, b.lng], { icon: bankIcon }).addTo(map);
-          m.on('click', () => onSelectDestination && onSelectDestination(b));
-        });
-
-        (donors || VERIFIED_COMMUNITY_DONORS).forEach((donor) => {
-          const isMatch = donor.group === selectedGroup || (donor.group === 'O-' && selectedGroup !== 'O-');
-          const donorIcon = L.divIcon({
-            className: 'custom-donor-marker',
-            html: `
-              <div style="display: flex; flex-direction: column; align-items: center; opacity: ${isMatch ? '1.0' : '0.7'}; cursor: pointer;">
-                <div style="width: 30px; height: 30px; border-radius: 50%; background: ${isMatch ? '#dc2626' : '#1e293b'}; border: 2px solid ${isMatch ? '#f87171' : '#64748b'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 10px; font-weight: 900;">
-                  ${donor.group}
-                </div>
-                <div style="margin-top: 1px; background: rgba(5, 10, 20, 0.95); color: ${isMatch ? '#fca5a5' : '#94a3b8'}; font-size: 7px; font-weight: bold; padding: 1px 3px; border-radius: 3px; border: 1px solid ${isMatch ? '#ef4444' : '#334155'}; white-space: nowrap;">
-                  ${donor.name.split(' ')[0]} (${donor.distanceKm}km)
-                </div>
-              </div>
-            `,
-            iconSize: [80, 45],
-            iconAnchor: [40, 22]
-          });
-          const m = L.marker([donor.lat, donor.lng], { icon: donorIcon }).addTo(map);
-          m.on('click', () => onSelectDestination && onSelectDestination(donor));
-        });
-
+        markersGroupRef.current = L.layerGroup().addTo(map);
         mapInstance.current = map;
       } catch (mapErr) {
-        console.warn('[BloodDonationMap]', mapErr);
+        console.warn('[BloodDonationMap init]', mapErr);
       }
     }
+  }, []);
 
-    if (mapInstance.current) {
-      if (routePolylineRef.current) {
-        mapInstance.current.removeLayer(routePolylineRef.current);
-        routePolylineRef.current = null;
+  // Update Markers & Route whenever patientCoords, selectedGroup, donors, or selectedDestination change
+  useEffect(() => {
+    if (!mapInstance.current || !markersGroupRef.current) return;
+
+    // Clear previous markers
+    markersGroupRef.current.clearLayers();
+
+    // 1. Add Patient Marker
+    const patientIcon = L.divIcon({
+      className: 'custom-patient-marker',
+      html: `
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(127, 29, 29, 0.95); border: 2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.9); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 20px;">
+            📍
+          </div>
+          <div style="margin-top: 3px; background: rgba(5, 10, 20, 0.95); color: #f87171; font-size: 8px; font-weight: 900; padding: 2px 5px; border-radius: 4px; border: 1px solid #ef4444; white-space: nowrap;">
+            YOU (${selectedGroup})
+          </div>
+        </div>
+      `,
+      iconSize: [120, 60],
+      iconAnchor: [60, 30]
+    });
+    L.marker(patientCoords, { icon: patientIcon, zIndexOffset: 1000 }).addTo(markersGroupRef.current);
+
+    // 2. Add Regional Blood Banks (relative to user coords if far from seed)
+    const isFar = calculateHaversineKm(patientCoords[0], patientCoords[1], 16.5167, 80.6500) > 35;
+    const bloodBanks = [
+      { 
+        name: 'Regional Red Cross Blood Center', 
+        units: 18, 
+        lat: isFar ? patientCoords[0] + 0.011 : 16.5175, 
+        lng: isFar ? patientCoords[1] + 0.009 : 80.6488, 
+        phone: '+91-866-2571234', 
+        address: 'Central Component Storage Depot' 
+      },
+      { 
+        name: 'District Trauma Blood Bank', 
+        units: 28, 
+        lat: isFar ? patientCoords[0] - 0.013 : 16.5167, 
+        lng: isFar ? patientCoords[1] - 0.008 : 80.6500, 
+        phone: '+91-866-2472777', 
+        address: 'Emergency Cryo-Storage Unit' 
+      },
+      { 
+        name: 'Rotary Lifeline Blood Reserve', 
+        units: 14, 
+        lat: isFar ? patientCoords[0] + 0.018 : 16.5180, 
+        lng: isFar ? patientCoords[1] - 0.012 : 80.6420, 
+        phone: '+91-866-2432222', 
+        address: 'Regional Emergency Center' 
       }
+    ];
 
-      const target = selectedDestination || { lat: 16.5175, lng: 80.6488 };
-      const destLat = target.lat || target.latitude || 16.5175;
-      const destLng = target.lng || target.longitude || 80.6488;
+    bloodBanks.forEach((b) => {
+      const isSelected = selectedDestination && (selectedDestination.name === b.name);
+      const bankIcon = L.divIcon({
+        className: 'custom-bank-marker',
+        html: `
+          <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+            <div style="width: ${isSelected ? '38px' : '32px'}; height: ${isSelected ? '38px' : '32px'}; border-radius: 10px; background: ${isSelected ? 'linear-gradient(135deg, #047857, #10b981)' : 'linear-gradient(135deg, #064e3b, #022c22)'}; border: 2px solid #34d399; box-shadow: 0 0 14px rgba(16, 185, 129, 0.8); display: flex; align-items: center; justify-content: center; color: #34d399; font-size: 16px;">
+              🏥
+            </div>
+            <div style="margin-top: 2px; background: rgba(2, 44, 34, 0.95); color: #34d399; font-size: 8px; font-weight: bold; padding: 1px 4px; border-radius: 4px; border: 1px solid #10b981; white-space: nowrap;">
+              ${b.name.split(' ')[0]} (${b.units}U)
+            </div>
+          </div>
+        `,
+        iconSize: [100, 50],
+        iconAnchor: [50, 25]
+      });
+      const m = L.marker([b.lat, b.lng], { icon: bankIcon }).addTo(markersGroupRef.current);
+      m.on('click', () => onSelectDestination && onSelectDestination(b));
+    });
+
+    // 3. Add Donor Markers
+    const donorList = (donors && donors.length > 0 ? donors : VERIFIED_COMMUNITY_DONORS).map((d, idx) => {
+      if (isFar) {
+        const angles = [0.8, 2.3, 3.9, 5.1, 1.4, 4.3];
+        const radii = [0.009, 0.017, 0.022, 0.014, 0.026, 0.031];
+        const angle = angles[idx % angles.length];
+        const radius = radii[idx % radii.length];
+        return {
+          ...d,
+          lat: Number((patientCoords[0] + radius * Math.cos(angle)).toFixed(5)),
+          lng: Number((patientCoords[1] + radius * Math.sin(angle)).toFixed(5))
+        };
+      }
+      return d;
+    });
+
+    donorList.forEach((donor) => {
+      const isMatch = donor.group === selectedGroup || (donor.group === 'O-' && selectedGroup !== 'O-');
+      const isSelected = selectedDestination && (selectedDestination.name === donor.name);
+      const donorIcon = L.divIcon({
+        className: 'custom-donor-marker',
+        html: `
+          <div style="display: flex; flex-direction: column; align-items: center; opacity: ${isMatch ? '1.0' : '0.7'}; cursor: pointer;">
+            <div style="width: ${isSelected ? '36px' : '30px'}; height: ${isSelected ? '36px' : '30px'}; border-radius: 50%; background: ${isMatch ? '#dc2626' : '#1e293b'}; border: 2px solid ${isSelected ? '#fbbf24' : isMatch ? '#f87171' : '#64748b'}; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 10px; font-weight: 900; box-shadow: ${isSelected ? '0 0 16px rgba(251, 191, 36, 0.9)' : 'none'};">
+              ${donor.group}
+            </div>
+            <div style="margin-top: 1px; background: rgba(5, 10, 20, 0.95); color: ${isMatch ? '#fca5a5' : '#94a3b8'}; font-size: 7px; font-weight: bold; padding: 1px 3px; border-radius: 3px; border: 1px solid ${isMatch ? '#ef4444' : '#334155'}; white-space: nowrap;">
+              ${donor.name.split(' ')[0]} (${donor.distanceKm || '1.8'}km)
+            </div>
+          </div>
+        `,
+        iconSize: [80, 45],
+        iconAnchor: [40, 22]
+      });
+      const m = L.marker([donor.lat, donor.lng], { icon: donorIcon }).addTo(markersGroupRef.current);
+      m.on('click', () => onSelectDestination && onSelectDestination(donor));
+    });
+
+    // 4. Update Polyline Route to selected destination
+    if (routePolylineRef.current) {
+      mapInstance.current.removeLayer(routePolylineRef.current);
+      routePolylineRef.current = null;
+    }
+
+    const target = selectedDestination || bloodBanks[0];
+    if (target) {
+      const destLat = target.lat || target.latitude || (isFar ? patientCoords[0] + 0.011 : 16.5175);
+      const destLng = target.lng || target.longitude || (isFar ? patientCoords[1] + 0.009 : 80.6488);
 
       const midLat = (patientCoords[0] + destLat) / 2 + 0.001;
       const midLng = (patientCoords[1] + destLng) / 2 - 0.001;
@@ -224,23 +282,34 @@ function BloodDonationMapComponent({ selectedGroup, donors, selectedDestination,
         lineCap: 'round'
       }).addTo(mapInstance.current);
 
-      mapInstance.current.fitBounds([patientCoords, [destLat, destLng]], { padding: [40, 40] });
+      mapInstance.current.fitBounds([patientCoords, [destLat, destLng]], { padding: [45, 45], maxZoom: 15 });
     }
 
     const t1 = setTimeout(() => {
       if (mapInstance.current) mapInstance.current.invalidateSize();
-    }, 200);
+    }, 250);
 
-    return () => {
-      clearTimeout(t1);
-    };
-  }, [selectedGroup, donors, selectedDestination]);
+    return () => clearTimeout(t1);
+  }, [patientCoords, selectedGroup, donors, selectedDestination]);
 
   return (
-    <div 
-      ref={mapDivRef} 
-      className="w-full h-full min-h-[320px] sm:min-h-[440px] rounded-3xl z-0" 
-    />
+    <div className="relative w-full h-full min-h-[320px] sm:min-h-[440px] rounded-3xl overflow-hidden">
+      <div 
+        ref={mapDivRef} 
+        className="w-full h-full z-0" 
+      />
+      {onLocateUser && (
+        <button
+          onClick={onLocateUser}
+          disabled={isLocating}
+          className="absolute top-3 right-3 z-[400] px-3 py-1.5 rounded-xl bg-[#050A14]/90 hover:bg-[#081528] text-amber-400 hover:text-white border border-amber-500/40 text-xs font-black shadow-xl flex items-center space-x-1.5 transition-all backdrop-blur-md cursor-pointer active:scale-95"
+          title="Detect Current GPS Location"
+        >
+          <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
+          <span>{isLocating ? 'Locating...' : 'My GPS'}</span>
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -254,7 +323,50 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
   const [showTableExplorer, setShowTableExplorer] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState(null);
 
+  // User Live GPS Coordinates
+  const [userCoords, setUserCoords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('resqone_user_location');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.lat && parsed.lng) return [parsed.lat, parsed.lng];
+      }
+    } catch (e) {}
+    return [16.5167, 80.6500];
+  });
+  const [isLocating, setIsLocating] = useState(false);
+
+  const locateUserPosition = () => {
+    if (!navigator.geolocation) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const coords = [Number(latitude.toFixed(5)), Number(longitude.toFixed(5))];
+        setUserCoords(coords);
+        setIsLocating(false);
+        try {
+          localStorage.setItem('resqone_user_location', JSON.stringify({ lat: coords[0], lng: coords[1] }));
+        } catch (e) {}
+        DataService.matchBloodResources(selectedGroup, unitsNeeded, coords[0], coords[1]).then((res) => {
+          if (res) {
+            setMatchResults(res);
+            if (res.results && res.results.length > 0) {
+              setSelectedDestination(res.results[0]);
+            }
+          }
+        }).catch((e) => console.warn(e));
+      },
+      (err) => {
+        console.warn('BloodDonorPage geolocation error:', err);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   useEffect(() => {
+    locateUserPosition();
     return () => stopAllAudio();
   }, []);
 
@@ -283,12 +395,12 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
     setLoading(true);
     setHasSearched(true);
     try {
-      const results = await DataService.matchBloodResources(groupToMatch, units, 16.5167, 80.6500);
+      const results = await DataService.matchBloodResources(groupToMatch, units, userCoords[0], userCoords[1]);
       setMatchResults(results);
       if (results?.results && results.results.length > 0) {
         setSelectedDestination(results.results[0]);
       }
-      speakEmergencyInstruction(`Found verified blood banks and compatible donors for ${groupToMatch} in Vijayawada.`, language);
+      speakEmergencyInstruction(`Found verified blood banks and compatible donors for ${groupToMatch} nearby.`, language);
     } catch (err) {
       console.error("Error matching blood resources:", err);
     } finally {
@@ -580,7 +692,7 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
               {selectedDestination && (
                 <a
-                  href={`https://www.google.com/maps/dir/?api=1&origin=16.5167,80.6500&destination=${selectedDestination.lat || selectedDestination.latitude || 16.5175},${selectedDestination.lng || selectedDestination.longitude || 80.6488}`}
+                  href={`https://www.google.com/maps/dir/?api=1&origin=${userCoords[0]},${userCoords[1]}&destination=${selectedDestination.lat || selectedDestination.latitude || 16.5175},${selectedDestination.lng || selectedDestination.longitude || 80.6488}`}
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center space-x-1.5 shadow-md self-start sm:self-auto cursor-pointer"
@@ -593,10 +705,13 @@ export const BloodDonorPage = ({ initialQuery, onClearQuery }) => {
 
             <div className="h-[300px] sm:h-[400px] rounded-2xl overflow-hidden border border-white/10">
               <BloodDonationMapComponent 
+                patientCoords={userCoords}
                 selectedGroup={selectedGroup} 
                 donors={compatibleDonorsList} 
                 selectedDestination={selectedDestination}
                 onSelectDestination={handleSelectRouteToDestination}
+                onLocateUser={locateUserPosition}
+                isLocating={isLocating}
               />
             </div>
           </div>
