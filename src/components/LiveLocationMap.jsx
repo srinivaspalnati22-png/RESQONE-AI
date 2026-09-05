@@ -11,6 +11,8 @@ import {
   Locate, Compass, Crosshair, Radio, Activity
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { calculateRealRoadRoute, getTileLayerConfig } from '../services/routing_service';
+import { GoogleMapsToolbar } from './GoogleMapsToolbar';
 
 // Fix Leaflet default icon paths in bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -148,40 +150,66 @@ export function LiveLocationMap() {
     setTimeout(() => setDispatchStatus(null), 7000);
   };
 
-  // Interpolation loop for moving ambulance on map toward user
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [routeInfo, setRouteInfo] = useState({ distance: '', duration: '', source: '' });
+  const [mapLayer, setMapLayer] = useState('dark');
+  const nearestHospital = hospitals[0] || null;
+
+  // Dynamic Real Road Route Calculation from Nearest Hospital to User (Google Directions / OSRM)
+  useEffect(() => {
+    if (!center.lat || !center.lng) return;
+    const hospLat = nearestHospital?.latitude || (center.lat + 0.015);
+    const hospLng = nearestHospital?.longitude || (center.lng + 0.015);
+
+    let isMounted = true;
+    calculateRealRoadRoute(hospLat, hospLng, center.lat, center.lng).then((res) => {
+      if (!isMounted) return;
+      if (res.coordinates && res.coordinates.length > 1) {
+        setRouteCoordinates(res.coordinates);
+        setRouteInfo({
+          distance: `${res.distanceKm} km`,
+          duration: `${res.durationMin} mins`,
+          source: res.source
+        });
+      }
+    }).catch(err => console.warn('[LiveLocationMap] Route calculation fallback:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [nearestHospital?.latitude, nearestHospital?.longitude, center.lat, center.lng]);
+
+  // Interpolation loop for moving ambulance on map toward user along real roads
   useEffect(() => {
     if (activeDispatch?.active) {
       let progress = 0;
-      const hosp = activeDispatch.hospitalCoords || { lat: center.lat + 0.015, lng: center.lng + 0.015 };
-      const user = activeDispatch.userCoords || center;
-      
+      const pts = routeCoordinates.length > 1 ? routeCoordinates : [
+        [nearestHospital?.latitude || center.lat + 0.015, nearestHospital?.longitude || center.lng + 0.015],
+        [center.lat, center.lng]
+      ];
+
       const interval = setInterval(() => {
-        progress += 0.015;
+        progress += 0.018;
         if (progress >= 1.0) {
           clearInterval(interval);
-          setAmbulanceCoords(user);
+          setAmbulanceCoords(center);
         } else {
-          const lat = hosp.lat + (user.lat - hosp.lat) * progress;
-          const lng = hosp.lng + (user.lng - hosp.lng) * progress;
+          const totalSegs = pts.length - 1;
+          const globalT = progress * totalSegs;
+          const segIdx = Math.min(Math.floor(globalT), totalSegs - 1);
+          const localT = globalT - segIdx;
+          const p1 = pts[segIdx];
+          const p2 = pts[segIdx + 1];
+          const lat = p1[0] + (p2[0] - p1[0]) * localT;
+          const lng = p1[1] + (p2[1] - p1[1]) * localT;
           setAmbulanceCoords({ lat, lng });
         }
-      }, 150);
+      }, 120);
       return () => clearInterval(interval);
     } else {
       setAmbulanceCoords(null);
     }
-  }, [activeDispatch?.active, center.lat, center.lng]);
-
-  const nearestHospital = hospitals[0] || null;
-
-  // Route path between nearest hospital and user
-  const routePolyline = useMemo(() => {
-    if (!nearestHospital) return [];
-    return [
-      [nearestHospital.latitude || (center.lat + 0.015), nearestHospital.longitude || (center.lng + 0.015)],
-      [center.lat, center.lng]
-    ];
-  }, [nearestHospital, center.lat, center.lng]);
+  }, [activeDispatch?.active, routeCoordinates, center.lat, center.lng]);
 
   return (
     <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-blue-500/40 p-4 sm:p-6 shadow-2xl space-y-4">
@@ -208,6 +236,8 @@ export function LiveLocationMap() {
 
         {/* Action Controls */}
         <div className="flex items-center flex-wrap gap-2">
+          <GoogleMapsToolbar currentLayer={mapLayer} onLayerChange={setMapLayer} />
+
           <button
             onClick={handleTransmitLocationSOS}
             className="px-4 py-2 bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-slate-950 font-black rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-lg shadow-red-950/60 cursor-pointer min-h-[40px]"
@@ -283,13 +313,19 @@ export function LiveLocationMap() {
           {/* Recenter helper */}
           <MapRecenter center={center} />
 
-          {/* High-Tech Free Map Tile Layer - Zero API Key Required */}
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            className="leaflet-dark-mode"
-            maxZoom={19}
-          />
+          {/* Real Google Maps or High-Tech Dark Tile Layer */}
+          {(() => {
+            const conf = getTileLayerConfig(mapLayer);
+            return (
+              <TileLayer
+                key={mapLayer}
+                attribution={conf.attribution}
+                url={conf.url}
+                className={mapLayer === 'dark' ? 'leaflet-dark-mode' : ''}
+                maxZoom={conf.maxZoom}
+              />
+            );
+          })()}
 
           {/* Live GPS Accuracy Halo */}
           {accuracy && (
@@ -337,7 +373,7 @@ export function LiveLocationMap() {
                 }}
               >
                 <Popup>
-                  <div className="p-2.5 text-slate-950 font-sans max-w-xs space-y-2">
+                  <div className="p-2.5 text-slate-950 font-sans space-y-1.5 max-w-[200px]">
                     <div className="flex items-center justify-between">
                       <h4 className="font-extrabold text-xs text-slate-900">{hosp.name}</h4>
                       <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">
@@ -372,15 +408,17 @@ export function LiveLocationMap() {
             );
           })}
 
-          {/* Emergency Route Polyline */}
-          {routePolyline.length > 0 && (
+          {/* Glowing Real Road Emergency Corridor Polyline */}
+          {routeCoordinates.length > 0 && (
             <LeafletPolyline
-              positions={routePolyline}
+              positions={routeCoordinates}
               pathOptions={{
-                color: '#00D9FF',
-                weight: 4,
-                opacity: 0.85,
-                dashArray: '6, 8'
+                color: '#10b981',
+                weight: 5,
+                opacity: 0.9,
+                dashArray: '8, 6',
+                lineCap: 'round',
+                lineJoin: 'round'
               }}
             />
           )}
@@ -402,6 +440,22 @@ export function LiveLocationMap() {
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
           <span>Nearest: {nearestHospital ? `${nearestHospital.name.slice(0, 24)} (${nearestHospital.distanceKm} km)` : 'Scanning...'}</span>
         </div>
+
+        {/* Real Road Route Telemetry & Google Maps Navigation Badge */}
+        {routeInfo.distance && (
+          <div className="absolute bottom-3 left-3 z-[1000] bg-slate-950/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-emerald-500/40 text-[11px] font-mono text-emerald-300 flex flex-wrap items-center gap-2 shadow-xl">
+            <span>🛣️ Route: <strong>{routeInfo.distance} • {routeInfo.duration}</strong> ({routeInfo.source})</span>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&origin=${nearestHospital?.latitude || center.lat + 0.015},${nearestHospital?.longitude || center.lng + 0.015}&destination=${center.lat},${center.lng}&travelmode=driving`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pointer-events-auto inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 font-bold underline"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Google Maps Nav</span>
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Nearest Facilities Quick Grid */}

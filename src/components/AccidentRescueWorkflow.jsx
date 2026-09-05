@@ -11,6 +11,8 @@ import {
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { calculateRealRoadRoute, getTileLayerConfig, getGoogleMapsApiKey } from '../services/routing_service';
+import { GoogleMapsToolbar } from './GoogleMapsToolbar';
 
 export function AccidentRescueWorkflow({ crashDetails, onReset }) {
   const { user, familyContacts } = useAuth();
@@ -105,6 +107,77 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
     [16.5412, 80.5843]  // Gollapudi Crash Site (Victim Location)
   ];
 
+  // Dynamic Victim Coordinates from real telemetry or live GPS
+  const victimCoords = React.useMemo(() => {
+    if (crashDetails?.coords) {
+      if (Array.isArray(crashDetails.coords)) {
+        return [Number(crashDetails.coords[0]), Number(crashDetails.coords[1])];
+      }
+      if (crashDetails.coords.lat && crashDetails.coords.lng) {
+        return [Number(crashDetails.coords.lat), Number(crashDetails.coords.lng)];
+      }
+    }
+    return [16.5412, 80.5843];
+  }, [crashDetails]);
+
+  const leadHospCoords = [16.5167, 80.6500];
+  const currentWaypointsRef = useRef(gpsRouteWaypoints);
+  const [routeMeta, setRouteMeta] = useState({
+    distance: '11.5 km',
+    duration: '12 mins',
+    source: 'Real Road Network'
+  });
+  const [mapLayer, setMapLayer] = useState('dark');
+  const tileLayerRef = useRef(null);
+  const victimMarkerRef = useRef(null);
+
+  // Dynamic Real Road Route Calculation (Google Directions / OSRM)
+  useEffect(() => {
+    let isMounted = true;
+    calculateRealRoadRoute(leadHospCoords[0], leadHospCoords[1], victimCoords[0], victimCoords[1])
+      .then((route) => {
+        if (!isMounted) return;
+        if (route.coordinates && route.coordinates.length > 1) {
+          currentWaypointsRef.current = route.coordinates;
+          setRouteMeta({
+            distance: `${route.distanceKm} km`,
+            duration: `${route.durationMin} mins`,
+            source: route.source
+          });
+
+          if (routePolylineRef.current) {
+            routePolylineRef.current.setLatLngs(route.coordinates);
+          }
+          if (victimMarkerRef.current) {
+            victimMarkerRef.current.setLatLng(victimCoords);
+          }
+          if (mapInstanceRef.current) {
+            const bounds = L.latLngBounds([leadHospCoords, victimCoords, ...route.coordinates]);
+            mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+          }
+        }
+      })
+      .catch((err) => console.warn('[AccidentRescueWorkflow] Route calculation fallback:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [victimCoords]);
+
+  const handleLayerChange = (layer) => {
+    setMapLayer(layer);
+    if (mapInstanceRef.current && tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+      const conf = getTileLayerConfig(layer);
+      const newTileLayer = L.tileLayer(conf.url, {
+        maxZoom: conf.maxZoom,
+        className: layer === 'dark' ? 'leaflet-dark-mode' : '',
+        attribution: conf.attribution
+      }).addTo(mapInstanceRef.current);
+      tileLayerRef.current = newTileLayer;
+    }
+  };
+
   // Helper to interpolate position & heading angle along road
   const getInterpolatedGPSAndAngle = (pct) => {
     const clampedPct = Math.max(0, Math.min(100, pct));
@@ -116,13 +189,14 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
       effectiveProgress = clampedPct; // 100 -> 0 along waypoints reversed
     }
 
-    const totalSegments = gpsRouteWaypoints.length - 1;
+    const waypoints = currentWaypointsRef.current || gpsRouteWaypoints;
+    const totalSegments = waypoints.length - 1;
     const globalT = (effectiveProgress / 100) * totalSegments;
     const segIdx = Math.min(Math.floor(globalT), totalSegments - 1);
     const localT = globalT - segIdx;
 
-    const p1 = gpsRouteWaypoints[segIdx];
-    const p2 = gpsRouteWaypoints[segIdx + 1];
+    const p1 = waypoints[segIdx];
+    const p2 = waypoints[segIdx + 1];
 
     const lat = p1[0] + (p2[0] - p1[0]) * localT;
     const lng = p1[1] + (p2[1] - p1[1]) * localT;
@@ -251,15 +325,17 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
         attributionControl: false
       });
 
-      // Authentic Real-World Street Tiles (Free OpenStreetMap - No API Key Required)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        className: 'leaflet-dark-mode',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      // Real-World Street Tiles (Google Maps or OpenStreetMap)
+      const conf = getTileLayerConfig(mapLayer);
+      const tiles = L.tileLayer(conf.url, {
+        maxZoom: conf.maxZoom,
+        className: mapLayer === 'dark' ? 'leaflet-dark-mode' : '',
+        attribution: conf.attribution
       }).addTo(map);
+      tileLayerRef.current = tiles;
 
       // 1. Draw Glowing Emergency Green Corridor Polyline along Real Streets
-      const polyline = L.polyline(gpsRouteWaypoints, {
+      const polyline = L.polyline(currentWaypointsRef.current || gpsRouteWaypoints, {
         color: '#10b981',
         weight: 7,
         opacity: 0.95,
@@ -311,7 +387,7 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
         iconAnchor: [32, 40]
       });
 
-      L.marker([16.5167, 80.6500], { icon: ggh3DIcon }).addTo(map);
+      L.marker(leadHospCoords, { icon: ggh3DIcon }).addTo(map);
 
       // 3. Other Regional Hospital Markers
       hospitals.slice(1).forEach((h) => {
@@ -340,7 +416,7 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
         L.marker(h.coords, { icon: hospIcon }).addTo(map);
       });
 
-      // 4. Victim 3D Crash Marker (NH-16 Gollapudi Bypass)
+      // 4. Victim 3D Crash Marker (Real Live Telemetry Location)
       const victim3DIcon = L.divIcon({
         className: 'custom-3d-victim-marker',
         html: `
@@ -383,7 +459,8 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
         iconAnchor: [32, 40]
       });
 
-      L.marker([16.5412, 80.5843], { icon: victim3DIcon }).addTo(map);
+      const victimMarker = L.marker(victimCoords, { icon: victim3DIcon }).addTo(map);
+      victimMarkerRef.current = victimMarker;
 
       // 5. Initial 3D Animated Ambulance Marker at Hospital Start
       const { lat: initLat, lng: initLng, angle: initAngle } = getInterpolatedGPSAndAngle(0);
@@ -511,9 +588,12 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-emerald-400 self-start sm:self-auto">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>{language === 'te' ? 'లైవ్ GPS ట్రాకింగ్' : language === 'hi' ? 'लाइव जीपीएस ट्रैकिंग' : 'REAL-TIME SATELLITE GPS ACTIVE'}</span>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <GoogleMapsToolbar currentLayer={mapLayer} onLayerChange={handleLayerChange} />
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-emerald-400">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <span>{language === 'te' ? 'లైవ్ GPS' : language === 'hi' ? 'लाइव जीपीएस' : 'REAL GPS'}</span>
+            </div>
           </div>
         </div>
 
@@ -532,9 +612,22 @@ export function AccidentRescueWorkflow({ crashDetails, onReset }) {
             </div>
 
             <div className="text-[10px] text-slate-400 space-y-0.5">
-              <div>📍 Corridor: <strong className="text-white">NH-16 Gollapudi ↔ GGH Vijayawada</strong></div>
+              <div>📍 Corridor: <strong className="text-white">{crashDetails?.locationName || 'Live Crash Scene'} ↔ GGH Vijayawada</strong></div>
+              <div>🛣️ Road Distance: <strong className="text-emerald-400">{routeMeta.distance} • {routeMeta.duration}</strong> <span className="text-[9px] text-slate-500">({routeMeta.source})</span></div>
               <div>⚡ Green Signal Corridors: <strong className="text-emerald-400">4 Intersections Cleared</strong></div>
               <div>🏥 Lead Hospital: <strong className="text-cyan-300">GGH Vijayawada (14 ICU Beds Ready)</strong></div>
+            </div>
+
+            <div className="pt-1">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&origin=${leadHospCoords[0]},${leadHospCoords[1]}&destination=${victimCoords[0]},${victimCoords[1]}&travelmode=driving`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pointer-events-auto inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 font-bold underline"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Open in Google Maps Live Navigation</span>
+              </a>
             </div>
 
             {/* Mission Progress Bar */}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Navigation, Hospital, ShieldAlert, RefreshCw, Compass, Crosshair, Phone, ExternalLink, Droplet, Users, Home } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { getGoogleMapsApiKey } from '../services/routing_service';
+import { GoogleMapsToolbar } from './GoogleMapsToolbar';
 
 // JS Haversine distance function (km)
 const calculateHaversineKm = (lat1, lon1, lat2, lon2) => {
@@ -26,7 +28,15 @@ export const GoogleEmergencyMap = ({ onLocationDetected }) => {
   const [gpsStatus, setGpsStatus] = useState('INITIALIZING');
   const [activeFilter, setActiveFilter] = useState('hospitals'); // hospitals, donors, volunteers, shelters
   const [selectedEntity, setSelectedEntity] = useState(null);
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+  const [apiKey, setApiKey] = useState(getGoogleMapsApiKey());
+
+  useEffect(() => {
+    const handleKeyChange = (e) => {
+      setApiKey(e.detail?.apiKey || getGoogleMapsApiKey());
+    };
+    window.addEventListener('resqone_google_key_changed', handleKeyChange);
+    return () => window.removeEventListener('resqone_google_key_changed', handleKeyChange);
+  }, []);
 
   // Real AP Datasets
   const rawHospitals = [
@@ -135,14 +145,17 @@ export const GoogleEmergencyMap = ({ onLocationDetected }) => {
           </div>
         </div>
 
-        <button
-          onClick={detectLiveLocation}
-          disabled={loading}
-          className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer min-h-[44px]"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 text-red-400 ${loading ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">Recenter GPS</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <GoogleMapsToolbar />
+          <button
+            onClick={detectLiveLocation}
+            disabled={loading}
+            className="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer min-h-[44px]"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-red-400 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Recenter GPS</span>
+          </button>
+        </div>
       </div>
 
       {/* GPS Status Telemetry Bar */}

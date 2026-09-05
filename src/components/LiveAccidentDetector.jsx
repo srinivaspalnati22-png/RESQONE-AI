@@ -15,6 +15,8 @@ import {
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { calculateRealRoadRoute, getTileLayerConfig } from '../services/routing_service';
+import { GoogleMapsToolbar } from './GoogleMapsToolbar';
 
 // Default fallback coords for Pathanaguluru, AP (16.8118° N, 80.7045° E)
 const DEFAULT_PATHANAGULURU_COORDS = [16.8118, 80.7045];
@@ -99,6 +101,22 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   const simIndexRef = useRef(0);
   const simIntervalRef = useRef(null);
   const countdownIntervalRef = useRef(null);
+  const [mapLayer, setMapLayer] = useState('roadmap');
+  const tileLayerRef = useRef(null);
+
+  const handleLayerChange = (layer) => {
+    setMapLayer(layer);
+    if (mapInstanceRef.current && tileLayerRef.current) {
+      mapInstanceRef.current.removeLayer(tileLayerRef.current);
+      const conf = getTileLayerConfig(layer);
+      const newTileLayer = L.tileLayer(conf.url, {
+        maxZoom: conf.maxZoom,
+        className: layer === 'dark' ? 'leaflet-dark-mode' : '',
+        attribution: conf.attribution
+      }).addTo(mapInstanceRef.current);
+      tileLayerRef.current = newTileLayer;
+    }
+  };
 
   // Determine if user is moving
   const isUserMoving = currentSpeed >= 5 || isSimulatedDriving;
@@ -271,10 +289,13 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
         attributionControl: false
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      const conf = getTileLayerConfig(mapLayer);
+      const tiles = L.tileLayer(conf.url, {
+        maxZoom: conf.maxZoom,
+        className: mapLayer === 'dark' ? 'leaflet-dark-mode' : '',
+        attribution: conf.attribution
       }).addTo(map);
+      tileLayerRef.current = tiles;
 
       const userDotIcon = L.divIcon({
         className: 'google-user-live-dot',
@@ -497,13 +518,10 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
 
     try {
-      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=geojson&steps=true`;
-      const res = await fetch(osrmUrl);
-      const data = await res.json();
+      const route = await calculateRealRoadRoute(originLat, originLng, destLat, destLng);
 
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-        const roadPoints = route.geometry.coordinates.map(pt => [pt[1], pt[0]]);
+      if (route.coordinates && route.coordinates.length > 0) {
+        const roadPoints = route.coordinates;
         setRouteCoordinates(roadPoints);
 
         if (mapInstanceRef.current) {
@@ -523,17 +541,10 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
         }
 
-        const distKm = (route.distance / 1000).toFixed(1) + ' km';
-        const durMin = Math.round(route.duration / 60) + ' min';
+        const distKm = `${route.distanceKm} km`;
+        const durMin = `${route.durationMin} min`;
 
-        let turn = `Head towards ${dest.name.split(',')[0]}`;
-        if (route.legs && route.legs[0]?.steps && route.legs[0].steps.length > 1) {
-          const s1 = route.legs[0].steps[1];
-          const type = s1.maneuver.type || 'turn';
-          const mod = s1.maneuver.modifier || 'straight';
-          const road = s1.name ? ` onto ${s1.name}` : '';
-          turn = `In ${Math.round(s1.distance)}m, ${type} ${mod}${road}`;
-        }
+        let turn = route.turns?.[0] ? `In 150m, ${route.turns[0]}` : `Head towards ${dest.name.split(',')[0]}`;
         setNextTurnText(turn);
 
         setSelectedRoute({
@@ -542,7 +553,8 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           lat: destLat,
           lng: destLng,
           distance: distKm,
-          duration: durMin
+          duration: durMin,
+          source: route.source
         });
       } else {
         throw new Error('No route');
@@ -738,7 +750,9 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-end">
+          <GoogleMapsToolbar currentLayer={mapLayer} onLayerChange={handleLayerChange} />
+
           <button
             onClick={() => setIsSettingCustomOrigin(!isSettingCustomOrigin)}
             className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center justify-center space-x-1 cursor-pointer"
