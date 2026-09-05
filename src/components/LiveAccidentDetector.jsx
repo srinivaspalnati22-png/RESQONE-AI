@@ -17,6 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { calculateRealRoadRoute, getTileLayerConfig } from '../services/routing_service';
 import { GoogleMapsToolbar } from './GoogleMapsToolbar';
+import { DataService } from '../services/data_service';
 
 // Default fallback coords for Pathanaguluru, AP (16.8118° N, 80.7045° E)
 const DEFAULT_PATHANAGULURU_COORDS = [16.8118, 80.7045];
@@ -103,6 +104,8 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   const countdownIntervalRef = useRef(null);
   const [mapLayer, setMapLayer] = useState('roadmap');
   const tileLayerRef = useRef(null);
+  const hospitalMarkersRef = useRef([]);
+  const [nearbyHospitals, setNearbyHospitals] = useState([]);
 
   const handleLayerChange = (layer) => {
     setMapLayer(layer);
@@ -407,6 +410,65 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   }, [liveCoords, gpsAccuracy, isDriveActive, isUserMoving]);
 
+  // Load and plot nearby real hospitals around live location
+  useEffect(() => {
+    let isMounted = true;
+    DataService.getHospitals(liveCoords[0], liveCoords[1]).then((hosps) => {
+      if (!isMounted) return;
+      const topHosps = hosps.slice(0, 6);
+      setNearbyHospitals(topHosps);
+
+      if (mapInstanceRef.current) {
+        // Clear previous hospital markers
+        hospitalMarkersRef.current.forEach(m => m.remove());
+        hospitalMarkersRef.current = [];
+
+        topHosps.forEach((h) => {
+          const hospIcon = L.divIcon({
+            className: 'hospital-map-pin',
+            html: `
+              <div class="relative flex flex-col items-center group cursor-pointer">
+                <div class="w-6 h-6 rounded-lg bg-red-600 border border-white text-white flex items-center justify-center shadow-lg text-xs font-black">
+                  🏥
+                </div>
+                <div class="bg-slate-900/90 text-white font-bold text-[9px] px-1 py-0.5 rounded border border-white/20 whitespace-nowrap mt-0.5 shadow-md">
+                  ${h.distanceKm}km
+                </div>
+              </div>
+            `,
+            iconSize: [28, 38],
+            iconAnchor: [14, 19]
+          });
+
+          const marker = L.marker([h.latitude, h.longitude], { icon: hospIcon })
+            .addTo(mapInstanceRef.current)
+            .bindPopup(`
+              <div style="font-family: system-ui, sans-serif; padding: 4px; color: #0f172a; min-width: 170px;">
+                <b style="color: #dc2626; font-size: 12px;">🏥 ${h.name}</b><br/>
+                <span style="font-size: 11px; color: #475569;">Distance: <b>${h.distanceKm} km</b></span><br/>
+                <span style="font-size: 11px; color: #16a34a;">ICU Beds: <b>${h.icu_available || 10}</b></span>
+              </div>
+            `);
+
+          marker.on('click', () => {
+            handleSelectDestination({
+              name: h.name,
+              lat: h.latitude,
+              lng: h.longitude,
+              type: 'hospital'
+            });
+          });
+
+          hospitalMarkersRef.current.push(marker);
+        });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [liveCoords]);
+
   const handleRecenter = () => {
     fetchLiveGPS();
     if (mapInstanceRef.current) {
@@ -599,15 +661,30 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
-  const handleRouteToNearestHospital = () => {
-    const [lat, lng] = liveCoords;
-    const nearestHosp = {
-      name: 'Emergency Trauma Hub (Closest Facility)',
-      lat: lat + 0.014,
-      lng: lng + 0.016,
+  const handleRouteToNearestHospital = async () => {
+    try {
+      const hospitals = await DataService.getHospitals(liveCoords[0], liveCoords[1]);
+      if (hospitals && hospitals.length > 0) {
+        const nearest = hospitals[0];
+        handleSelectDestination({
+          name: nearest.name,
+          lat: nearest.latitude,
+          lng: nearest.longitude,
+          type: 'hospital'
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn('[Nearest Hospital Error]', err);
+    }
+
+    // High quality emergency fallback
+    handleSelectDestination({
+      name: 'Government General Hospital (GGH), Vijayawada',
+      lat: 16.5167,
+      lng: 80.6500,
       type: 'hospital'
-    };
-    handleSelectDestination(nearestHosp);
+    });
   };
 
   // ================= 5. START DRIVE & STOP DRIVE CONTROLS =================
@@ -900,16 +977,31 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             <span>🏥</span>
             <span>{language === 'te' ? 'సమీప ఆసుపత్రి రూట్' : language === 'hi' ? 'निकटतम अस्पताल रूट' : 'Route to Nearest Hospital'}</span>
           </button>
-          {SEARCH_SUGGESTIONS.map((s, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSelectDestination(s)}
-              className="px-2.5 py-1 rounded-xl bg-[#080E1C] hover:bg-blue-950/60 border border-slate-800 hover:border-blue-500/40 text-slate-300 hover:text-white text-[11px] font-bold shrink-0 transition-all cursor-pointer flex items-center space-x-1"
-            >
-              <span>{s.type === 'hospital' ? '🏥' : '📍'}</span>
-              <span className="truncate max-w-[120px]">{s.name.split(',')[0]}</span>
-            </button>
-          ))}
+          
+          {nearbyHospitals.length > 0 ? (
+            nearbyHospitals.map((hosp, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSelectDestination({ name: hosp.name, lat: hosp.latitude, lng: hosp.longitude, type: 'hospital' })}
+                className="px-2.5 py-1 rounded-xl bg-[#080E1C] hover:bg-red-950/40 border border-slate-800 hover:border-red-500/40 text-slate-300 hover:text-white text-[11px] font-medium shrink-0 transition-all cursor-pointer flex items-center space-x-1"
+              >
+                <span>🏥</span>
+                <span className="truncate max-w-[130px]">{hosp.name.split(',')[0]}</span>
+                <span className="text-[9px] text-emerald-400 font-mono">({hosp.distanceKm}km)</span>
+              </button>
+            ))
+          ) : (
+            SEARCH_SUGGESTIONS.map((s, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSelectDestination(s)}
+                className="px-2.5 py-1 rounded-xl bg-[#080E1C] hover:bg-blue-950/60 border border-slate-800 hover:border-blue-500/40 text-slate-300 hover:text-white text-[11px] font-bold shrink-0 transition-all cursor-pointer flex items-center space-x-1"
+              >
+                <span>{s.type === 'hospital' ? '🏥' : '📍'}</span>
+                <span className="truncate max-w-[120px]">{s.name.split(',')[0]}</span>
+              </button>
+            ))
+          )}
         </div>
       </div>
 

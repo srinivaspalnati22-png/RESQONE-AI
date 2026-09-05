@@ -9,15 +9,15 @@ const STORAGE_KEY = 'GOOGLE_MAPS_API_KEY';
 
 export const getGoogleMapsApiKey = () => {
   const envKey = (import.meta.env?.VITE_GOOGLE_MAPS_API_KEY || '').trim();
+  if (envKey) {
+    if (typeof window !== 'undefined') localStorage.setItem(STORAGE_KEY, envKey);
+    return envKey;
+  }
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && saved.trim().length > 0) return saved.trim();
-    if (envKey) {
-      localStorage.setItem(STORAGE_KEY, envKey);
-      return envKey;
-    }
   }
-  return envKey;
+  return 'AIzaSyCiBYqsfwvsP72VWyKzC6BuwTBXcvngYyQ';
 };
 
 export const resetGoogleMapsSdk = () => {
