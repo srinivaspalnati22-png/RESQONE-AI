@@ -73,21 +73,65 @@ const HINDI_AUDIO_MAP = {
 };
 
 const TAMIL_AUDIO_MAP = {
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
+    "கடுமையான வாகன விபத்து கண்டறியப்பட்டது. 10 வினாடிகளில் தானியங்கி மீட்புக்குழு புறப்படும்.",
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 25 seconds.":
+    "கடுமையான வாகன விபத்து கண்டறியப்பட்டது. 25 வினாடிகளில் தானியங்கி மீட்புக்குழு புறப்படும்.",
+  "Emergency SOS Confirmed. GGH Vijayawada accepted case. Ambulance ALS 108 dispatched.":
+    "அவசர SOS உறுதி செய்யப்பட்டது. அரசு பொது மருத்துவமனை வழக்கை ஏற்றது. 108 ஆம்புலன்ஸ் புறப்பட்டது.",
+  "Victim arrived safely at hospital trauma bay. Admitted to ICU. Patient is safe!":
+    "பாதிக்கப்பட்டவர் பாதுகாப்பாக மருத்துவமனை சென்றடைந்தார். தீவிர சிகிச்சை பிரிவில் அனுமதிக்கப்பட்டார்!",
+  "Navigating to Blood Donation Finder.":
+    "இரத்த தானம் தேடும் பக்கத்திற்கு செல்கிறது.",
+  "Navigating to Snakebite First Aid and Antivenom.":
+    "பாம்புக்கடி முதலுதவி பக்கத்திற்கு செல்கிறது.",
+  "Navigating to 3D Vehicle Crash Simulation.":
+    "3D விபத்து பக்கத்திற்கு செல்கிறது.",
   "Please select which snake matches what you encountered from the visual gallery below.":
     "பாம்பை அடையாளம் காண கீழே உள்ள படங்களில் இருந்து சரியான பாம்பை தேர்வு செய்யவும்.",
   "Unknown snake bite reported. Please tap which snake matches what you encountered from the visual gallery.":
     "பாம்பை அடையாளம் காண கீழே உள்ள படங்களில் இருந்து சரியான பாம்பை தேர்வு செய்யவும்.",
-  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
-    "விபத்து கண்டறியப்பட்டது. 10 வினாடிகளில் மீட்புக்குழு புறப்படும்."
+  "Warning! High speed detected. You are exceeding the safe limit. Please slow down immediately.":
+    "எச்சரிக்கை! நீங்கள் அதிவேகமாக செல்கிறீர்கள். உடனே வேகத்தைக் குறைக்கவும்.",
+  "Caution! High-accident risk zone ahead on NH-16 highway. Sharp curve detected, drive slowly.":
+    "எச்சரிக்கை! முன்னால் விபத்து ஏற்படும் அபாய பகுதி உள்ளது. மெதுவாக செல்லவும்.",
+  "Caution! Sudden lane swerving detected. Please maintain vehicle stability.":
+    "எச்சரிக்கை! வாகனம் நிலைதடுமாறுகிறது. கவனமாக ஓட்டவும்.",
+  "Speed normalized. You are safe! Hazard avoided.":
+    "வேகம் இயல்பு நிலைக்கு திரும்பியது. நீங்கள் பாதுகாப்பாக உள்ளீர்கள்!",
+  "SOS Cancelled. Stay safe.":
+    "அவசர எச்சரிக்கை ரத்து செய்யப்பட்டது. பாதுகாப்பாக இருங்கள்."
 };
 
 const KANNADA_AUDIO_MAP = {
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
+    "ತೀವ್ರ ವಾಹನ ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ. 10 ಸೆಕೆಂಡುಗಳಲ್ಲಿ ಸ್ವಯಂಚಾಲಿತ ರಕ್ಷಣಾ ಪಡೆ ಹೊರಡಲಿದೆ.",
+  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 25 seconds.":
+    "ತೀವ್ರ ವಾಹನ ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ. 25 ಸೆಕೆಂಡುಗಳಲ್ಲಿ ಸ್ವಯಂಚಾಲಿತ ರಕ್ಷಣಾ ಪಡೆ ಹೊರಡಲಿದೆ.",
+  "Emergency SOS Confirmed. GGH Vijayawada accepted case. Ambulance ALS 108 dispatched.":
+    "ತುರ್ತು SOS ದೃಢಪಟ್ಟಿದೆ. ಆಸ್ಪತ್ರೆ ಪ್ರಕರಣವನ್ನು ಸ್ವೀಕರಿಸಿದೆ. 108 ಆಂಬ್ಯುಲೆನ್ಸ್ ಹೊರಟಿದೆ.",
+  "Victim arrived safely at hospital trauma bay. Admitted to ICU. Patient is safe!":
+    "ಸಂತ್ರಸ್ತರು ಸುರಕ್ಷಿತವಾಗಿ ಆಸ್ಪತ್ರೆ ತಲುಪಿದ್ದಾರೆ. ರೋಗಿ ಸುರಕ್ಷಿತವಾಗಿದ್ದಾರೆ!",
+  "Navigating to Blood Donation Finder.":
+    "ರಕ್ತದಾನಿಗಳ ಹುಡುಕಾಟ ಪುಟಕ್ಕೆ ತೆರಳಲಾಗುತ್ತಿದೆ.",
+  "Navigating to Snakebite First Aid and Antivenom.":
+    "ಹಾವು ಕಡಿತ ಪ್ರಥಮ ಚಿಕಿತ್ಸೆ ಪುಟಕ್ಕೆ ತೆರಳಲಾಗುತ್ತಿದೆ.",
+  "Navigating to 3D Vehicle Crash Simulation.":
+    "3D ವಾಹನ ಅಪಘಾತ ಪುಟಕ್ಕೆ ತೆರಳಲಾಗುತ್ತಿದೆ.",
   "Please select which snake matches what you encountered from the visual gallery below.":
     "ಹಾವನ್ನು ಗುರುತಿಸಲು ಕೆಳಗಿನ ಚಿತ್ರಗಳಿಂದ ಸರಿಯಾದ ಹಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
   "Unknown snake bite reported. Please tap which snake matches what you encountered from the visual gallery.":
     "ಹಾವನ್ನು ಗುರುತಿಸಲು ಕೆಳಗಿನ ಚಿತ್ರಗಳಿಂದ ಸರಿಯಾದ ಹಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ.",
-  "Severe vehicle crash detected. Emergency SOS countdown active. Automatic rescue dispatch in 10 seconds.":
-    "ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ. 10 ಸೆಕೆಂಡುಗಳಲ್ಲಿ ರಕ್ಷಣಾ ಪಡೆ ಹೊರಡಲಿದೆ."
+  "Warning! High speed detected. You are exceeding the safe limit. Please slow down immediately.":
+    "ಎಚ್ಚರಿಕೆ! ನೀವು ಅತಿವೇಗದಲ್ಲಿ ಚಲಿಸುತ್ತಿದ್ದೀರಿ. ದಯವಿಟ್ಟು ತಕ್ಷಣ ವೇಗವನ್ನು ಕಡಿಮೆ ಮಾಡಿ.",
+  "Caution! High-accident risk zone ahead on NH-16 highway. Sharp curve detected, drive slowly.":
+    "ಎಚ್ಚರಿಕೆ! ಮುಂದೆ ಅಪಾಯಕಾರಿ ತಿರುವು ಮತ್ತು ಅಪಘಾತ ವಲಯವಿದೆ. ನಿಧಾನವಾಗಿ ಚಲಿಸಿ.",
+  "Caution! Sudden lane swerving detected. Please maintain vehicle stability.":
+    "ಎಚ್ಚರಿಕೆ! ವಾಹನ ಅಸ್ಥಿರವಾಗಿದೆ. ಲೇನ್ ನಿಯಂತ್ರಣವನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಿ.",
+  "Speed normalized. You are safe! Hazard avoided.":
+    "ವೇಗ ಸಹಜ ಸ್ಥಿತಿಗೆ ಬಂದಿದೆ. ನೀವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೀರಿ!",
+  "SOS Cancelled. Stay safe.":
+    "ತುರ್ತು SOS ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ. ಸುರಕ್ಷಿತವಾಗಿರಿ."
 };
 
 /**
@@ -119,6 +163,9 @@ function translateToTeluguDynamic(text) {
   if (lower.includes('starting drive') || lower.includes('live drive')) {
     return "డ్రైవింగ్ ప్రారంభమైంది. లైవ్ సెన్సార్లు మరియు స్పీడోమీటర్ పర్యవేక్షణ ఆన్‌లో ఉంది.";
   }
+  if (lower.includes('crash detected') || lower.includes('severe vehicle crash')) {
+    return "తీవ్రమైన వాహన ప్రమాదం గుర్తించబడింది. అత్యవసర ఎమర్జెన్సీ రెస్క్యూ బయలుదేరుతుంది.";
+  }
 
   return text;
 }
@@ -148,6 +195,75 @@ function translateToHindiDynamic(text) {
   }
   if (lower.includes('route') && lower.includes('hospital')) {
     return "अस्पताल के लिए सड़क मार्ग मानचित्र पर दिखाया गया है।";
+  }
+  if (lower.includes('crash detected') || lower.includes('severe vehicle crash')) {
+    return "गंभीर वाहन दुर्घटना का पता चला है। आपातकालीन बचाव दल रवाना किया जा रहा है।";
+  }
+
+  return text;
+}
+
+/**
+ * Dynamic Tamil Speech Translator for runtime templates
+ */
+function translateToTamilDynamic(text) {
+  if (TAMIL_AUDIO_MAP[text]) return TAMIL_AUDIO_MAP[text];
+
+  const lower = text.toLowerCase();
+
+  if (lower.includes('which snake') || lower.includes('visual gallery') || lower.includes('select')) {
+    return "பாம்பை அடையாளம் காண கீழே உள்ள படங்களில் இருந்து சரியான பாம்பை தேர்வு செய்யவும்.";
+  }
+  if (lower.includes('found verified blood banks') || lower.includes('compatible donors')) {
+    return "பொருத்தமான இரத்த வங்கிகள் மற்றும் இரத்த தானம் செய்பவர்கள் கண்டுபிடிக்கப்பட்டனர்.";
+  }
+  if (lower.includes('blood sos sent to') || lower.includes('cold chain courier')) {
+    return "அவசர இரத்த உதவி கோரிக்கை அனுப்பப்பட்டது. கூரியர் புறப்பட்டது.";
+  }
+  if (lower.includes('antivenom') && (lower.includes('reserved') || lower.includes('hospital'))) {
+    return "மருத்துவமனையில் நச்சு முறிவு மருந்து ஒதுக்கப்பட்டது. ஆம்புலன்ஸ் புறப்பட்டது.";
+  }
+  if (lower.includes('first aid')) {
+    return "முதலுதவி நெறிமுறை: பாதிக்கப்பட்டவரை அமைதியாக வைத்திருங்கள், உடனடியாக மருத்துவமனைக்கு அழைத்துச் செல்லுங்கள்.";
+  }
+  if (lower.includes('route') && lower.includes('hospital')) {
+    return "மருத்துவமனைக்கான பாதை வரைபடத்தில் காட்டப்பட்டுள்ளது.";
+  }
+  if (lower.includes('crash detected') || lower.includes('severe vehicle crash')) {
+    return "வாகன விபத்து கண்டறியப்பட்டது. அவசர மீட்புக்குழு புறப்படுகிறது.";
+  }
+
+  return text;
+}
+
+/**
+ * Dynamic Kannada Speech Translator for runtime templates
+ */
+function translateToKannadaDynamic(text) {
+  if (KANNADA_AUDIO_MAP[text]) return KANNADA_AUDIO_MAP[text];
+
+  const lower = text.toLowerCase();
+
+  if (lower.includes('which snake') || lower.includes('visual gallery') || lower.includes('select')) {
+    return "ಹಾವನ್ನು ಗುರುತಿಸಲು ಕೆಳಗಿನ ಚಿತ್ರಗಳಿಂದ ಸರಿಯಾದ ಹಾವನ್ನು ಆಯ್ಕೆಮಾಡಿ.";
+  }
+  if (lower.includes('found verified blood banks') || lower.includes('compatible donors')) {
+    return "ಹತ್ತಿರದ ರಕ್ತ ನಿಧಿ ಮತ್ತು ರಕ್ತದಾನಿಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಗುರುತಿಸಲಾಗಿದೆ.";
+  }
+  if (lower.includes('blood sos sent to') || lower.includes('cold chain courier')) {
+    return "ತುರ್ತು ರಕ್ತ ವಿನಂತಿ ಕಳುಹಿಸಲಾಗಿದೆ. ಶೀತಲ ಸರಪಳಿ ಕೊರಿಯರ್ ಹೊರಟಿದೆ.";
+  }
+  if (lower.includes('antivenom') && (lower.includes('reserved') || lower.includes('hospital'))) {
+    return "ಆಸ್ಪತ್ರೆಯಲ್ಲಿ ಆಂಟಿವೆನಮ್ ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ. ತುರ್ತು ಆಂಬ್ಯುಲೆನ್ಸ್ ಹೊರಟಿದೆ.";
+  }
+  if (lower.includes('first aid')) {
+    return "ಡಬ್ಲ್ಯುಎಚ್‌ಒ ಪ್ರಥಮ ಚಿಕಿತ್ಸೆ: ಗಾಯಗೊಂಡವರನ್ನು ಶಾಂತರಾಗಿರಿಸಿ ಮತ್ತು ತಕ್ಷಣವೇ ಆಸ್ಪತ್ರೆಗೆ ಕರೆದೊಯ್ಯಿರಿ.";
+  }
+  if (lower.includes('route') && lower.includes('hospital')) {
+    return "ಆಸ್ಪತ್ರೆಗೆ ರಸ್ತೆ ಮಾರ್ಗವನ್ನು ನಕ್ಷೆಯಲ್ಲಿ ತೋರಿಸಲಾಗಿದೆ.";
+  }
+  if (lower.includes('crash detected') || lower.includes('severe vehicle crash')) {
+    return "ವಾಹನ ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ. ತುರ್ತು ರಕ್ಷಣಾ ತಂಡ ಹೊರಡುತ್ತಿದೆ.";
   }
 
   return text;
@@ -192,10 +308,10 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
       spokenText = translateToHindiDynamic(text);
     } else if (selectedLang === 'ta') {
       targetLocale = 'ta-IN';
-      spokenText = TAMIL_AUDIO_MAP[text] || text;
+      spokenText = translateToTamilDynamic(text);
     } else if (selectedLang === 'kn') {
       targetLocale = 'kn-IN';
-      spokenText = KANNADA_AUDIO_MAP[text] || text;
+      spokenText = translateToKannadaDynamic(text);
     }
 
     const utterance = new SpeechSynthesisUtterance(spokenText);

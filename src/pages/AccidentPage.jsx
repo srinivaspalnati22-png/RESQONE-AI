@@ -48,6 +48,10 @@ export const AccidentPage = () => {
       return 'Live Drive & Accident Detection';
     }
     if (activeMode === 'google_maps') {
+      if (language === 'te') return 'గూగుల్ మ్యాప్స్ లైవ్ రూటింగ్ & నావిగేషన్';
+      if (language === 'hi') return 'गूगल मैप्स लाइव नेविगेशन एवं मार्ग';
+      if (language === 'ta') return 'கூகுள் வரைபடம் நேரலை வழிகாட்டல்';
+      if (language === 'kn') return 'ಗೂಗಲ್ ನಕ್ಷೆ ಲೈವ್ ಮಾರ್ಗದರ್ಶನ';
       return 'Google Maps Live Routing & Directions Engine';
     }
     return t('sim_title') || '3D Real-Time Crash & Rescue';
@@ -62,6 +66,10 @@ export const AccidentPage = () => {
       return 'Real-time GPS road map, speedometer thresholds, G-force impact & live driving detector';
     }
     if (activeMode === 'google_maps') {
+      if (language === 'te') return 'టర్న్-బై-టర్న్ లైవ్ నావిగేషన్, వేగవంతమైన ఆసుపత్రి మార్గాలు & గూగుల్ మ్యాప్స్ SDK';
+      if (language === 'hi') return 'चरण-दर-चरण लाइव नेविगेशन, तीव्र अस्पताल मार्ग और गूगल मैप्स एसडीके';
+      if (language === 'ta') return 'நேரலை திருப்ப வழிகாட்டல் மற்றும் மருத்துவமனை வழித்தடங்கள்';
+      if (language === 'kn') return 'ಲೈವ್ ಹಂತ-ಹಂತದ ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ಆಸ್ಪತ್ರೆ ಮಾರ್ಗಗಳು';
       return 'Turn-by-turn live navigation, fastest hospital routing & Google Maps SDK integration';
     }
     return t('sim_desc') || 'Physics collision engine, vehicle telemetry & emergency rescue simulations';
@@ -72,7 +80,7 @@ export const AccidentPage = () => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      className="space-y-4 max-w-7xl mx-auto px-2 sm:px-4"
+      className="space-y-4 max-w-7xl mx-auto px-2 sm:px-4 pb-32 sm:pb-40"
     >
       {/* Sleek Modern Header Bar with Segmented View Switcher */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl bg-[#080E1C]/95 border border-white/10 shadow-2xl backdrop-blur-xl">
@@ -103,19 +111,19 @@ export const AccidentPage = () => {
         <div className="grid grid-cols-3 sm:flex items-center bg-[#050A14] p-1 rounded-xl border border-white/[0.08] w-full md:w-auto shrink-0 gap-1 shadow-inner">
           <button
             onClick={() => setActiveMode('live_detection')}
-            className={`min-h-[36px] px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`min-h-9 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               activeMode === 'live_detection'
                 ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-950/60 ring-1 ring-cyan-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-850'
             }`}
           >
             <Satellite className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{language === 'te' ? 'లైవ్ డ్రైవ్' : language === 'hi' ? 'लाइव ड्राइव' : 'Live Drive'}</span>
+            <span className="truncate">{language === 'te' ? 'లైవ్ డ్రైవ్' : language === 'hi' ? 'लाइव ड्राइव' : language === 'ta' ? 'நேரலை டிரைவ்' : language === 'kn' ? 'ಲೈವ್ ಡ್ರೈವ್' : 'Live Drive'}</span>
           </button>
 
           <button
             onClick={() => setActiveMode('google_maps')}
-            className={`min-h-[36px] px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`min-h-9 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               activeMode === 'google_maps'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-950/60 ring-1 ring-blue-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-850'
@@ -127,14 +135,14 @@ export const AccidentPage = () => {
 
           <button
             onClick={() => setActiveMode('3d_simulation')}
-            className={`min-h-[36px] px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`min-h-9 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               activeMode === '3d_simulation'
                 ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-950/60 ring-1 ring-red-400/40'
                 : 'text-slate-400 hover:text-white hover:bg-slate-850'
             }`}
           >
             <Car className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{language === 'te' ? '3D క్రాష్' : language === 'hi' ? '3D क्रैश' : '3D Crash'}</span>
+            <span className="truncate">{language === 'te' ? '3D క్రాష్' : language === 'hi' ? '3D क्रैश' : language === 'ta' ? '3D விபத்து' : language === 'kn' ? '3D ಅಪಘಾತ' : '3D Crash'}</span>
           </button>
         </div>
       </div>

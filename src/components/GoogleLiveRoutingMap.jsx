@@ -67,6 +67,16 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const [nearbyHospitals, setNearbyHospitals] = useState([]);
   const [mobileViewTab, setMobileViewTab] = useState('map'); // 'map' | 'turns'
+  const [isMapTouchPan, setIsMapTouchPan] = useState(false);
+
+  // Sync Google Maps gestureHandling with isMapTouchPan toggle
+  useEffect(() => {
+    if (mapInstanceRef.current && window.google?.maps) {
+      mapInstanceRef.current.setOptions({
+        gestureHandling: isMapTouchPan ? 'greedy' : 'cooperative'
+      });
+    }
+  }, [isMapTouchPan]);
 
   // 1. Load Google Maps SDK
   useEffect(() => {
@@ -236,6 +246,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
     const maps = window.google.maps;
 
     // Create Map with mobile-optimized touch gestures
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const map = new maps.Map(mapContainerRef.current, {
       zoom: 15,
       center: currentPos,
@@ -244,7 +255,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
       streetViewControl: false,
       fullscreenControl: false,
       zoomControl: true,
-      gestureHandling: 'greedy', // Seamless 1-finger panning on mobile touchscreens
+      gestureHandling: isMapTouchPan ? 'greedy' : (isMobile ? 'cooperative' : 'greedy'), // cooperative enables smooth page scroll on mobile
       styles: mapTheme === 'dark' ? GOOGLE_DARK_MODE_STYLE : null
     });
     mapInstanceRef.current = map;
@@ -432,7 +443,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
   };
 
   return (
-    <div className="w-full bg-[#070D18] border border-blue-500/30 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xl space-y-3 sm:space-y-4 font-sans text-white max-w-full overflow-hidden">
+    <div className="w-full bg-[#070D18] border border-blue-500/30 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-2xl space-y-3 sm:space-y-4 font-sans text-white max-w-full overflow-hidden pb-20 sm:pb-28">
       
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-3">
@@ -443,7 +454,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           <div className="min-w-0">
             <div className="flex items-center space-x-1.5 flex-wrap">
               <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider truncate">
-                Google Maps Live Routing
+                {language === 'te' ? 'గూగుల్ మ్యాప్స్ లైవ్ రూటింగ్' : language === 'hi' ? 'गूगल मैप्स लाइव नेविगेशन' : language === 'ta' ? 'கூகுள் வரைபடம் நேரலை வழிகாட்டல்' : language === 'kn' ? 'ಗೂಗಲ್ ನಕ್ಷೆ ಲೈವ್ ಮಾರ್ಗದರ್ಶನ' : 'Google Maps Live Routing'}
               </h3>
               <span className="text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/40 shrink-0">
                 LIVE GPS
@@ -478,7 +489,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
             className="px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[10px] sm:text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 shadow-md"
           >
             {isLocating ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Crosshair className="w-3 h-3" />}
-            <span>Locate</span>
+            <span>{language === 'te' ? 'లొకేట్' : language === 'hi' ? 'स्थान' : language === 'ta' ? 'கண்டறி' : language === 'kn' ? 'ಪತ್ತೆಮಾಡಿ' : 'Locate'}</span>
           </button>
         </div>
       </div>
@@ -490,13 +501,13 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           <label className="block text-[11px] font-bold text-slate-400 mb-1 flex items-center justify-between">
             <span className="flex items-center gap-1">
               <Crosshair className="w-3 h-3 text-blue-400" />
-              <span>START (ORIGIN)</span>
+              <span>{language === 'te' ? 'ప్రారంభం (లొకేషన్)' : language === 'hi' ? 'प्रारंभ (स्थान)' : language === 'ta' ? 'தொடக்க இடம்' : language === 'kn' ? 'ಪ್ರಾರಂಭದ ಸ್ಥಳ' : 'START (ORIGIN)'}</span>
             </span>
             <button
               onClick={() => { setUseLiveOrigin(true); panToCurrentLocation(); }}
               className="text-[10px] text-blue-400 hover:underline cursor-pointer"
             >
-              Use Live GPS
+              {language === 'te' ? 'లైవ్ GPS వాడు' : language === 'hi' ? 'लाइव GPS' : language === 'ta' ? 'நேரலை GPS' : language === 'kn' ? 'ಲೈವ್ GPS' : 'Use Live GPS'}
             </button>
           </label>
           <input
@@ -513,7 +524,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
         <div>
           <label className="block text-[11px] font-bold text-slate-400 mb-1 flex items-center gap-1">
             <MapPin className="w-3 h-3 text-red-400" />
-            <span>DESTINATION (HOSPITAL)</span>
+            <span>{language === 'te' ? 'గమ్యస్థానం (ఆసుపత్రి)' : language === 'hi' ? 'गंतव्य (अस्पताल)' : language === 'ta' ? 'சேருமிடம் (மருத்துவமனை)' : language === 'kn' ? 'ಗಮ್ಯಸ್ಥಾನ (ಆಸ್ಪತ್ರೆ)' : 'DESTINATION (HOSPITAL)'}</span>
           </label>
           <input
             id="end"
@@ -528,7 +539,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
         {/* Travel Mode & Route Trigger */}
         <div className="flex flex-col justify-end">
           <label className="block text-[11px] font-bold text-slate-400 mb-1">
-            TRAVEL MODE & ACTION
+            {language === 'te' ? 'ప్రయాణ మార్గం & చర్య' : language === 'hi' ? 'यात्रा मोड एवं क्रिया' : language === 'ta' ? 'பயண முறை' : language === 'kn' ? 'ಪ್ರಯಾಣ ವಿಧಾನ' : 'TRAVEL MODE & ACTION'}
           </label>
           <div className="flex gap-1.5">
             <select
@@ -537,10 +548,10 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
               onChange={(e) => setSelectedMode(e.target.value)}
               className="bg-[#080E1C] border border-slate-700 rounded-xl px-2.5 py-2 text-white font-bold text-xs focus:outline-none cursor-pointer"
             >
-              <option value="DRIVING">Driving (Emergency)</option>
-              <option value="WALKING">Walking</option>
-              <option value="BICYCLING">Bicycling</option>
-              <option value="TRANSIT">Transit</option>
+              <option value="DRIVING">{language === 'te' ? 'డ్రైవింగ్ (ఎమర్జెన్సీ)' : language === 'hi' ? 'ड्राइविंग (आपातकालीन)' : language === 'ta' ? 'வாகனம் (அவசரம்)' : language === 'kn' ? 'ಡ್ರೈವಿಂಗ್ (ತುರ್ತು)' : 'Driving (Emergency)'}</option>
+              <option value="WALKING">{language === 'te' ? 'నడక' : language === 'hi' ? 'पैदल' : language === 'ta' ? 'நடை' : language === 'kn' ? 'ನಡಿಗೆ' : 'Walking'}</option>
+              <option value="BICYCLING">{language === 'te' ? 'సైకిల్' : language === 'hi' ? 'साइकिल' : language === 'ta' ? 'மிதிவண்டி' : language === 'kn' ? 'ಸೈಕಲ್' : 'Bicycling'}</option>
+              <option value="TRANSIT">{language === 'te' ? 'రవాణా' : language === 'hi' ? 'ट्रांजिट' : language === 'ta' ? 'பேருந்து/ரயில்' : language === 'kn' ? 'ಸಾರಿಗೆ' : 'Transit'}</option>
             </select>
             <button
               onClick={() => calculateAndDisplayRoute()}
@@ -548,7 +559,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
               className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl px-3 py-2 text-xs flex items-center justify-center gap-1 cursor-pointer transition-all shadow-md shadow-blue-950"
             >
               <Route className="w-3.5 h-3.5" />
-              <span>{isCalculatingRoute ? 'Routing...' : 'Route'}</span>
+              <span>{isCalculatingRoute ? (language === 'te' ? 'గణన...' : language === 'hi' ? 'खोज...' : 'Routing...') : (language === 'te' ? 'రూట్' : language === 'hi' ? 'मार्ग' : language === 'ta' ? 'வழி' : language === 'kn' ? 'ಮಾರ್ಗ' : 'Route')}</span>
             </button>
           </div>
         </div>
@@ -556,7 +567,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
 
       {/* Emergency Nearby Hospitals Quick Selector */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-        <span className="text-[10px] text-slate-400 font-bold shrink-0">🏥 Nearby Hospitals:</span>
+        <span className="text-[10px] text-slate-400 font-bold shrink-0">🏥 {language === 'te' ? 'సమీప ఆసుపత్రులు:' : language === 'hi' ? 'निकटतम अस्पताल:' : language === 'ta' ? 'அருகிலுள்ள மருத்துவமனைகள்:' : language === 'kn' ? 'ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗಳು:' : 'Nearby Hospitals:'}</span>
         {nearbyHospitals.map((hosp, idx) => (
           <button
             key={idx}
@@ -602,7 +613,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
               }`}
             >
               {isSimulatingDrive ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-              <span>{isSimulatingDrive ? 'Stop Drive' : 'Simulate Live Drive'}</span>
+              <span>{isSimulatingDrive ? (language === 'te' ? 'డ్రైవ్ ఆపు' : language === 'hi' ? 'ड्राइव रोकें' : language === 'ta' ? 'நிறுத்து' : language === 'kn' ? 'ನಿಲ್ಲಿಸಿ' : 'Stop Drive') : (language === 'te' ? 'లైవ్ డ్రైవ్ అనుకరణ' : language === 'hi' ? 'लाइव ड्राइव सिमुलेशन' : language === 'ta' ? 'பயண உருவகப்படுத்துதல்' : language === 'kn' ? 'ಲೈವ್ ಡ್ರೈವ್ ಸಿಮ್ಯುಲೇಶನ್' : 'Simulate Live Drive')}</span>
             </button>
 
             <a
@@ -627,7 +638,7 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           }`}
         >
           <MapPin className="w-3.5 h-3.5" />
-          <span>Interactive Map</span>
+          <span>{language === 'te' ? 'ఇంటరాక్టివ్ మ్యాప్' : language === 'hi' ? 'इंटरैक्टिव मानचित्र' : language === 'ta' ? 'நேரலை வரைபடம்' : language === 'kn' ? 'ಲೈವ್ ನಕ್ಷೆ' : 'Interactive Map'}</span>
         </button>
         <button
           onClick={() => setMobileViewTab('turns')}
@@ -636,17 +647,29 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
           }`}
         >
           <Route className="w-3.5 h-3.5" />
-          <span>Turn Steps ({routeSummary?.stepsCount || 0})</span>
+          <span>{language === 'te' ? `మలుపుల వివరాలు (${routeSummary?.stepsCount || 0})` : language === 'hi' ? `नेविगेशन चरण (${routeSummary?.stepsCount || 0})` : language === 'ta' ? `வழிமுறைகள் (${routeSummary?.stepsCount || 0})` : language === 'kn' ? `ಮಾರ್ಗದ ಹಂತಗಳು (${routeSummary?.stepsCount || 0})` : `Turn Steps (${routeSummary?.stepsCount || 0})`}</span>
         </button>
       </div>
 
       {/* Main Map & Step-by-Step Directions Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Google Maps Canvas */}
-        <div className={`lg:col-span-2 relative w-full h-[360px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner ${
+        <div className={`lg:col-span-2 relative w-full h-[290px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner ${
           mobileViewTab === 'turns' ? 'hidden lg:block' : 'block'
         }`}>
-          <div ref={mapContainerRef} className="w-full h-full" />
+          <div ref={mapContainerRef} className="w-full h-full" style={{ touchAction: isMapTouchPan ? 'none' : 'pan-y' }} />
+
+          {/* Mobile Floating 1-Finger Gesture Toggle */}
+          <button
+            onClick={() => setIsMapTouchPan(!isMapTouchPan)}
+            className={`absolute top-3 right-3 z-10 px-2.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-2xl backdrop-blur-md transition-all sm:hidden cursor-pointer ${
+              isMapTouchPan
+                ? 'bg-amber-500 text-slate-950 font-black ring-1 ring-amber-300'
+                : 'bg-slate-900/90 text-cyan-300 border border-cyan-500/40'
+            }`}
+          >
+            <span>{isMapTouchPan ? '🗺️ 1-Finger: Pan Map' : '📜 1-Finger: Scroll Page'}</span>
+          </button>
           
           {/* Loading Indicator */}
           {(sdkLoading || isLocating) && (
@@ -658,11 +681,11 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
         </div>
 
         {/* Google Directions Sidebar Panel */}
-        <div className={`relative w-full h-[360px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-3 sm:p-4 flex flex-col space-y-2 ${
+        <div className={`relative w-full h-[320px] sm:h-[480px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-3 sm:p-4 flex flex-col space-y-2 ${
           mobileViewTab === 'map' ? 'hidden lg:flex' : 'flex'
         }`}>
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between border-b border-slate-800 pb-2 shrink-0">
-            <span>Turn-by-Turn Navigation</span>
+            <span>{language === 'te' ? 'మలుపుల వారీగా నావిగేషన్' : language === 'hi' ? 'चरण-दर-चरण नेविगेशन' : language === 'ta' ? 'வழிகாட்டல் படிகள்' : language === 'kn' ? 'ಹಂತ-ಹಂತದ ಮಾರ್ಗದರ್ಶನ' : 'Turn-by-Turn Navigation'}</span>
             <span className="text-[10px] text-blue-400 font-mono">DirectionsRenderer</span>
           </h4>
           <div 

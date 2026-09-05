@@ -89,6 +89,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   const [crashModalOpen, setCrashModalOpen] = useState(false);
   const [crashCountdown, setCrashCountdown] = useState(10);
   const [impactG, setImpactG] = useState(4.85);
+  const [isTouchPanning, setIsTouchPanning] = useState(false);
 
   // References
   const mapContainerRef = useRef(null);
@@ -121,13 +122,29 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
+  // Sync touch dragging mode with Leaflet
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      if (isTouchPanning) {
+        mapInstanceRef.current.dragging.enable();
+      } else {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        if (isMobile) {
+          mapInstanceRef.current.dragging.disable();
+        } else {
+          mapInstanceRef.current.dragging.enable();
+        }
+      }
+    }
+  }, [isTouchPanning]);
+
   // Determine if user is moving
   const isUserMoving = currentSpeed >= 5 || isSimulatedDriving;
 
   // Multilingual UI Dictionary Helpers
   const locLabel = language === 'te' ? 'ప్రత్యక్ష లొకేషన్' : language === 'hi' ? 'लाइव स्थान' : language === 'ta' ? 'நேரலை இடம்' : language === 'kn' ? 'ಲೈವ್ ಸ್ಥಳ' : 'Live Location';
-  const notDrivingLabel = language === 'te' ? '🅿️ మీరు ప్రస్తుతం డ్రైవింగ్ చేయడం లేదు (వాహనం ఆగింది)' : language === 'hi' ? '🅿️ आप वर्तमान में ड्राइविंग नहीं कर रहे हैं (वाहन रुका हुआ है)' : language === 'ta' ? '🅿️ நீங்கள் தற்போது ஓட்டவில்லை' : '🅿️ YOU ARE NOT CURRENTLY DRIVING (STATIONARY)';
-  const movingLabel = (spd) => language === 'te' ? `🟢 ప్రయాణిస్తున్నారు (${spd} KM/H)` : language === 'hi' ? `🟢 वाहन चल रहा है (${spd} KM/H)` : `🟢 USER IS MOVING (${spd} KM/H)`;
+  const notDrivingLabel = language === 'te' ? '🅿️ మీరు ప్రస్తుతం డ్రైవింగ్ చేయడం లేదు (వాహనం ఆగింది)' : language === 'hi' ? '🅿️ आप वर्तमान में ड्राइविंग नहीं कर रहे हैं (वाहन रुका हुआ है)' : language === 'ta' ? '🅿️ நீங்கள் தற்போது வாகனம் ஓட்டவில்லை (நிற்கிறது)' : language === 'kn' ? '🅿️ ನೀವು ಪ್ರಸ್ತುತ ಚಾಲನೆ ಮಾಡುತ್ತಿಲ್ಲ (ವಾಹನ ನಿಂತಿದೆ)' : '🅿️ YOU ARE NOT CURRENTLY DRIVING (STATIONARY)';
+  const movingLabel = (spd) => language === 'te' ? `🟢 ప్రయాణిస్తున్నారు (${spd} KM/H)` : language === 'hi' ? `🟢 वाहन चल रहा है (${spd} KM/H)` : language === 'ta' ? `🟢 வாகனம் இயங்குகிறது (${spd} KM/H)` : language === 'kn' ? `🟢 ವಾಹನ ಚಲಿಸುತ್ತಿದೆ (${spd} KM/H)` : `🟢 USER IS MOVING (${spd} KM/H)`;
 
   // Reverse Geocoding Helper
   const reverseGeocode = async (lat, lng) => {
@@ -286,11 +303,13 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
       const map = L.map(mapContainerRef.current, {
         center: liveCoords,
         zoom: 17,
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        dragging: !isMobile
       });
 
       const conf = getTileLayerConfig(mapLayer);
@@ -801,7 +820,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   };
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-3 font-sans">
+    <div className="w-full max-w-full overflow-x-hidden space-y-3 font-sans pb-20 sm:pb-28">
 
       {/* 1. TOP LIVE LOCATION BAR (RESPONSIVE ON MOBILE) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl bg-[#080E1C] border border-white/10 shadow-xl">
@@ -847,7 +866,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 flex items-center justify-center space-x-1 cursor-pointer"
           >
             <Edit3 className="w-3 h-3 text-cyan-400" />
-            <span className="truncate">{language === 'te' ? 'లొకేషన్ మార్చు' : language === 'hi' ? 'स्थान बदलें' : 'Set Location'}</span>
+            <span className="truncate">{language === 'te' ? 'లొకేషన్ మార్చు' : language === 'hi' ? 'स्थान बदलें' : language === 'ta' ? 'இடத்தை மாற்று' : language === 'kn' ? 'ಸ್ಥಳ ಬದಲಿಸಿ' : 'Set Location'}</span>
           </button>
           
           <button
@@ -856,7 +875,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             className="px-2.5 py-1.5 rounded-xl bg-[#1a73e8] hover:bg-blue-600 text-white cursor-pointer shadow-md flex items-center justify-center gap-1 text-xs font-bold shrink-0"
           >
             {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LocateFixed className="w-3.5 h-3.5" />}
-            <span>{language === 'te' ? 'లొకేట్' : language === 'hi' ? 'स्थान' : 'Locate'}</span>
+            <span>{language === 'te' ? 'లొకేట్' : language === 'hi' ? 'स्थान' : language === 'ta' ? 'கண்டறி' : language === 'kn' ? 'ಪತ್ತೆಮಾಡಿ' : 'Locate'}</span>
           </button>
         </div>
       </div>
@@ -932,7 +951,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             value={searchQuery}
             onChange={handleSearchInput}
             onFocus={() => { if (searchResults.length > 0) setSearchOpen(true); }}
-            placeholder={language === 'te' ? 'గమ్యస్థానాన్ని వెతకండి (ఉదా: GGH విజయవాడ, AIIMS)...' : language === 'hi' ? 'गंतव्य खोजें (उदा: GGH विजयवाड़ा, AIIMS)...' : "Search destination route (e.g. GGH Vijayawada, AIIMS)..."}
+            placeholder={language === 'te' ? 'గమ్యస్థానాన్ని వెతకండి (ఉదా: GGH విజయవాడ, AIIMS)...' : language === 'hi' ? 'गंतव्य खोजें (उदा: GGH विजयवाड़ा, AIIMS)...' : language === 'ta' ? 'சேருமிடத்தைத் தேடுங்கள் (எ.கா: GGH, AIIMS)...' : language === 'kn' ? 'ಗಮ್ಯಸ್ಥಾನವನ್ನು ಹುಡುಕಿ (ಉದಾ: GGH, AIIMS)...' : "Search destination route (e.g. GGH Vijayawada, AIIMS)..."}
             className="w-full bg-[#080E1C] border-2 border-[#1a73e8]/50 focus:border-[#1a73e8] rounded-2xl pl-10 pr-20 py-2.5 text-xs sm:text-sm text-white placeholder-slate-400 shadow-2xl focus:outline-none transition-all"
           />
           <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
@@ -941,7 +960,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
               className="bg-[#1a73e8] hover:bg-blue-600 text-white font-black px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-all shadow-md"
             >
               <Route className="w-3 h-3" />
-              <span>{language === 'te' ? 'రూట్' : language === 'hi' ? 'मार्ग' : 'Route'}</span>
+              <span>{language === 'te' ? 'రూట్' : language === 'hi' ? 'मार्ग' : language === 'ta' ? 'வழி' : language === 'kn' ? 'ಮಾರ್ಗ' : 'Route'}</span>
             </button>
           </div>
         </form>
@@ -954,7 +973,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             title="Auto-route to closest emergency trauma hospital"
           >
             <span>🏥</span>
-            <span>{language === 'te' ? 'సమీప ఆసుపత్రి రూట్' : language === 'hi' ? 'निकटतम अस्पताल रूट' : 'Route to Nearest Hospital'}</span>
+            <span>{language === 'te' ? 'సమీప ఆసుపత్రి రూట్' : language === 'hi' ? 'निकटतम अस्पताल रूट' : language === 'ta' ? 'அருகிலுள்ள மருத்துவமனை வழி' : language === 'kn' ? 'ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆ ಮಾರ್ಗ' : 'Route to Nearest Hospital'}</span>
           </button>
           
           {nearbyHospitals.length > 0 ? (
@@ -999,7 +1018,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
               <div className="min-w-0">
                 <div className="flex items-center space-x-2">
                   <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">
-                    {language === 'te' ? 'రూట్ సిద్ధం' : language === 'hi' ? 'मार्ग तैयार' : 'ROUTE READY'}
+                    {language === 'te' ? 'రూట్ సిద్ధం' : language === 'hi' ? 'मार्ग तैयार' : language === 'ta' ? 'பாதை தயார்' : language === 'kn' ? 'ಮಾರ್ಗ ಸಿದ್ಧ' : 'ROUTE READY'}
                   </span>
                   <span className="text-[9px] font-bold text-slate-400 font-mono bg-white/5 px-2 py-0.5 rounded">
                     {selectedRoute.distance} • {selectedRoute.duration}
@@ -1025,7 +1044,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             >
               <Play className="w-4 h-4 fill-slate-950 text-slate-950 shrink-0" />
               <span className="truncate">
-                {language === 'te' ? `${selectedRoute.name} వైపు డ్రైవ్ ప్రారంభించండి` : language === 'hi' ? `${selectedRoute.name} के लिए ड्राइव शुरू करें` : `START DRIVE TO ${selectedRoute.name.toUpperCase()}`}
+                {language === 'te' ? `${selectedRoute.name} వైపు డ్రైవ్ ప్రారంభించండి` : language === 'hi' ? `${selectedRoute.name} के लिए ड्राइव शुरू करें` : language === 'ta' ? `${selectedRoute.name} நோக்கி பயணிக்கவும்` : language === 'kn' ? `${selectedRoute.name} ಕಡೆಗೆ ಡ್ರೈವ್ ಪ್ರಾರಂಭಿಸಿ` : `START DRIVE TO ${selectedRoute.name.toUpperCase()}`}
               </span>
             </button>
 
@@ -1067,15 +1086,27 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
               className="bg-black/30 hover:bg-black/50 text-white px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 ml-2 cursor-pointer flex items-center space-x-1"
             >
               <StopCircle className="w-3.5 h-3.5" />
-              <span>{language === 'te' ? 'ఆపు' : language === 'hi' ? 'रोकें' : 'Stop'}</span>
+              <span>{language === 'te' ? 'ఆపు' : language === 'hi' ? 'रोकें' : language === 'ta' ? 'நிறுத்து' : language === 'kn' ? 'ನಿಲ್ಲಿಸಿ' : 'Stop'}</span>
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 5. MAIN MAP CONTAINER */}
-      <div className="relative w-full h-[320px] sm:h-[400px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-        <div ref={mapContainerRef} className="w-full h-full" />
+      {/* 5. MAIN MAP CONTAINER WITH MOBILE SCROLL PROTECTION */}
+      <div className="relative w-full h-[280px] sm:h-[400px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+        <div ref={mapContainerRef} className="w-full h-full" style={{ touchAction: isTouchPanning ? 'none' : 'pan-y' }} />
+
+        {/* Mobile Floating 1-Finger Gesture Toggle */}
+        <button
+          onClick={() => setIsTouchPanning(!isTouchPanning)}
+          className={`absolute top-3 left-3 z-10 px-2.5 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 shadow-2xl backdrop-blur-md transition-all sm:hidden cursor-pointer ${
+            isTouchPanning
+              ? 'bg-amber-500 text-slate-950 font-black ring-1 ring-amber-300'
+              : 'bg-[#080E1C]/90 text-cyan-300 border border-cyan-500/40'
+          }`}
+        >
+          <span>{isTouchPanning ? '🗺️ 1-Finger: Pan Map' : '📜 1-Finger: Scroll Page'}</span>
+        </button>
 
         {/* Floating Recenter & Locate Me Button */}
         <button
@@ -1090,7 +1121,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
         {!selectedRoute && !isDriveActive && (
           <div className="absolute bottom-2 left-2 right-2 z-10 bg-[#080E1C]/95 backdrop-blur-md p-2.5 rounded-2xl border border-white/10 shadow-lg text-center">
             <p className="text-[11px] text-slate-300 font-bold">
-              🔍 {language === 'te' ? 'డ్రైవ్ ప్రారంభించడానికి పైనున్న గమ్యస్థానాన్ని ఎంచుకోండి' : language === 'hi' ? 'ड्राइव शुरू करने के लिए ऊपर दिए गए गंतव्य का चयन करें' : 'Select a destination route above to begin drive'}
+              🔍 {language === 'te' ? 'డ్రైవ్ ప్రారంభించడానికి పైనున్న గమ్యస్థానాన్ని ఎంచుకోండి' : language === 'hi' ? 'ड्राइव शुरू करने के लिए ऊपर दिए गए गंतव्य का चयन करें' : language === 'ta' ? 'தொடங்க மேலே உள்ள சேருமிடத்தைத் தேர்ந்தெடுக்கவும்' : language === 'kn' ? 'ಪ್ರಾರಂಭಿಸಲು ಮೇಲಿನ ಗಮ್ಯಸ್ಥಾನವನ್ನು ಆಯ್ಕೆಮಾಡಿ' : 'Select a destination route above to begin drive'}
             </p>
           </div>
         )}
@@ -1154,7 +1185,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
                   className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 text-white py-2 px-3 rounded-xl text-xs font-black shadow-lg cursor-pointer flex items-center justify-center space-x-1"
                 >
                   <AlertOctagon className="w-3.5 h-3.5" />
-                  <span>{language === 'te' ? 'క్రాష్ అనుకరణ (4.85G)' : language === 'hi' ? 'क्रैश सिमुलेशन' : 'Simulate Crash (4.85G)'}</span>
+                  <span>{language === 'te' ? 'క్రాష్ అనుకరణ (4.85G)' : language === 'hi' ? 'क्रैश सिमुलेशन (4.85G)' : language === 'ta' ? 'விபத்து உருவகப்படுத்துதல் (4.85G)' : language === 'kn' ? 'ಕ್ರ್ಯಾಶ್ ಸಿಮ್ಯುಲೇಶನ್ (4.85G)' : 'Simulate Crash (4.85G)'}</span>
                 </button>
               </div>
             </div>
@@ -1202,7 +1233,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
               <div className="min-w-0">
                 <h3 className="text-xs sm:text-sm font-black text-white">{notDrivingLabel}</h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  {language === 'te' ? 'వాహనం కదలడం ప్రారంభించగానే లైవ్ సెన్సార్లు ఆటోమేటిక్‌గా ప్రారంభమవుతాయి.' : 'Speed is 0 km/h. Live sensor readings will activate once your vehicle moves.'}
+                  {language === 'te' ? 'వాహనం కదలడం ప్రారంభించగానే లైవ్ సెన్సార్లు ఆటోమేటిక్‌గా ప్రారంభమవుతాయి.' : language === 'hi' ? 'वाहन चलने पर लाइव सेंसर रीडिंग सक्रिय हो जाएगी।' : language === 'ta' ? 'வாகனம் நகரும்போது நேரலை சென்சார்கள் தானாக செயல்படும்.' : language === 'kn' ? 'ವಾಹನ ಚಲಿಸಲು ಪ್ರಾರಂಭಿಸಿದಾಗ ಲೈವ್ ಸಂವೇದಕಗಳು ಸಕ್ರಿಯಗೊಳ್ಳುತ್ತವೆ.' : 'Speed is 0 km/h. Live sensor readings will activate once your vehicle moves.'}
                 </p>
               </div>
             </div>
@@ -1220,7 +1251,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
                 onClick={handleStopDrive}
                 className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl text-xs font-bold border border-slate-700 cursor-pointer"
               >
-                {language === 'te' ? 'రద్దు' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                {language === 'te' ? 'రద్దు' : language === 'hi' ? 'रद्द करें' : language === 'ta' ? 'ரத்து' : language === 'kn' ? 'ರದ್ದು' : 'Cancel'}
               </button>
             </div>
           </motion.div>
@@ -1246,10 +1277,10 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
                   {impactG}G IMPACT DETECTED
                 </span>
                 <h2 className="text-base sm:text-xl font-black text-white">
-                  {language === 'te' ? 'ప్రమాదం గుర్తించబడింది!' : language === 'hi' ? 'दुर्घटना का पता चला!' : 'HIGH-G CRASH DETECTED!'}
+                  {language === 'te' ? 'ప్రమాదం గుర్తించబడింది!' : language === 'hi' ? 'दुर्घटना का पता चला!' : language === 'ta' ? 'விபத்து கண்டறியப்பட்டது!' : language === 'kn' ? 'ಅಪಘಾತ ಪತ್ತೆಯಾಗಿದೆ!' : 'HIGH-G CRASH DETECTED!'}
                 </h2>
                 <p className="text-[11px] text-slate-300">
-                  {language === 'te' ? 'మీరు సురక్షితంగా ఉన్నారా? రెస్క్యూ పంపమంటారా?' : 'Are you injured or in need of emergency rescue?'}
+                  {language === 'te' ? 'మీరు సురక్షితంగా ఉన్నారా? రెస్క్యూ పంపమంటారా?' : language === 'hi' ? 'क्या आप सुरक्षित हैं? आपातकालीन बचाव भेजें?' : language === 'ta' ? 'நீங்கள் பாதுகாப்பாக உள்ளீர்களா? மீட்புக் குழுவை அனுப்பவா?' : language === 'kn' ? 'ನೀವು ಸುರಕ್ಷಿತವಾಗಿದ್ದೀರಾ? ರಕ್ಷಣಾ ತಂಡವನ್ನು ಕಳುಹಿಸಬೇಕೆ?' : 'Are you injured or in need of emergency rescue?'}
                 </p>
               </div>
 
@@ -1264,13 +1295,13 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
                   className="w-full bg-gradient-to-r from-red-600 via-red-500 to-amber-500 text-white font-black py-3 px-4 rounded-2xl text-xs sm:text-sm shadow-xl cursor-pointer flex items-center justify-center space-x-2"
                 >
                   <Siren className="w-4 h-4 animate-spin" />
-                  <span>{language === 'te' ? 'అత్యవసర రెస్క్యూ పంపండి' : language === 'hi' ? 'आपातकालीन बचाव भेजें' : 'DISPATCH RESCUE NOW'}</span>
+                  <span>{language === 'te' ? 'అత్యవసర రెస్క్యూ పంపండి' : language === 'hi' ? 'आपातकालीन बचाव भेजें' : language === 'ta' ? 'மீட்புக் குழுவை அனுப்பு' : language === 'kn' ? 'ತುರ್ತು ರಕ್ಷಣಾ ತಂಡವನ್ನು ಕಳುಹಿಸಿ' : 'DISPATCH RESCUE NOW'}</span>
                 </button>
                 <button
                   onClick={handleCancelCrash}
                   className="w-full bg-slate-900 hover:bg-slate-800 text-slate-300 py-2.5 px-4 rounded-2xl text-xs font-bold border border-slate-700 cursor-pointer"
                 >
-                  {language === 'te' ? 'నేను సురక్షితంగా ఉన్నాను (రద్దు)' : language === 'hi' ? 'मैं सुरक्षित हूँ (रद्द करें)' : 'I AM SAFE (CANCEL SOS)'}
+                  {language === 'te' ? 'నేను సురక్షితంగా ఉన్నాను (రద్దు)' : language === 'hi' ? 'मैं सुरक्षित हूँ (रद्द करें)' : language === 'ta' ? 'நான் பாதுகாப்பாக உள்ளேன் (ரத்து)' : language === 'kn' ? 'ನಾನು ಸುರಕ್ಷಿತವಾಗಿದ್ದೇನೆ (ರದ್ದು)' : 'I AM SAFE (CANCEL SOS)'}
                 </button>
               </div>
             </motion.div>

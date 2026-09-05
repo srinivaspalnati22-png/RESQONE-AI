@@ -462,6 +462,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
   const [speed, setSpeed] = useState(85);
   const [gForce, setGForce] = useState(1.05);
   const [isAutoOrbit, setIsAutoOrbit] = useState(false);
+  const [isTouchRotating, setIsTouchRotating] = useState(false);
 
   // Pre-Crash Proactive Safety Radar State
   const [preCrashAlert, setPreCrashAlert] = useState(null);
@@ -789,7 +790,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
   };
 
   return (
-    <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl space-y-4 p-3.5 sm:p-6 relative">
+    <div className="w-full bg-[#0B1220]/95 backdrop-blur-2xl rounded-3xl border border-slate-800/80 shadow-2xl space-y-4 p-3 sm:p-6 relative pb-10">
       
       {/* 1. Header Bar: Responsive Mobile & Desktop Layout */}
       <div className="flex flex-col gap-2.5 border-b border-slate-800 pb-3">
@@ -798,7 +799,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
           <div className="grid grid-cols-3 sm:flex items-center gap-1.5 bg-[#050A14] p-1 rounded-2xl border border-slate-800 w-full sm:w-auto">
             <button
               onClick={() => setVehicleType('car')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+              className={`px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center justify-center space-x-1 sm:space-x-1.5 transition-all cursor-pointer ${
                 vehicleType === 'car' 
                   ? 'bg-cyan-600 text-slate-950 shadow-lg shadow-cyan-950/60 ring-2 ring-cyan-400/50' 
                   : 'text-slate-400 hover:text-white bg-slate-900/40'
@@ -810,7 +811,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
 
             <button
               onClick={() => setVehicleType('bike')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+              className={`px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center justify-center space-x-1 sm:space-x-1.5 transition-all cursor-pointer ${
                 vehicleType === 'bike' 
                   ? 'bg-cyan-600 text-slate-950 shadow-lg shadow-cyan-950/60 ring-2 ring-cyan-400/50' 
                   : 'text-slate-400 hover:text-white bg-slate-900/40'
@@ -822,7 +823,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
 
             <button
               onClick={() => setVehicleType('ambulance')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
+              className={`px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center justify-center space-x-1 sm:space-x-1.5 transition-all cursor-pointer ${
                 vehicleType === 'ambulance' 
                   ? 'bg-red-600 text-white shadow-lg shadow-red-950/60 ring-2 ring-red-400/50' 
                   : 'text-slate-400 hover:text-white bg-slate-900/40'
@@ -877,13 +878,14 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
           onClick={handleStartAutonomousScenario}
           className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white text-xs font-black flex items-center justify-center space-x-2 cursor-pointer shadow-lg shadow-cyan-950/80 active:scale-95 transition-all"
         >
-          <Zap className="w-4 h-4 fill-white" />
-          <span>🚀 Run Scenario: Drive → Speeding → Voice Alert → Collision</span>
+          <Zap className="w-4 h-4 fill-white shrink-0" />
+          <span className="hidden sm:inline">🚀 Run Scenario: Drive → Speeding → Voice Alert → Collision</span>
+          <span className="sm:hidden">🚀 Run Autonomous Crash Scenario</span>
         </button>
       </div>
 
-      {/* 2. 3D Viewport - START BACK VIEW + FULL 360° ROTATION */}
-      <div className="relative w-full h-[380px] sm:h-[480px] rounded-3xl overflow-hidden border border-slate-800 bg-[#02050E] shadow-inner">
+      {/* 2. 3D Viewport - START BACK VIEW + FULL 360° ROTATION (SMOOTH MOBILE SCROLL) */}
+      <div className="relative w-full h-[260px] sm:h-[440px] rounded-3xl overflow-hidden border border-slate-800 bg-[#02050E] shadow-inner touch-pan-y">
         <WebGLErrorBoundary fallback={<WebGLFallbackView simState={simState} vehicleType={vehicleType} speed={speed} gForce={gForce} />}>
           <Suspense fallback={
             <div className="w-full h-full flex flex-col items-center justify-center space-y-3 bg-[#02050E]">
@@ -895,7 +897,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
               shadows
               key={`back-view-360-${vehicleType}`}
               camera={initialCamera}
-              style={{ width: '100%', height: '100%' }}
+              style={{ width: '100%', height: '100%', touchAction: isTouchRotating ? 'none' : 'pan-y' }}
             >
               <ambientLight intensity={1.3} />
               <directionalLight position={[0, 12, -8]} intensity={3.2} castShadow />
@@ -923,7 +925,7 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
 
               <ContactShadows position={[0, 0, 0]} opacity={0.85} scale={12} blur={2.2} far={4} />
               
-              {/* FULL 360° ORBIT CONTROLS - Drag freely in all directions */}
+              {/* FULL 360° ORBIT CONTROLS - Drag freely, touch-friendly on mobile */}
               <OrbitControls 
                 enableZoom={true} 
                 autoRotate={isAutoOrbit}
@@ -932,6 +934,10 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
                 dampingFactor={0.05}
                 maxPolarAngle={Math.PI / 2.05} 
                 minPolarAngle={Math.PI / 6}
+                touches={{
+                  ONE: isTouchRotating ? THREE.TOUCH.ROTATE : THREE.TOUCH.NONE,
+                  TWO: THREE.TOUCH.DOLLY_ROTATE
+                }}
               />
             </Canvas>
           </Suspense>
@@ -949,16 +955,33 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
                 ? 'bg-amber-400 animate-pulse' 
                 : 'bg-emerald-400'
             }`} />
-            <span>
+            <span className="truncate max-w-[200px] sm:max-w-none">
               {simState === 'CRASHED' 
                 ? 'CRASH DETECTED: 4.85G IMPACT' 
                 : storyStep === 'SAFE'
-                ? 'SAFE: HAZARD AVOIDED • SPEED NORMAL'
+                ? 'SAFE: HAZARD AVOIDED'
                 : preCrashAlert 
                 ? `HAZARD WARNING ACTIVE: ${speed} KM/H` 
-                : '360° INTERACTIVE VIEW • PRE-CRASH RADAR ACTIVE'}
+                : '360° VIEW • PRE-CRASH RADAR ACTIVE'}
             </span>
           </div>
+        </div>
+
+        {/* Mobile-Friendly Touch Rotate / Page Scroll Toggle */}
+        <div className="absolute bottom-3 left-3 z-10">
+          <button
+            type="button"
+            onClick={() => setIsTouchRotating(!isTouchRotating)}
+            className={`px-2.5 py-1.5 rounded-xl border text-[10px] sm:text-xs font-bold flex items-center space-x-1.5 backdrop-blur-md cursor-pointer transition-all shadow-xl ${
+              isTouchRotating
+                ? 'bg-amber-500 text-slate-950 border-amber-400 ring-2 ring-amber-400/50 font-black'
+                : 'bg-black/80 text-cyan-300 border-cyan-500/40 hover:text-white'
+            }`}
+            title="Toggle 1-finger 3D model rotation vs normal page scrolling"
+          >
+            <Orbit className={`w-3.5 h-3.5 shrink-0 ${isTouchRotating ? 'animate-spin' : ''}`} />
+            <span>{isTouchRotating ? '1-Finger: 3D Rotate' : '📱 1-Finger: Scroll Page'}</span>
+          </button>
         </div>
 
         {/* USER LISTENED & SAFE BANNER */}
@@ -976,18 +999,18 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
 
         {/* PRE-CRASH PROACTIVE WARNING & DECISION HUD OVERLAY */}
         {preCrashAlert && simState !== 'CRASHED' && storyStep !== 'SAFE' && (
-          <div className="absolute top-12 left-2 right-2 sm:left-6 sm:right-6 z-20 bg-[#070D18]/95 backdrop-blur-2xl border-2 border-amber-400 rounded-3xl p-4 sm:p-5 shadow-[0_0_60px_rgba(245,158,11,0.7)] animate-in fade-in zoom-in space-y-3.5">
+          <div className="absolute top-12 left-2 right-2 sm:left-6 sm:right-6 z-20 bg-[#070D18]/95 backdrop-blur-2xl border-2 border-amber-400 rounded-3xl p-3 sm:p-5 shadow-[0_0_60px_rgba(245,158,11,0.7)] animate-in fade-in zoom-in space-y-3">
             
             {/* Header with Title & Live 15s Countdown Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/30 pb-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/30 pb-2">
               <div className="flex items-center space-x-2 text-amber-400 font-mono text-xs sm:text-sm font-black uppercase">
-                <AlertTriangle className="w-5 h-5 animate-bounce text-amber-400 shrink-0" />
-                <span>{preCrashAlert.title}</span>
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce text-amber-400 shrink-0" />
+                <span className="truncate">{preCrashAlert.title}</span>
               </div>
               <div className="flex items-center space-x-2 self-start sm:self-auto">
-                <span className="bg-red-950/90 text-red-300 font-mono text-xs font-black px-3 py-1 rounded-full border border-red-500/60 animate-pulse flex items-center space-x-1.5 shadow-md">
+                <span className="bg-red-950/90 text-red-300 font-mono text-xs font-black px-2.5 py-0.5 rounded-full border border-red-500/60 animate-pulse flex items-center space-x-1.5 shadow-md">
                   <Clock className="w-3.5 h-3.5 text-red-400" />
-                  <span>DECISION TIMER: {hazardCountdown}s</span>
+                  <span>TIMER: {hazardCountdown}s</span>
                 </span>
               </div>
             </div>
@@ -1001,32 +1024,26 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
             </div>
 
             {/* Spoken Alert Message */}
-            <p className="text-xs sm:text-sm font-extrabold text-white leading-relaxed bg-[#0B1426] p-3 rounded-2xl border border-slate-800">
+            <p className="text-xs sm:text-sm font-extrabold text-white leading-relaxed bg-[#0B1426] p-2.5 sm:p-3 rounded-2xl border border-slate-800">
               {preCrashAlert.message}
             </p>
 
-            <div className="text-[11px] text-slate-300 font-medium">
-              💡 <span className="text-amber-300 font-bold">Action Required:</span> Choose an action below within <span className="text-white font-mono font-bold">{hazardCountdown} seconds</span>, or system will simulate crash impact.
-            </div>
-
             {/* TWO HIGH-CONTRAST DECISION BUTTONS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              {/* Option A: User Listens -> Safe */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
               <button
                 onClick={handleUserListensSlowDown}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-emerald-950/90 active:scale-95 ring-2 ring-emerald-400/50"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black py-2.5 sm:py-3 px-3 rounded-2xl text-[11px] sm:text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-emerald-950/90 active:scale-95 ring-2 ring-emerald-400/50"
               >
-                <CheckCircle2 className="w-5 h-5 fill-slate-950 text-emerald-400" />
-                <span>{language === 'te' ? '🛑 వేగాన్ని తగ్గించండి (నేను నెమ్మదిగా వెళ్తాను)' : language === 'hi' ? '🛑 गति धीमी करें (मैं सुनूंगा)' : '🛑 SLOW DOWN (I WILL LISTEN)'}</span>
+                <CheckCircle2 className="w-4 h-4 fill-slate-950 text-emerald-400 shrink-0" />
+                <span className="truncate">{language === 'te' ? '🛑 వేగాన్ని తగ్గించండి' : language === 'hi' ? '🛑 गति धीमी करें' : '🛑 SLOW DOWN (I WILL LISTEN)'}</span>
               </button>
 
-              {/* Option B: User Doesn't Listen -> Crash & Rescue */}
               <button
                 onClick={handleIgnoreWarningAndCrash}
-                className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black py-3.5 px-4 rounded-2xl text-xs sm:text-sm flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-red-950/90 active:scale-95 ring-2 ring-red-500/50"
+                className="w-full bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black py-2.5 sm:py-3 px-3 rounded-2xl text-[11px] sm:text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-xl shadow-red-950/90 active:scale-95 ring-2 ring-red-500/50"
               >
-                <AlertOctagon className="w-5 h-5 animate-pulse text-white" />
-                <span>{language === 'te' ? '⚠️ హెచ్చరికను పట్టించుకోకండి (ప్రమాదాన్ని అనుకరించండి)' : language === 'hi' ? '⚠️ अनसुना करें (दुर्घटना सिमुलेट करें)' : '⚠️ IGNORE / SPEED UP (TRIGGER CRASH)'}</span>
+                <AlertOctagon className="w-4 h-4 animate-pulse text-white shrink-0" />
+                <span className="truncate">{language === 'te' ? '⚠️ హెచ్చరికను పట్టించుకోకండి' : language === 'hi' ? '⚠️ अनसुना करें' : '⚠️ IGNORE / SPEED UP (CRASH)'}</span>
               </button>
             </div>
 
@@ -1037,10 +1054,11 @@ export const Vehicle3DSimulation = ({ onAccidentConfirmed, externalReset }) => {
         {simState !== 'CRASHED' && (
           <button
             onClick={handleIgnoreWarningAndCrash}
-            className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-xs px-4 sm:px-6 py-3 rounded-2xl shadow-xl shadow-red-950/80 flex items-center space-x-2 transition-all cursor-pointer hover:scale-105"
+            className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-[11px] sm:text-xs px-3 sm:px-5 py-2 sm:py-3 rounded-2xl shadow-xl shadow-red-950/80 flex items-center space-x-1.5 transition-all cursor-pointer hover:scale-105"
           >
-            <AlertOctagon className="w-4 h-4 animate-pulse" />
-            <span>{language === 'te' ? 'ప్రమాదాన్ని అనుకరించండి (4.85G క్రాష్)' : language === 'hi' ? 'दुर्घटना सिमुलेट करें (4.85G)' : 'TRIGGER 3D ACCIDENT (4.85G)'}</span>
+            <AlertOctagon className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse shrink-0" />
+            <span className="hidden sm:inline">{language === 'te' ? 'ప్రమాదాన్ని అనుకరించండి (4.85G క్రాష్)' : language === 'hi' ? 'दुर्घटना सिमुलेट करें (4.85G)' : 'TRIGGER 3D ACCIDENT (4.85G)'}</span>
+            <span className="sm:hidden">4.85G CRASH</span>
           </button>
         )}
       </div>
