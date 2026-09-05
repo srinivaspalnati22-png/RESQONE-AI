@@ -9,13 +9,14 @@ import {
 import { Vehicle3DSimulation } from '../components/Vehicle3DSimulation';
 import { LiveAccidentDetector } from '../components/LiveAccidentDetector';
 import { AccidentRescueWorkflow } from '../components/AccidentRescueWorkflow';
+import { GoogleLiveRoutingMap } from '../components/GoogleLiveRoutingMap';
 import { useLanguage } from '../context/LanguageContext';
 
 export const AccidentPage = () => {
   const { language, t } = useLanguage();
   const [activeCrashDetails, setActiveCrashDetails] = useState(null);
   const [isDispatched, setIsDispatched] = useState(false);
-  const [activeMode, setActiveMode] = useState('live_detection'); // 'live_detection' | '3d_simulation'
+  const [activeMode, setActiveMode] = useState('live_detection'); // 'live_detection' | 'google_maps' | '3d_simulation'
 
   const handleAccidentConfirmed = (details) => {
     setActiveCrashDetails(details);
@@ -46,6 +47,9 @@ export const AccidentPage = () => {
       if (language === 'kn') return 'ಲೈವ್ ಅಪಘಾತ ಪತ್ತೆ';
       return 'Live Drive & Accident Detection';
     }
+    if (activeMode === 'google_maps') {
+      return 'Google Maps Live Routing & Directions Engine';
+    }
     return t('sim_title') || '3D Real-Time Crash & Rescue';
   };
 
@@ -56,6 +60,9 @@ export const AccidentPage = () => {
       if (language === 'ta') return 'நேரலை GPS வரைபடம் மற்றும் சென்சார் கண்காணிப்பு';
       if (language === 'kn') return 'ನೈಜ ಸಮಯದ ಜಿಪಿಎಸ್ ನಕ್ಷೆ ಮತ್ತು ಸಂವೇದಕಗಳ ಮೇಲ್ವಿಚಾರಣೆ';
       return 'Real-time GPS road map, speedometer thresholds, G-force impact & live driving detector';
+    }
+    if (activeMode === 'google_maps') {
+      return 'Official Google Maps JavaScript SDK, HTML5 Geolocation watchPosition, DirectionsService & DirectionsRenderer turn panel';
     }
     return t('sim_subtitle') || '3D WebGL Highway decision support simulation with collision dynamics';
   };
@@ -81,7 +88,7 @@ export const AccidentPage = () => {
                 {getHeaderTitle()}
               </h2>
               <span className="bg-red-600/20 text-red-400 border border-red-500/40 text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase shrink-0">
-                {language === 'te' ? 'సెన్సార్లు ఆన్' : language === 'hi' ? 'सक्रिय सेंसर' : 'ACTIVE SENSORS'}
+                {activeMode === 'google_maps' ? 'GOOGLE SDK ACTIVE' : language === 'te' ? 'సెన్సార్లు ఆన్' : language === 'hi' ? 'सक्रिय सेंसर' : 'ACTIVE SENSORS'}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 line-clamp-2 sm:line-clamp-1">
@@ -90,8 +97,8 @@ export const AccidentPage = () => {
           </div>
         </div>
 
-        {/* Dual Mode Switcher Tabs */}
-        <div className="grid grid-cols-2 sm:flex items-center bg-[#050A14] p-1 rounded-2xl border border-white/[0.08] w-full sm:w-auto shrink-0 gap-1 sm:gap-0">
+        {/* 3-Way Mode Switcher Tabs */}
+        <div className="grid grid-cols-3 sm:flex items-center bg-[#050A14] p-1 rounded-2xl border border-white/[0.08] w-full sm:w-auto shrink-0 gap-1 sm:gap-0">
           <button
             onClick={() => setActiveMode('live_detection')}
             className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
@@ -107,6 +114,18 @@ export const AccidentPage = () => {
           </button>
 
           <button
+            onClick={() => setActiveMode('google_maps')}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+              activeMode === 'google_maps'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Route className="w-3.5 h-3.5" />
+            <span className="truncate">Google Maps</span>
+          </button>
+
+          <button
             onClick={() => setActiveMode('3d_simulation')}
             className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               activeMode === '3d_simulation'
@@ -116,19 +135,29 @@ export const AccidentPage = () => {
           >
             <Car className="w-3.5 h-3.5" />
             <span className="truncate">
-              {language === 'te' ? '3D క్రాష్ డెమో' : language === 'hi' ? '3D क्रैश डेमो' : '3D Crash Demo'}
+              {language === 'te' ? '3D క్రాష్' : language === 'hi' ? '3D क्रैश' : '3D Crash'}
             </span>
           </button>
         </div>
       </div>
 
       {/* RENDER SELECTED MODE */}
-      {activeMode === 'live_detection' ? (
+      {activeMode === 'live_detection' && (
         <LiveAccidentDetector 
           onAccidentConfirmed={handleAccidentConfirmed} 
           externalReset={handleResetAll}
         />
-      ) : (
+      )}
+
+      {activeMode === 'google_maps' && (
+        <GoogleLiveRoutingMap 
+          onRouteCalculated={(route) => {
+            console.log('[GoogleLiveRoutingMap] Active route:', route);
+          }}
+        />
+      )}
+
+      {activeMode === '3d_simulation' && (
         <Vehicle3DSimulation 
           onAccidentConfirmed={handleAccidentConfirmed} 
           externalReset={handleResetAll} 
