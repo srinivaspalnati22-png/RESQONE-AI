@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, RotateCcw, ArrowRight, X } from 'lucide-react';
 import { VoiceControlWidget } from './components/VoiceControlWidget';
 import { stopAllAudio } from './services/audio_service';
+import { GlobalAudioWidget } from './components/GlobalAudioWidget';
 
 // Code-split heavy secondary pages for instant load across all platforms
 const AccidentPage = lazy(() => import('./pages/AccidentPage').then(m => ({ default: m.AccidentPage })));
@@ -309,6 +310,9 @@ function AppContent() {
 
       {/* Persistent Notification Permission Banner Prompt for All Users */}
       <NotificationPermissionBanner />
+
+      {/* Global Voice / Audioout Tester & Mute Widget */}
+      <GlobalAudioWidget />
 
       {/* Bottom Floating Navigation Bar */}
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />

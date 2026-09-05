@@ -5,7 +5,8 @@ import {
   ShieldAlert, AlertTriangle, Hospital, Car, ArrowRight, Play, Square
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getGoogleMapsApiKey, loadGoogleMapsSdk } from '../services/routing_service';
+import { getGoogleMapsApiKey, loadGoogleMapsSdk, geocodeLocation } from '../services/routing_service';
+import { speakEmergencyInstruction } from '../services/audio_service';
 import { DataService } from '../services/data_service';
 
 // Google Maps Night / Dark Style JSON for tactical emergency aesthetic
@@ -360,41 +361,60 @@ export const GoogleLiveRoutingMap = ({ onRouteCalculated, initialDestination = n
   }, [sdkReady, mapTheme]);
 
   // 4. Calculate & Display Google Directions Route
-  const calculateAndDisplayRoute = useCallback((customDestination = null) => {
+  const calculateAndDisplayRoute = useCallback(async (customDestination = null) => {
     if (!directionsServiceRef.current || !directionsRendererRef.current || !window.google?.maps) return;
 
     setIsCalculatingRoute(true);
     const maps = window.google.maps;
 
     const origin = useLiveOrigin ? new maps.LatLng(currentPos.lat, currentPos.lng) : startQuery;
-    const destination = customDestination || endQuery;
+    let destination = customDestination || endQuery;
 
-    directionsServiceRef.current.route(
-      {
-        origin: origin,
-        destination: destination,
-        travelMode: maps.TravelMode[selectedMode] || maps.TravelMode.DRIVING,
-        provideRouteAlternatives: true
-      },
-      (response, status) => {
-        setIsCalculatingRoute(false);
-        if (status === 'OK' && response?.routes?.[0]) {
-          directionsRendererRef.current.setDirections(response);
-          const leg = response.routes[0].legs[0];
-          const summary = {
-            distance: leg.distance.text,
-            duration: leg.duration.text,
-            startAddress: leg.start_address,
-            endAddress: leg.end_address,
-            stepsCount: leg.steps.length,
-            overviewPath: response.routes[0].overview_path.map(p => [p.lat(), p.lng()])
-          };
-          setRouteSummary(summary);
-          if (onRouteCalculated) onRouteCalculated(summary);
+    const executeRoute = (destTarget) => {
+      directionsServiceRef.current.route(
+        {
+          origin: origin,
+          destination: destTarget,
+          travelMode: maps.TravelMode[selectedMode] || maps.TravelMode.DRIVING,
+          provideRouteAlternatives: true
+        },
+        async (response, status) => {
+          if (status === 'OK' && response?.routes?.[0]) {
+            setIsCalculatingRoute(false);
+            directionsRendererRef.current.setDirections(response);
+            const leg = response.routes[0].legs[0];
+            const summary = {
+              distance: leg.distance.text,
+              duration: leg.duration.text,
+              startAddress: leg.start_address,
+              endAddress: leg.end_address,
+              stepsCount: leg.steps.length,
+              overviewPath: response.routes[0].overview_path.map(p => [p.lat(), p.lng()])
+            };
+            setRouteSummary(summary);
+            if (onRouteCalculated) onRouteCalculated(summary);
+
+            // Multilingual Voice Guidance Announcement
+            speakEmergencyInstruction(`Driving route calculated to ${endQuery.split(',')[0]}. Total distance: ${leg.distance.text}.`, language);
+          } else {
+            // If string destination failed, try resolving coordinates via geocoder
+            if (typeof destTarget === 'string') {
+              try {
+                const geo = await geocodeLocation(destTarget);
+                if (geo && geo.length > 0) {
+                  executeRoute(new maps.LatLng(geo[0].lat, geo[0].lng));
+                  return;
+                }
+              } catch {}
+            }
+            setIsCalculatingRoute(false);
+          }
         }
-      }
-    );
-  }, [useLiveOrigin, currentPos, startQuery, endQuery, selectedMode, onRouteCalculated]);
+      );
+    };
+
+    executeRoute(destination);
+  }, [useLiveOrigin, currentPos, startQuery, endQuery, selectedMode, onRouteCalculated, language]);
 
   // Auto calculate when destination is preset
   useEffect(() => {

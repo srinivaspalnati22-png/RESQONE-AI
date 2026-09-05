@@ -124,7 +124,7 @@ export async function calculateRealRoadRoute(originLat, originLng, destLat, dest
   // 2. High-precision Real Road Routing via OSRM (100% Free, Zero Key, Real Streets)
   try {
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=geojson&steps=true`;
-    const res = await fetch(osrmUrl, { headers: { 'User-Agent': 'ResQOne-AI' } });
+    const res = await fetch(osrmUrl);
     if (res.ok) {
       const data = await res.json();
       if (data.routes && data.routes.length > 0) {
@@ -226,5 +226,66 @@ export function getTileLayerConfig(layerType = 'hybrid', apiKey = getGoogleMapsA
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   };
+}
+
+/**
+ * Universal, CORS-friendly geocoding helper using Google Geocoder + Photon OpenStreetMap
+ * @param {string} query
+ * @returns {Promise<Array<{ name: string, shortName: string, lat: number, lng: number, type: string }>>}
+ */
+export async function geocodeLocation(query) {
+  if (!query || typeof query !== 'string' || !query.trim()) return [];
+  const cleanQuery = query.trim();
+
+  // 1. Try Google Maps Geocoder if SDK is available
+  if (typeof window !== 'undefined' && window.google?.maps?.Geocoder) {
+    try {
+      const geocoder = new window.google.maps.Geocoder();
+      const results = await new Promise((resolve) => {
+        geocoder.geocode({ address: cleanQuery }, (res, status) => {
+          if (status === 'OK' && res?.length > 0) resolve(res);
+          else resolve(null);
+        });
+      });
+      if (results && results.length > 0) {
+        return results.slice(0, 6).map((item) => ({
+          name: item.formatted_address || cleanQuery,
+          shortName: item.address_components?.[0]?.long_name || cleanQuery,
+          lat: item.geometry.location.lat(),
+          lng: item.geometry.location.lng(),
+          type: 'google'
+        }));
+      }
+    } catch (e) {
+      console.warn('[RoutingService] Google geocoder failed, falling back to Photon:', e.message);
+    }
+  }
+
+  // 2. High-speed, CORS-friendly Photon OpenStreetMap Geocoding API (100% free, zero rate limit 403)
+  try {
+    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(cleanQuery)}&limit=6`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.features && data.features.length > 0) {
+        return data.features.map((f) => {
+          const props = f.properties || {};
+          const title = props.name || props.street || cleanQuery;
+          const locParts = [props.street, props.city || props.town || props.locality, props.state, props.country].filter(Boolean);
+          const fullName = locParts.length > 0 ? `${title}, ${locParts.join(', ')}` : title;
+          return {
+            name: fullName,
+            shortName: title,
+            lat: f.geometry.coordinates[1],
+            lng: f.geometry.coordinates[0],
+            type: props.osm_value === 'hospital' ? 'hospital' : props.type || 'place'
+          };
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[RoutingService] Photon geocoding network error:', err.message);
+  }
+
+  return [];
 }
 

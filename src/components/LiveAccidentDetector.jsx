@@ -15,7 +15,7 @@ import {
 import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { calculateRealRoadRoute, getTileLayerConfig } from '../services/routing_service';
+import { calculateRealRoadRoute, getTileLayerConfig, geocodeLocation } from '../services/routing_service';
 import { GoogleMapsToolbar } from './GoogleMapsToolbar';
 import { DataService } from '../services/data_service';
 
@@ -146,14 +146,35 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
   const notDrivingLabel = language === 'te' ? '🅿️ మీరు ప్రస్తుతం డ్రైవింగ్ చేయడం లేదు (వాహనం ఆగింది)' : language === 'hi' ? '🅿️ आप वर्तमान में ड्राइविंग नहीं कर रहे हैं (वाहन रुका हुआ है)' : language === 'ta' ? '🅿️ நீங்கள் தற்போது வாகனம் ஓட்டவில்லை (நிற்கிறது)' : language === 'kn' ? '🅿️ ನೀವು ಪ್ರಸ್ತುತ ಚಾಲನೆ ಮಾಡುತ್ತಿಲ್ಲ (ವಾಹನ ನಿಂತಿದೆ)' : '🅿️ YOU ARE NOT CURRENTLY DRIVING (STATIONARY)';
   const movingLabel = (spd) => language === 'te' ? `🟢 ప్రయాణిస్తున్నారు (${spd} KM/H)` : language === 'hi' ? `🟢 वाहन चल रहा है (${spd} KM/H)` : language === 'ta' ? `🟢 வாகனம் இயங்குகிறது (${spd} KM/H)` : language === 'kn' ? `🟢 ವಾಹನ ಚಲಿಸುತ್ತಿದೆ (${spd} KM/H)` : `🟢 USER IS MOVING (${spd} KM/H)`;
 
-  // Reverse Geocoding Helper
+  // Reverse Geocoding Helper with Multi-Tier Fallback (Photon + BigDataCloud)
   const reverseGeocode = async (lat, lng) => {
     try {
+      // 1. High precision Photon reverse geocoding
+      const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
+      if (photonRes.ok) {
+        const pData = await photonRes.json();
+        const feat = pData?.features?.[0]?.properties;
+        if (feat && (feat.city || feat.locality || feat.district || feat.county || feat.state || feat.name)) {
+          const mainLoc = feat.name || feat.street || feat.locality || feat.district || feat.city;
+          const cityOrDistrict = feat.city || feat.district || feat.county || '';
+          const state = feat.state || feat.country || 'Andhra Pradesh';
+          const parts = [mainLoc, cityOrDistrict && cityOrDistrict !== mainLoc ? cityOrDistrict : null, state].filter(Boolean);
+          const addr = parts.join(', ');
+          setLiveAddress(addr);
+          localStorage.setItem('resqone_live_address', addr);
+          localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
+          return;
+        }
+      }
+    } catch {}
+
+    try {
+      // 2. Secondary BigDataCloud reverse geocode
       const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
       const data = await res.json();
       if (data && (data.locality || data.city || data.principalSubdivision)) {
-        const locality = data.locality || data.city || data.localityInfo?.administrative?.[2]?.name || 'Pathanaguluru';
-        const sub = data.principalSubdivision || 'Andhra Pradesh';
+        const locality = data.locality || data.city || data.localityInfo?.administrative?.[2]?.name || 'Live Location';
+        const sub = data.principalSubdivision || data.countryName || 'Andhra Pradesh';
         const addr = `${locality}, ${sub}`;
         setLiveAddress(addr);
         localStorage.setItem('resqone_live_address', addr);
@@ -164,13 +185,44 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
-  // ================= 1. REAL DEVICE HARDWARE GEOLOCATION =================
+  // ================= 1. REAL DEVICE HARDWARE GPS + IP GEOLOCATION FALLBACK =================
   const fetchLiveGPS = () => {
     setIsLocating(true);
 
+    const fallbackToIpGeolocation = () => {
+      fetch('https://api.bigdatacloud.net/data/reverse-geocode-client')
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.latitude && d.longitude) {
+            const lat = d.latitude;
+            const lng = d.longitude;
+            const locality = d.locality || d.city || 'Live Location';
+            const sub = d.principalSubdivision || 'Andhra Pradesh';
+            const addr = `${locality}, ${sub}`;
+            setLiveCoords([lat, lng]);
+            setLiveAddress(addr);
+            setGpsAccuracy(500);
+            setGpsLocked(true);
+            setIsLocating(false);
+            localStorage.setItem('resqone_live_address', addr);
+            localStorage.setItem('resqone_live_coords', JSON.stringify([lat, lng]));
+            reverseGeocode(lat, lng);
+
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.setView([lat, lng], 16, { animate: true });
+              mapInstanceRef.current.invalidateSize();
+            }
+          } else {
+            setIsLocating(false);
+          }
+        })
+        .catch(() => {
+          setIsLocating(false);
+        });
+    };
+
     if (!navigator.geolocation) {
-      setIsLocating(false);
-      reverseGeocode(liveCoords[0], liveCoords[1]);
+      fallbackToIpGeolocation();
       return;
     }
 
@@ -197,7 +249,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             const lat = pos2.coords.latitude;
             const lng = pos2.coords.longitude;
             setLiveCoords([lat, lng]);
-            setGpsAccuracy(Math.round(pos2.coords.accuracy || 15));
+            setGpsAccuracy(Math.round(pos2.coords.accuracy || 25));
             setGpsLocked(true);
             setIsLocating(false);
             reverseGeocode(lat, lng);
@@ -208,14 +260,13 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
             }
           },
           (err) => {
-            console.warn('[GPS Error]', err.message);
-            setIsLocating(false);
-            reverseGeocode(liveCoords[0], liveCoords[1]);
+            console.warn('[GPS Hardware Unavailable, switching to IP Geolocation]:', err.message);
+            fallbackToIpGeolocation();
           },
-          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+          { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 }
         );
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
     );
   };
 
@@ -482,27 +533,19 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     setIsSearchingOrigin(true);
 
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(originSearchQuery + ' Andhra Pradesh')}&limit=5&countrycodes=in`);
-      const data = await res.json();
-      if (data && data.length > 0) {
-        setOriginResults(data.map(item => ({
-          name: item.display_name,
-          lat: parseFloat(item.lat),
-          lng: parseFloat(item.lon)
+      const results = await geocodeLocation(originSearchQuery);
+      if (results && results.length > 0) {
+        setOriginResults(results.map(item => ({
+          name: item.name,
+          lat: item.lat,
+          lng: item.lng
         })));
       } else {
-        setOriginResults([{
-          name: 'Pathanaguluru, Reddigudem, NTR District, Andhra Pradesh',
-          lat: 16.8118,
-          lng: 80.7045
-        }]);
+        const filtered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(originSearchQuery.toLowerCase()));
+        setOriginResults(filtered.length > 0 ? filtered : SEARCH_SUGGESTIONS.slice(0, 3));
       }
     } catch {
-      setOriginResults([{
-        name: 'Pathanaguluru, Reddigudem, NTR District, Andhra Pradesh',
-        lat: 16.8118,
-        lng: 80.7045
-      }]);
+      setOriginResults(SEARCH_SUGGESTIONS.slice(0, 3));
     } finally {
       setIsSearchingOrigin(false);
     }
@@ -524,7 +567,7 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
     }
   };
 
-  // ================= 4. DESTINATION SEARCH & OSRM ROAD DIRECTIONS =================
+  // ================= 4. DESTINATION SEARCH & REAL ROAD ROUTING =================
   const handleSearchInput = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
@@ -533,8 +576,12 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
       setSearchOpen(false);
       return;
     }
-    const filtered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(val.toLowerCase()));
-    setSearchResults(filtered);
+    const localFiltered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(val.toLowerCase()));
+    const nearbyFiltered = nearbyHospitals
+      .filter(h => h.name.toLowerCase().includes(val.toLowerCase()))
+      .map(h => ({ name: h.name, lat: h.latitude, lng: h.longitude, type: 'hospital' }));
+
+    setSearchResults([...nearbyFiltered, ...localFiltered]);
     setSearchOpen(true);
   };
 
@@ -544,61 +591,47 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
 
     setIsSearching(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=6&countrycodes=in`);
-      const data = await res.json();
-      if (data && data.length > 0) {
-        const formatted = data.map(item => ({
-          name: item.display_name,
-          lat: parseFloat(item.lat),
-          lng: parseFloat(item.lon),
-          type: item.type || 'place'
-        }));
-        
-        // Auto-route directly if only 1 result, OR if user typed something specific
-        if (formatted.length === 1) {
-          // Direct route — no need to show dropdown
-          setIsSearching(false);
-          handleSelectDestination(formatted[0]);
-          return;
-        } else {
-          // Multiple results — show dropdown to let user pick
-          setSearchResults(formatted);
-          setSearchOpen(true);
-        }
-      } else {
-        // No Nominatim result — try quick suggestions, auto-route to first match
-        const filtered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        if (filtered.length === 1) {
-          setIsSearching(false);
-          handleSelectDestination(filtered[0]);
-          return;
-        } else if (filtered.length > 0) {
-          setSearchResults(filtered);
-          setSearchOpen(true);
-        } else {
-          // Last resort: route to the first suggestion that partially matches
-          const anyMatch = SEARCH_SUGGESTIONS.find(s => 
-            s.name.toLowerCase().split(' ').some(word => searchQuery.toLowerCase().includes(word))
-          );
-          if (anyMatch) {
-            setIsSearching(false);
-            handleSelectDestination(anyMatch);
-            return;
-          }
-          setSearchResults(SEARCH_SUGGESTIONS);
-          setSearchOpen(true);
+      // 1. Check local hospital and suggestion matches
+      const localMatches = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const nearbyMatches = nearbyHospitals
+        .filter(h => h.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .map(h => ({ name: h.name, lat: h.latitude, lng: h.longitude, type: 'hospital' }));
+      
+      const allLocal = [...nearbyMatches, ...localMatches];
+
+      // 2. High-speed, unblocked CORS geocoding (Photon OSM / Google Geocoder)
+      const geocoded = await geocodeLocation(searchQuery);
+      const combined = [...allLocal, ...geocoded];
+
+      // Deduplicate by proximity coordinates
+      const unique = [];
+      const seen = new Set();
+      for (const item of combined) {
+        const key = `${item.lat.toFixed(3)},${item.lng.toFixed(3)}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
         }
       }
-    } catch {
-      const filtered = SEARCH_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      if (filtered.length > 0) {
-        setSearchResults(filtered);
+
+      if (unique.length > 0) {
+        setSearchResults(unique);
         setSearchOpen(true);
+        // Automatically plot route immediately so user sees the route on the map!
+        handleSelectDestination(unique[0]);
       } else {
-        // Fallback: show all suggestions
+        // Fallback: route to first search suggestion
+        const fallback = SEARCH_SUGGESTIONS[0];
         setSearchResults(SEARCH_SUGGESTIONS);
         setSearchOpen(true);
+        handleSelectDestination(fallback);
       }
+    } catch (err) {
+      console.warn('[Search Geocoding Error, using fallback]:', err);
+      const fallback = SEARCH_SUGGESTIONS[0];
+      setSearchResults(SEARCH_SUGGESTIONS);
+      setSearchOpen(true);
+      handleSelectDestination(fallback);
     } finally {
       setIsSearching(false);
     }
@@ -673,13 +706,27 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
           duration: durMin,
           source: route.source
         });
+
+        // Multilingual voice confirmation of calculated route
+        speakEmergencyInstruction(`Driving route calculated to ${dest.name.split(',')[0]}. Total distance: ${distKm}.`, language);
       } else {
         throw new Error('No route');
       }
     } catch {
       const fallbackPts = [liveCoords, [destLat, destLng]];
       setRouteCoordinates(fallbackPts);
-      if (routePolylineRef.current) routePolylineRef.current.setLatLngs(fallbackPts);
+      if (routePolylineRef.current) {
+        routePolylineRef.current.setLatLngs(fallbackPts);
+      } else if (mapInstanceRef.current) {
+        routePolylineRef.current = L.polyline(fallbackPts, {
+          color: '#1a73e8',
+          weight: 6,
+          opacity: 0.9
+        }).addTo(mapInstanceRef.current);
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.fitBounds(L.latLngBounds(fallbackPts), { padding: [50, 50] });
+      }
       const dist = (calculateDistanceM(originLat, originLng, destLat, destLng) / 1000).toFixed(1) + ' km';
       setSelectedRoute({
         name: dest.name.split(',')[0],
@@ -687,8 +734,10 @@ export const LiveAccidentDetector = ({ onAccidentConfirmed, externalReset }) => 
         lat: destLat,
         lng: destLng,
         distance: dist,
-        duration: Math.round(parseFloat(dist) * 1.5) + ' min'
+        duration: Math.round(parseFloat(dist) * 1.5) + ' min',
+        source: 'Direct Route'
       });
+      speakEmergencyInstruction(`Driving route calculated to ${dest.name.split(',')[0]}. Total distance: ${dist}.`, language);
     } finally {
       setIsCalculatingRoute(false);
     }
