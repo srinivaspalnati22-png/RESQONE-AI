@@ -5,26 +5,29 @@
 ---
 
 ### Authors & Project Batch
-1. **1st Rachamalla Rachel**  
+1. **1st Palnati Pushpa Naga Venkata Srinivas**  
    *Department of Computer Science and Engineering (NRI Institute of Technology)*  
    NRI Institute of Technology, Pothavarappadu, Agiripalli, Vijayawada, Andhra Pradesh, India  
    Curriculum: III B.Tech I Semester (NRIA23 Autonomous)  
-   `srinivaspalnati22@gmail.com`
+   <a href="mailto:srinivaspalnati22@gmail.com" style="color: #0044cc;"><u>srinivaspalnati22@gmail.com</u></a>
 
-2. **2nd Palnati Pushpa Naga Venkata Srinivas**  
+2. **2nd Rachamalla Rachel**  
    *Department of Computer Science and Engineering (NRI Institute of Technology)*  
    NRI Institute of Technology, Pothavarappadu, Agiripalli, Vijayawada, Andhra Pradesh, India  
-   Curriculum: III B.Tech I Semester (NRIA23 Autonomous)
+   Curriculum: III B.Tech I Semester (NRIA23 Autonomous)  
+   <a href="mailto:rachamallarachel123@gmail.com" style="color: #0044cc;"><u>rachamallarachel123@gmail.com</u></a>
 
 3. **3rd Jannu Vinay Babu**  
    *Department of Computer Science and Engineering (NRI Institute of Technology)*  
    NRI Institute of Technology, Pothavarappadu, Agiripalli, Vijayawada, Andhra Pradesh, India  
-   Curriculum: III B.Tech I Semester (NRIA23 Autonomous)
+   Curriculum: III B.Tech I Semester (NRIA23 Autonomous)  
+   <a href="mailto:Vinayjannu874@gmail.com" style="color: #0044cc;"><u>Vinayjannu874@gmail.com</u></a>
 
 4. **4th Shaik Lateefunnisa**  
    *Department of Computer Science and Engineering (NRI Institute of Technology)*  
    NRI Institute of Technology, Pothavarappadu, Agiripalli, Vijayawada, Andhra Pradesh, India  
-   Curriculum: III B.Tech I Semester (NRIA23 Autonomous)
+   Curriculum: III B.Tech I Semester (NRIA23 Autonomous)  
+   <a href="mailto:shaiklateefa2428@gmail.com" style="color: #0044cc;"><u>shaiklateefa2428@gmail.com</u></a>
 
 ---
 

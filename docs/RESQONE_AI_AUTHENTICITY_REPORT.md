@@ -2,10 +2,10 @@
 
 **Manuscript Title:** *RESQONE-AI+: An Integrated Edge–Cloud Framework for Multimodal Emergency Coordination with Autonomous Crash Sensing, Interpretable NLP Triage, and Offline-Capable Geographic Mesh Dispatch*  
 **Primary Authors:**  
-1. **Palnati Pushpa Naga Venkata Srinivas** (1st Author) — `srinivaspalnati22@gmail.com`  
-2. **Rachamalla Rachel** (2nd Author) — `rachelrachamalla@gmail.com`  
-3. **Jannu Vinay Babu** (3rd Author) — `vinaybabujannu@gmail.com`  
-4. **Shaik Lateefunnisa** (4th Author) — `lateefunnisa@gmail.com`  
+1. **Palnati Pushpa Naga Venkata Srinivas** (1st Author) — <a href="mailto:srinivaspalnati22@gmail.com" style="color: #0044cc;"><u>`srinivaspalnati22@gmail.com`</u></a>  
+2. **Rachamalla Rachel** (2nd Author) — <a href="mailto:rachamallarachel123@gmail.com" style="color: #0044cc;"><u>`rachamallarachel123@gmail.com`</u></a>  
+3. **Jannu Vinay Babu** (3rd Author) — <a href="mailto:Vinayjannu874@gmail.com" style="color: #0044cc;"><u>`Vinayjannu874@gmail.com`</u></a>  
+4. **Shaik Lateefunnisa** (4th Author) — <a href="mailto:shaiklateefa2428@gmail.com" style="color: #0044cc;"><u>`shaiklateefa2428@gmail.com`</u></a>  
 
 **Affiliation:** Department of Computer Science and Engineering, NRI Institute of Technology, Agiripalli, Vijayawada, Andhra Pradesh, India  
 **Curriculum & Track:** NRIA23 Autonomous Curriculum — III B.Tech I Semester Mini-Project & Research Paper Review  
