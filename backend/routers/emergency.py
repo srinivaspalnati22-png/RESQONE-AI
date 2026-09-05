@@ -5,13 +5,57 @@ from backend.models.schemas import (
     AIExplainability,
     EmergencyReport,
     FamilyNotificationRequest,
-    FamilyNotificationResponse
+    FamilyNotificationResponse,
+    DeviceSubscriptionRequest,
+    BroadcastPushRequest,
+    BroadcastPushResponse
 )
 from backend.services.ai_service import AIService
 from backend.services.supabase_service import SupabaseService
 from backend.services.notification_service import NotificationService
+from backend.services.push_service import PushService, VAPID_PUBLIC_KEY
 
 router = APIRouter(prefix="/api/emergency", tags=["Emergency Copilot"])
+
+@router.get("/vapid-public-key")
+def get_vapid_public_key():
+    """
+    Returns the server VAPID public key so client browsers and installed PWAs
+    can subscribe to native operating system Web Push notifications.
+    """
+    return {"public_key": VAPID_PUBLIC_KEY}
+
+@router.post("/subscribe-device")
+def subscribe_device(req: DeviceSubscriptionRequest):
+    """
+    Registers a client device PushSubscription token. Enables sending
+    lockscreen background emergency alerts even when app is closed.
+    """
+    try:
+        success = PushService.register_device(req.dict())
+        return {"success": success, "message": "Device subscribed for 24/7 background emergency alerts"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Device subscription error: {str(e)}")
+
+@router.post("/broadcast-push", response_model=BroadcastPushResponse)
+def broadcast_push(req: BroadcastPushRequest):
+    """
+    Universal Background Alert Broadcaster:
+    Transmits RFC 8291/8292 encrypted Web Push to all registered users of the app.
+    Victim crash details, GPS coordinates, and live route shortcuts are delivered
+    directly to all users' devices without requiring them to open the app.
+    """
+    try:
+        result = PushService.broadcast_emergency_push(req.dict())
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Push broadcast error: {str(e)}")
+
+@router.get("/registered-devices-count")
+def get_registered_devices_count():
+    devices = PushService.get_registered_devices()
+    return {"total_registered_devices": len(devices)}
+
 
 @router.post("/notify-family", response_model=FamilyNotificationResponse)
 def notify_family_emergency(req: FamilyNotificationRequest):

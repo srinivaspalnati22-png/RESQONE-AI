@@ -17,6 +17,7 @@ import { RefreshCw, RotateCcw, ArrowRight, X } from 'lucide-react';
 import { VoiceControlWidget } from './components/VoiceControlWidget';
 import { stopAllAudio } from './services/audio_service';
 import { GlobalAudioWidget } from './components/GlobalAudioWidget';
+import { registerDeviceForBackgroundPush } from './services/push_subscription_service.js';
 
 // Code-split heavy secondary pages for instant load across all platforms
 const AccidentPage = lazy(() => import('./pages/AccidentPage').then(m => ({ default: m.AccidentPage })));
@@ -87,6 +88,11 @@ function AppContent() {
     }
     prevTabRef.current = activeTab;
   }, [activeTab]);
+
+  // Automatically register device for 24/7 background Web Push (lockscreen disaster alerts)
+  useEffect(() => {
+    registerDeviceForBackgroundPush();
+  }, []);
 
   useEffect(() => {
     // Start multi-signal crash detector

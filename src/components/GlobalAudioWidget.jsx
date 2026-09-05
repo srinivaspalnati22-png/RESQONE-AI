@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Play, Check, Globe, Siren, Bell, Radio } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Play, Check, Globe, Siren, Bell, Radio, Smartphone } from 'lucide-react';
 import { speakEmergencyInstruction, stopAllAudio, getAudioMuted, toggleAudioMute } from '../services/audio_service';
 import { simulateCommunityDisasterAlert, requestNotificationPermission } from '../services/broadcast_service';
+import { scheduleTestClosedAppPush } from '../services/push_subscription_service';
 import { useLanguage } from '../context/LanguageContext';
 
 export const GlobalAudioWidget = () => {
@@ -10,6 +11,7 @@ export const GlobalAudioWidget = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [activeSpeechText, setActiveSpeechText] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [pushTesting, setPushTesting] = useState(false);
 
   useEffect(() => {
     const handleSpeechStatus = (e) => {
@@ -204,6 +206,19 @@ export const GlobalAudioWidget = () => {
             >
               <Bell className="w-3 h-3 text-amber-400" />
               <span>Enable Background Alert Notifications</span>
+            </button>
+
+            {/* Test alert when app is closed / phone is locked */}
+            <button
+              onClick={async () => {
+                setPushTesting(true);
+                await scheduleTestClosedAppPush(4);
+                setTimeout(() => setPushTesting(false), 5000);
+              }}
+              className="w-full py-2 px-2.5 rounded-xl bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 hover:from-blue-600 hover:to-purple-500 text-white text-[11px] font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>{pushTesting ? "⏳ Lock Phone Now! Firing in 4s..." : "Test Closed-App Push (Lock Phone)"}</span>
             </button>
           </div>
 

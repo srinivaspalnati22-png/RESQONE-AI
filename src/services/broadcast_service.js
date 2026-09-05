@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { playDisasterAlertSiren, stopDisasterAlertSiren, speakEmergencyInstruction } from './audio_service.js';
+import { dispatchBackgroundPushToAll } from './push_subscription_service.js';
 
 /**
  * Universal Disaster-Style Emergency Broadcast Service
@@ -132,8 +133,15 @@ export const broadcastDisasterAlert = async (alertPayload) => {
     }
   }
 
-  // 4. Trigger system push notification with vibration
+  // 4. Trigger system push notification with vibration locally
   showSystemNotification(enrichedAlert);
+
+  // 4b. Dispatch Web Push to ALL registered devices (wakes up devices even when app is closed!)
+  try {
+    dispatchBackgroundPushToAll(enrichedAlert);
+  } catch (pushErr) {
+    console.warn('[BroadcastService] Background push dispatch exception:', pushErr);
+  }
 
   // 5. Sound the Government EAS Disaster Siren and vibrate device
   playDisasterAlertSiren(8);

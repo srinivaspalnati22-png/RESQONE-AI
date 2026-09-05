@@ -144,3 +144,38 @@ class FamilyNotificationResponse(BaseModel):
     gateway_used: str
     recipients: List[FamilyDispatchRecipientResult]
     message_preview: str
+
+class DeviceSubscriptionKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+class DeviceSubscriptionRequest(BaseModel):
+    endpoint: str
+    keys: DeviceSubscriptionKeys
+    user_id: Optional[str] = "anonymous"
+    user_name: Optional[str] = "Community Member"
+    platform: Optional[str] = "web-pwa"
+    timestamp: Optional[str] = None
+
+class BroadcastPushRequest(BaseModel):
+    alert_id: Optional[str] = None
+    victim_name: Optional[str] = "Emergency Citizen"
+    victim_phone: Optional[str] = "+91 94401 23401"
+    blood_group: Optional[str] = "O+"
+    location_name: Optional[str] = "Vijayawada Highway Corridor"
+    lat: Optional[float] = 16.5167
+    lng: Optional[float] = 80.6500
+    severity: Optional[str] = "CRITICAL_HIGH_IMPACT"
+    impact_g: Optional[float] = 4.85
+    speed_at_impact: Optional[float] = 76.0
+    medical_notes: Optional[str] = "Severe vehicle impact detected. CAD 108 units dispatched."
+    tracking_url: Optional[str] = None
+
+class BroadcastPushResponse(BaseModel):
+    success: bool
+    total_devices: int
+    sent_count: int
+    failed_count: int
+    alert_id: str
+    timestamp: str
+

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, BellRing, ShieldAlert, Download, CheckCircle2, X, Sparkles, Smartphone, Share, PlusSquare } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { speakEmergencyInstruction } from '../services/audio_service';
+import { registerDeviceForBackgroundPush } from '../services/push_subscription_service.js';
 
 export function NotificationPermissionBanner() {
   const { language } = useLanguage();
@@ -68,6 +69,7 @@ export function NotificationPermissionBanner() {
         setNotifPermission(permission);
         if (permission === 'granted') {
           localStorage.setItem('resqone_notif_enabled', 'true');
+          registerDeviceForBackgroundPush();
           try {
             new Notification("🚨 RESQONE AI+ Alerts Activated", {
               body: "24/7 High-speed crash telemetry and blood crisis dispatches are now active on your device.",
@@ -81,6 +83,7 @@ export function NotificationPermissionBanner() {
       }
     } else {
       localStorage.setItem('resqone_notif_enabled', 'true');
+      registerDeviceForBackgroundPush();
     }
 
     // 2. Trigger PWA Install
