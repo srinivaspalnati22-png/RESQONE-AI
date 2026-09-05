@@ -192,3 +192,9 @@
 .animate-sos-glow {
   animation: sosGlow 1.2s ease-in-out infinite;
 }
+
+/* High-Tech Dark Mode Map Tiles (Zero API Key, 100% Free OpenStreetMap) */
+.leaflet-dark-mode {
+  filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(92%) !important;
+}
+
