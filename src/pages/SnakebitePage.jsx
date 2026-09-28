@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { 
   Activity, ShieldAlert, CheckCircle2, Phone, MapPin, 
   Hospital, Hospital as HospIcon, Info, RefreshCw, AlertOctagon, 
-  Eye, Zap, Stethoscope, AlertTriangle, Mic, MicOff, Volume2, 
+  Eye, Zap, Stethoscope, AlertTriangle, Mic, MicOff, Volume2, VolumeX,
   XCircle, Sparkles, HelpCircle, ArrowRight, Check, Table, Search, Filter, Send,
   Navigation, ShieldCheck, Route, ExternalLink, Building2,
   Camera, CameraOff, UploadCloud, Image as ImageIcon, Scan, Maximize2, SwitchCamera,
@@ -14,9 +14,10 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useDemo } from '../context/DemoContext';
 import { DataService } from '../services/data_service';
-import { speakEmergencyInstruction, stopAllAudio } from '../services/audio_service';
+import { speakEmergencyInstruction, speakAllFirstAidPrecautions, stopAllAudio } from '../services/audio_service';
 import { broadcastDisasterAlert, getLoggedInUserProfile } from '../services/broadcast_service';
 import snakeSpeciesData from '../data/snake_species.json';
+import { firstAidTranslations } from '../data/first_aid_translations';
 import { LiveHospitalResponse } from '../components/LiveHospitalResponse';
 import { classifySnakeImage } from '../services/snake_vision_ai';
 
@@ -219,6 +220,22 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
   const [showDatasetTable, setShowDatasetTable] = useState(false);
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [allNearbyHospitals, setAllNearbyHospitals] = useState([]);
+  const [isSpeakingFirstAid, setIsSpeakingFirstAid] = useState(false);
+  const [firstAidStep, setFirstAidStep] = useState(0);
+
+  useEffect(() => {
+    const handleSpeechStatus = (e) => {
+      if (e.detail?.isFirstAid) {
+        setIsSpeakingFirstAid(true);
+        setFirstAidStep(e.detail.currentStep || 0);
+      } else if (!e.detail?.isSpeaking) {
+        setIsSpeakingFirstAid(false);
+        setFirstAidStep(0);
+      }
+    };
+    window.addEventListener('resqone_speech_status', handleSpeechStatus);
+    return () => window.removeEventListener('resqone_speech_status', handleSpeechStatus);
+  }, []);
 
   // User Live GPS Coordinates
   const [userCoords, setUserCoords] = useState(() => {
@@ -500,9 +517,8 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             setSelectedHospital(result.hospitals[0]);
           }
 
-          const firstAidSummary = (result.species.first_aid && result.species.first_aid.length > 0)
-            ? result.species.first_aid.slice(0, 2).join('. ')
-            : 'Immobilize the bitten limb immediately below heart level. Do not cut or apply tourniquets.';
+          const translatedFirstAid = firstAidTranslations[language]?.[result.species.venomous ? 'venomous' : 'non_venomous'] || firstAidTranslations['en'][result.species.venomous ? 'venomous' : 'non_venomous'];
+          const firstAidSummary = translatedFirstAid.slice(0, 2).join('. ');
 
           const speechText = result.species.venomous
             ? `AI Vision identified ${result.species.common_name} with ${analysis.confidence}% confidence. ${result.species.venom_type}. Recommended ${result.species.avs_vials_needed || 10} vials Polyvalent Antivenom. Immediate first aid: ${firstAidSummary}. Nearest antivenom hospital located on live GPS map.`
@@ -563,9 +579,8 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
           setSelectedHospital(result.hospitals[0]);
         }
 
-        const firstAidSummary = (result.species.first_aid && result.species.first_aid.length > 0)
-          ? result.species.first_aid.slice(0, 2).join('. ')
-          : 'Immobilize the bitten limb immediately below heart level. Do not cut or apply tourniquets.';
+        const translatedFirstAid = firstAidTranslations[language]?.[result.species.venomous ? 'venomous' : 'non_venomous'] || firstAidTranslations['en'][result.species.venomous ? 'venomous' : 'non_venomous'];
+        const firstAidSummary = translatedFirstAid.slice(0, 2).join('. ');
 
         const speechText = `Identified ${result.species.common_name}. ${result.species.venom_type}. Immediate first aid: ${firstAidSummary}. Nearest hospital with polyvalent antivenom vials located on live GPS map.`;
         speakEmergencyInstruction(speechText, language);
@@ -586,8 +601,15 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
 
   const handleSpeakFirstAidAloud = () => {
     if (!assessment || !assessment.species) return;
-    const steps = (assessment.species.first_aid || []).join('. ');
-    speakEmergencyInstruction(`First aid precautions for ${assessment.species.common_name}: ${steps}`, language);
+    if (isSpeakingFirstAid) {
+      stopAllAudio();
+      setIsSpeakingFirstAid(false);
+      setFirstAidStep(0);
+      return;
+    }
+    const isVenomous = !!assessment.species.venomous;
+    setIsSpeakingFirstAid(true);
+    speakAllFirstAidPrecautions(isVenomous, assessment.species.common_name, language);
   };
 
   const handleStartVoice = () => {
@@ -1209,15 +1231,68 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
             </div>
           </div>
 
+          {/* WHO Clinical First-Aid Precautions with Audio */}
+          <div className="bg-[#050A14] p-4 rounded-2xl border border-slate-800 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase text-amber-400 flex items-center space-x-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>WHO Standard Clinical First-Aid Protocol</span>
+              </h4>
+              <button
+                onClick={handleSpeakFirstAidAloud}
+                className={`text-xs font-bold flex items-center space-x-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border ${
+                  isSpeakingFirstAid
+                    ? 'bg-red-500/20 text-red-300 border-red-500/60 animate-pulse'
+                    : 'text-cyan-400 hover:text-white bg-slate-800/80 border-slate-700 hover:border-cyan-500'
+                }`}
+                title="Listen to 10 First Aid Precautions in Selected Language"
+              >
+                {isSpeakingFirstAid ? (
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-red-400" />
+                    <span>{language === 'te' ? `ఆపండి (${firstAidStep}/10)` : language === 'hi' ? `रोकें (${firstAidStep}/10)` : `Stop Audio (${firstAidStep}/10)`}</span>
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="w-3.5 h-3.5" />
+                    <span>{language === 'te' ? '10 జాగ్రత్తల ఆడియో వినండి' : language === 'hi' ? '10 सावधानियों का ऑडियो सुनें' : language === 'ta' ? '10 முன்னெச்சரிக்கை ஆடியோ' : language === 'kn' ? '10 ಮುನ್ನೆಚ್ಚರಿಕೆ ಆಡಿಯೋ' : 'Listen 10 Precautions'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <ul className="space-y-1.5 text-xs text-slate-200">
+              {(firstAidTranslations[language]?.[assessment.species.venomous ? 'venomous' : 'non_venomous'] || firstAidTranslations['en'][assessment.species.venomous ? 'venomous' : 'non_venomous']).map((step, idx) => (
+                <li key={idx} className="flex items-start space-x-2">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Action Row */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-800">
             <button
               type="button"
               onClick={handleSpeakFirstAidAloud}
-              className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer"
+              className={`w-full sm:w-auto px-4 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-2 cursor-pointer border transition-all ${
+                isSpeakingFirstAid
+                  ? 'bg-red-950/70 text-red-300 border-red-500/80 animate-pulse'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+              }`}
             >
-              <Volume2 className="w-4 h-4 text-cyan-400" />
-              <span>{language === 'te' ? 'వాయిస్ సూచనలను వినండి' : 'Listen First-Aid Audio'}</span>
+              {isSpeakingFirstAid ? (
+                <>
+                  <VolumeX className="w-4 h-4 text-red-400" />
+                  <span>{language === 'te' ? `వాయిస్ ఆపండి (నియమం ${firstAidStep}/10)` : `Stop Spoken Guide (Step ${firstAidStep}/10)`}</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4 text-cyan-400" />
+                  <span>{language === 'te' ? '10 ప్రథమ చికిత్స జాగ్రత్తల ఆడియో వినండి' : language === 'hi' ? '10 प्राथमिक उपचार सावधानियों का ऑडियो' : language === 'ta' ? '10 முதலுதவி முன்னெச்சரிக்கை ஆடியோ' : language === 'kn' ? '10 ಪ್ರಥಮ ಚಿಕಿತ್ಸಾ ಮುನ್ನೆಚ್ಚರಿಕೆ ಆಡಿಯೋ' : 'Listen 10 First-Aid Precautions Audio'}</span>
+                </>
+              )}
             </button>
 
             {selectedHospital && (
@@ -1357,20 +1432,28 @@ export const SnakebitePage = ({ initialQuery, onClearQuery }) => {
                   </h4>
                   <button
                     onClick={handleSpeakFirstAidAloud}
-                    className="text-xs text-cyan-400 hover:text-white font-bold flex items-center space-x-1 bg-slate-800/80 px-2.5 py-1 rounded-xl cursor-pointer"
+                    className={`text-xs font-bold flex items-center space-x-1.5 px-3 py-1.5 rounded-xl cursor-pointer transition-all border ${
+                      isSpeakingFirstAid
+                        ? 'bg-red-500/20 text-red-300 border-red-500/60 animate-pulse'
+                        : 'text-cyan-400 hover:text-white bg-slate-800/80 border-slate-700 hover:border-cyan-500'
+                    }`}
                   >
-                    <Volume2 className="w-3.5 h-3.5" />
-                    <span>{language === 'te' ? 'ఆడియో వినండి' : 'Listen Voice'}</span>
+                    {isSpeakingFirstAid ? (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5 text-red-400" />
+                        <span>{language === 'te' ? `ఆపండి (${firstAidStep}/10)` : language === 'hi' ? `रोकें (${firstAidStep}/10)` : `Stop Audio (${firstAidStep}/10)`}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span>{language === 'te' ? '10 జాగ్రత్తల ఆడియో వినండి' : language === 'hi' ? '10 सावधानियों का ऑडियो सुनें' : language === 'ta' ? '10 முன்னெச்சரிக்கை ஆடியோ' : language === 'kn' ? '10 ಮುನ್ನೆಚ್ಚರಿಕೆ ಆಡಿಯೋ' : 'Listen 10 Precautions'}</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
                 <ul className="space-y-1.5 text-xs text-slate-200">
-                  {(assessment.species.first_aid || [
-                    "1. Immobilize the bitten limb immediately below heart level.",
-                    "2. Remove rings, watches, or tight clothing near the bite site.",
-                    "3. DO NOT cut, suck venom, or apply tourniquets or ice.",
-                    "4. Transport patient immediately to an antivenom-equipped facility."
-                  ]).map((step, idx) => (
+                  {(firstAidTranslations[language]?.[assessment.species.venomous ? 'venomous' : 'non_venomous'] || firstAidTranslations['en'][assessment.species.venomous ? 'venomous' : 'non_venomous']).map((step, idx) => (
                     <li key={idx} className="flex items-start space-x-2">
                       <span className="text-emerald-400 font-bold">•</span>
                       <span>{step}</span>

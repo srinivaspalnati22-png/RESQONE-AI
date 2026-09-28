@@ -134,6 +134,7 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (setAuthError) setAuthError(null);
+    localStorage.setItem('resqone_is_demo_login', 'false');
     const result = await login(loginEmail, loginPassword);
     if (result.success) {
       setMessage(language === 'te' ? 'లాగిన్ విజయవంతమైంది!' : language === 'hi' ? 'लॉगिन सफल रहा!' : 'Login successful! Entering RESQONE...');
@@ -146,6 +147,7 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
   // Google OAuth Sign-In Handler
   const handleGoogleSignIn = async () => {
     if (setAuthError) setAuthError(null);
+    localStorage.setItem('resqone_is_demo_login', 'false');
     setMessage(
       language === 'te' 
         ? 'Google ఖాతా ధృవీకరించబడుతోంది...' 
@@ -164,16 +166,19 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
 
   // 1-Tap Quick Mobile Guest / Demo Login for emergency access (Gives default numbers automatically)
   const handleQuickMobileLogin = () => {
+    localStorage.setItem('resqone_is_demo_login', 'true');
+    sessionStorage.setItem('resqone_is_demo_login', 'true');
     const guestUser = {
       id: `demo-${Date.now().toString().slice(-4)}`,
-      name: 'Srinivas Palnati',
+      name: 'Srinivas Palnati (Demo Mode)',
       email: 'srinivas@resqone.ai',
       phone: '+91-9876543210',
       blood_group: 'O-',
       role: selectedRole || 'user',
-      medical_notes: 'No known allergies',
+      medical_notes: 'Demo emergency session',
       avatar_url: '/images/lifesaving_rescue_hero.jpg',
       auth_provider: 'demo',
+      is_demo_mode: true,
       hasSetupEmergencyContacts: true
     };
     completeOnboarding(guestUser, DEFAULT_DEMO_CONTACTS);
@@ -291,6 +296,7 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
   const handleRegisterComplete = async (e) => {
     e.preventDefault();
     if (setAuthError) setAuthError(null);
+    localStorage.setItem('resqone_is_demo_login', 'false');
     
     const result = await signup(regEmail, regPassword, name, selectedRole, bloodGroup, phone, medicalNotes);
     

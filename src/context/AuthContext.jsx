@@ -15,6 +15,25 @@ const DEFAULT_FAMILY_CONTACTS = [
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+export const checkIsDemoLogin = (user) => {
+  try {
+    if (localStorage.getItem('resqone_is_demo_login') === 'false') return false;
+    if (sessionStorage.getItem('resqone_is_demo_login') === 'false') return false;
+    if (user?.is_demo_mode === false) return false;
+    if (user?.auth_provider === 'google' || user?.auth_provider === 'email' || user?.auth_provider === 'local') return false;
+    if (user?.email && user.email !== 'srinivas@resqone.ai' && user.email !== 'demo@resqone.ai') return false;
+    if (user?.id && !String(user.id).startsWith('demo-')) return false;
+
+    return Boolean(
+      user?.is_demo_mode === true ||
+      user?.auth_provider === 'demo' ||
+      localStorage.getItem('resqone_is_demo_login') === 'true'
+    );
+  } catch (e) {
+    return false;
+  }
+};
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -96,10 +115,13 @@ export const AuthProvider = ({ children }) => {
       medical_notes: authUser.user_metadata?.medical_notes || existingUser?.medical_notes || '',
       avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || existingUser?.avatar_url || null,
       auth_provider: authUser.app_metadata?.provider || 'google',
+      is_demo_mode: false,
       hasSetupEmergencyContacts: hasContactsConfigured
     };
     setUser(userObj);
     localStorage.setItem('resqone_user', JSON.stringify(userObj));
+    localStorage.setItem('resqone_is_demo_login', 'false');
+    sessionStorage.setItem('resqone_is_demo_login', 'false');
     localStorage.setItem('resqone_user_id', userObj.id);
     localStorage.setItem('resqone_user_name', userObj.name);
     localStorage.setItem('resqone_user_phone', userObj.phone);
@@ -167,24 +189,32 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     setAuthError(null);
+    localStorage.setItem('resqone_is_demo_login', 'false');
+    sessionStorage.setItem('resqone_is_demo_login', 'false');
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        // Fallback: allow local-only login for demo/offline mode
-        const demoUser = {
-          id: `demo-${Date.now()}`,
+        // Fallback: allow local-only login for offline/standard user mode
+        const emailUser = {
+          id: `email-${Date.now()}`,
           email,
           name: email.split('@')[0],
           role: 'user',
           blood_group: 'O-',
-          phone: '+91-9876543210'
+          phone: '+91-9876543210',
+          auth_provider: 'email',
+          is_demo_mode: false
         };
-        setUser(demoUser);
-        localStorage.setItem('resqone_user', JSON.stringify(demoUser));
-        completeOnboarding(demoUser);
-        return { success: true, user: demoUser, isDemo: true };
+        setUser(emailUser);
+        localStorage.setItem('resqone_user', JSON.stringify(emailUser));
+        localStorage.setItem('resqone_is_demo_login', 'false');
+        sessionStorage.setItem('resqone_is_demo_login', 'false');
+        completeOnboarding(emailUser);
+        return { success: true, user: emailUser, isDemo: false };
       }
       syncProfile(data.user);
+      localStorage.setItem('resqone_is_demo_login', 'false');
+      sessionStorage.setItem('resqone_is_demo_login', 'false');
       completeOnboarding();
       return { success: true, user: data.user };
     } catch (err) {
@@ -198,6 +228,8 @@ export const AuthProvider = ({ children }) => {
   const signup = async (email, password, name, role, blood_group, phone, medical_notes) => {
     setLoading(true);
     setAuthError(null);
+    localStorage.setItem('resqone_is_demo_login', 'false');
+    sessionStorage.setItem('resqone_is_demo_login', 'false');
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -209,16 +241,20 @@ export const AuthProvider = ({ children }) => {
       if (error) {
         // If Supabase auth fails, allow local registration for offline resilience
         const localUser = {
-          id: `local-${Date.now()}`,
+          id: `email-${Date.now()}`,
           email,
           name,
           role: role || 'user',
           blood_group: blood_group || 'O-',
           phone: phone || '',
-          medical_notes: medical_notes || ''
+          medical_notes: medical_notes || '',
+          auth_provider: 'email',
+          is_demo_mode: false
         };
         setUser(localUser);
         localStorage.setItem('resqone_user', JSON.stringify(localUser));
+        localStorage.setItem('resqone_is_demo_login', 'false');
+        sessionStorage.setItem('resqone_is_demo_login', 'false');
         completeOnboarding(localUser);
         saveUserToSupabase(localUser, familyContacts);
         return { success: true, user: localUser, isLocal: true };
@@ -231,10 +267,14 @@ export const AuthProvider = ({ children }) => {
           role: role || 'user',
           blood_group: blood_group || 'O-',
           phone: phone || '',
-          medical_notes: medical_notes || ''
+          medical_notes: medical_notes || '',
+          auth_provider: 'email',
+          is_demo_mode: false
         };
         setUser(userObj);
         localStorage.setItem('resqone_user', JSON.stringify(userObj));
+        localStorage.setItem('resqone_is_demo_login', 'false');
+        sessionStorage.setItem('resqone_is_demo_login', 'false');
         completeOnboarding(userObj);
       }
       return { success: true, user: data.user };
@@ -259,6 +299,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('resqone_user');
     localStorage.removeItem('resqone_is_onboarded');
     localStorage.removeItem('resqone_family_contacts');
+    localStorage.removeItem('resqone_is_demo_login');
   };
 
   const updateProfile = (updatedData) => {
@@ -284,6 +325,8 @@ export const AuthProvider = ({ children }) => {
   const loginWithGoogle = async () => {
     setLoading(true);
     setAuthError(null);
+    localStorage.setItem('resqone_is_demo_login', 'false');
+    sessionStorage.setItem('resqone_is_demo_login', 'false');
     try {
       const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const redirectUrl = isLocal ? window.location.origin : 'https://resqone-ai-app.vercel.app';
@@ -311,10 +354,13 @@ export const AuthProvider = ({ children }) => {
           phone: '+91-9440123401',
           avatar_url: 'https://lh3.googleusercontent.com/a/default-user',
           auth_provider: 'google',
+          is_demo_mode: false,
           hasSetupEmergencyContacts: true
         };
         setUser(googleFallbackUser);
         localStorage.setItem('resqone_user', JSON.stringify(googleFallbackUser));
+        localStorage.setItem('resqone_is_demo_login', 'false');
+        sessionStorage.setItem('resqone_is_demo_login', 'false');
         completeOnboarding(googleFallbackUser);
         return { success: true, user: googleFallbackUser };
       }
@@ -334,10 +380,13 @@ export const AuthProvider = ({ children }) => {
         phone: '+91-9440123401',
         avatar_url: 'https://lh3.googleusercontent.com/a/default-user',
         auth_provider: 'google',
+        is_demo_mode: false,
         hasSetupEmergencyContacts: true
       };
       setUser(googleFallbackUser);
       localStorage.setItem('resqone_user', JSON.stringify(googleFallbackUser));
+      localStorage.setItem('resqone_is_demo_login', 'false');
+      sessionStorage.setItem('resqone_is_demo_login', 'false');
       completeOnboarding(googleFallbackUser);
       return { success: true, user: googleFallbackUser };
     } finally {

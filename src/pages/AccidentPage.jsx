@@ -10,13 +10,40 @@ import { Vehicle3DSimulation } from '../components/Vehicle3DSimulation';
 import { LiveAccidentDetector } from '../components/LiveAccidentDetector';
 import { AccidentRescueWorkflow } from '../components/AccidentRescueWorkflow';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth, checkIsDemoLogin } from '../context/AuthContext';
 import { broadcastDisasterAlert, getLoggedInUserProfile } from '../services/broadcast_service.js';
 
-export const AccidentPage = () => {
+export const AccidentPage = ({ initialQuery, onClearQuery }) => {
   const { language, t } = useLanguage();
+  const { user } = useAuth();
+
+  // Strict check: Only true for verified demo login sessions
+  const isDemoLogin = checkIsDemoLogin(user);
+
   const [activeCrashDetails, setActiveCrashDetails] = useState(null);
   const [isDispatched, setIsDispatched] = useState(false);
-  const [activeMode, setActiveMode] = useState('live_detection'); // 'live_detection' | '3d_simulation'
+  // Demo logins start in '3d_simulation' or can toggle. Real logins are locked to 'live_detection'
+  const [activeMode, setActiveMode] = useState(() => isDemoLogin ? '3d_simulation' : 'live_detection');
+
+  // Hard enforcement: non-demo users are ALWAYS forced to live_detection
+  React.useEffect(() => {
+    if (!isDemoLogin && activeMode !== 'live_detection') {
+      setActiveMode('live_detection');
+    }
+  }, [isDemoLogin, activeMode]);
+
+  React.useEffect(() => {
+    if (initialQuery?.autoTrigger && !isDispatched) {
+      handleAccidentConfirmed({
+        coords: [16.5167, 80.6500],
+        impactG: 4.85,
+        speedBeforeImpact: 76,
+        locationName: 'Highway Crash Location',
+        medicalTelemetry: { bloodGroup: 'O-' }
+      });
+      if (onClearQuery) onClearQuery();
+    }
+  }, [initialQuery, isDispatched, onClearQuery]);
 
   const handleAccidentConfirmed = (details) => {
     setActiveCrashDetails(details);
@@ -108,7 +135,7 @@ export const AccidentPage = () => {
                 <span>ONLINE</span>
               </span>
               <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[9px] font-mono text-cyan-400 shrink-0">
-                {activeMode === 'live_detection' ? 'GPS LIVE ROUTE' : '3D COLLISION'}
+                {isDemoLogin && activeMode === '3d_simulation' ? '3D COLLISION (DEMO)' : 'GPS LIVE ROUTE'}
               </span>
             </div>
             <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5">
@@ -117,45 +144,50 @@ export const AccidentPage = () => {
           </div>
         </div>
 
-        {/* Segmented Mode Switcher Tabs: ONLY Live Route and 3D Crash */}
-        <div className="grid grid-cols-2 sm:flex items-center bg-[#050A14] p-1 rounded-xl border border-white/[0.08] w-full md:w-auto shrink-0 gap-1.5 shadow-inner">
-          <button
-            onClick={() => setActiveMode('live_detection')}
-            className={`min-h-9 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
-              activeMode === 'live_detection'
-                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-950/60 ring-1 ring-cyan-400/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-850'
-            }`}
-          >
-            <Route className="w-4 h-4 shrink-0 text-cyan-300" />
-            <span className="truncate">{language === 'te' ? 'లైవ్ రూట్' : language === 'hi' ? 'लाइव मार्ग' : language === 'ta' ? 'நேரலை வழி' : language === 'kn' ? 'ಲೈವ್ ಮಾರ್ಗ' : 'Live Route'}</span>
-          </button>
+        {/* Mode Switcher Tabs: ONLY show 3D Crash for Demo Login. Anyone else only gets Live Route */}
+        {isDemoLogin ? (
+          <div className="grid grid-cols-2 sm:flex items-center bg-[#050A14] p-1 rounded-xl border border-white/8 w-full md:w-auto shrink-0 gap-1.5 shadow-inner">
+            <button
+              onClick={() => setActiveMode('live_detection')}
+              className={`min-h-9 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+                activeMode === 'live_detection'
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-950/60 ring-1 ring-cyan-400/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-850'
+              }`}
+            >
+              <Route className="w-4 h-4 shrink-0 text-cyan-300" />
+              <span className="truncate">{language === 'te' ? 'లైవ్ రూట్' : language === 'hi' ? 'लाइव मार्ग' : language === 'ta' ? 'நேரலை வழி' : language === 'kn' ? 'ಲೈವ್ ಮಾರ್ಗ' : 'Live Route'}</span>
+            </button>
 
-          <button
-            onClick={() => setActiveMode('3d_simulation')}
-            className={`min-h-9 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
-              activeMode === '3d_simulation'
-                ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-950/60 ring-1 ring-red-400/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-850'
-            }`}
-          >
-            <Car className="w-4 h-4 shrink-0 text-amber-300" />
-            <span className="truncate">{language === 'te' ? '3D క్రాష్' : language === 'hi' ? '3D क्रैश' : language === 'ta' ? '3D விபத்து' : language === 'kn' ? '3D ಅಪಘಾತ' : '3D Crash'}</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setActiveMode('3d_simulation')}
+              className={`min-h-9 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+                activeMode === '3d_simulation'
+                  ? 'bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md shadow-red-950/60 ring-1 ring-red-400/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-850'
+              }`}
+            >
+              <Car className="w-4 h-4 shrink-0 text-amber-300" />
+              <span className="truncate">{language === 'te' ? '3D క్రాష్ (డెమో)' : language === 'hi' ? '3D क्रैश (डेमो)' : '3D Crash (Demo)'}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-xs font-bold shrink-0">
+            <Route className="w-4 h-4 text-cyan-400 animate-pulse shrink-0" />
+            <span>{language === 'te' ? 'ప్రత్యక్ష GPS నావిగేషన్ & రూట్' : language === 'hi' ? 'लाइव जीपीएस नेविगेशन और मार्ग' : 'Live GPS Route & Impact Telemetry'}</span>
+          </div>
+        )}
       </div>
 
       {/* RENDER SELECTED MODE */}
-      {activeMode === 'live_detection' && (
+      {(!isDemoLogin || activeMode === 'live_detection') && (
         <LiveAccidentDetector 
           onAccidentConfirmed={handleAccidentConfirmed} 
           externalReset={handleResetAll}
         />
       )}
 
-
-
-      {activeMode === '3d_simulation' && (
+      {isDemoLogin && activeMode === '3d_simulation' && (
         <Vehicle3DSimulation 
           onAccidentConfirmed={handleAccidentConfirmed} 
           externalReset={handleResetAll} 

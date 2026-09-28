@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { Home, Droplet, Activity, ShieldAlert, LayoutDashboard, User, Car } from 'lucide-react';
+import { Home, Droplet, Activity, ShieldAlert, LayoutDashboard, User, Car, Route } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth, checkIsDemoLogin } from '../context/AuthContext';
 import { SOSModal } from './SOSModal';
 
 export const BottomNav = ({ activeTab, setActiveTab }) => {
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const [isSOSOpen, setIsSOSOpen] = useState(false);
+
+  const isDemoLogin = checkIsDemoLogin(user);
 
   const getTabLabel = (id) => {
     switch (id) {
       case 'home':
         return t('nav_home') || (language === 'te' ? 'హోమ్' : language === 'hi' ? 'होम' : 'Home');
       case 'accident':
-        return t('nav_crash') || (language === 'te' ? '3D ప్రమాదం' : language === 'hi' ? '3D क्रैश' : 'Crash 3D');
+        if (isDemoLogin) {
+          return t('nav_crash') || (language === 'te' ? '3D ప్రమాదం' : language === 'hi' ? '3D क्रैश' : 'Crash 3D');
+        }
+        return language === 'te' ? 'లైవ్ రూట్' : language === 'hi' ? 'लाइव रूट' : language === 'ta' ? 'நேரலை வழி' : language === 'kn' ? 'ಲೈವ್ ಮಾರ್ಗ' : 'Live Route';
       case 'blood':
         return t('nav_blood') || (language === 'te' ? 'రక్తం' : language === 'hi' ? 'रक्त' : 'Blood');
       case 'snakebite':
@@ -28,7 +35,7 @@ export const BottomNav = ({ activeTab, setActiveTab }) => {
 
   const tabs = [
     { id: 'home', label: getTabLabel('home'), icon: Home },
-    { id: 'accident', label: getTabLabel('accident'), icon: Car },
+    { id: 'accident', label: getTabLabel('accident'), icon: isDemoLogin ? Car : Route },
     { id: 'blood', label: getTabLabel('blood'), icon: Droplet },
     { id: 'sos', label: 'SOS', icon: ShieldAlert, isSOSAnchor: true },
     { id: 'snakebite', label: getTabLabel('snakebite'), icon: Activity },

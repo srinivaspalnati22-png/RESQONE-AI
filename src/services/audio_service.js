@@ -20,6 +20,8 @@
  * 5. Garbage Collection Guard: Utterances are retained in memory to prevent Chrome GC drops.
  */
 
+import { firstAidTranslations } from '../data/first_aid_translations';
+
 let isAudioMuted = false;
 let isAudioUnlocked = false;
 let audioContextInstance = null;
@@ -562,80 +564,200 @@ export const speakEmergencyInstruction = (text, forcedLang = null) => {
     stopAllAudio();
 
     const selectedLang = forcedLang || localStorage.getItem('resqone_language') || 'en';
-    const translation = getDynamicTranslation(text, selectedLang);
-
-    // Play subtle high-tech acoustic chime
     const isEmergency = text.toLowerCase().includes('crash') || text.toLowerCase().includes('sos') || text.toLowerCase().includes('accident');
     playAttentionChime(isEmergency ? 'emergency' : 'info');
 
     if (!('speechSynthesis' in window)) {
-      console.warn('[AudioService] Web SpeechSynthesis not supported on this device.');
+      console.warn('[AudioService] Web SpeechSynthesis not supported.');
       return;
     }
 
-    // Force resume any paused browser speech queues
-    try {
-      window.speechSynthesis.resume();
-    } catch {}
+    try { window.speechSynthesis.resume(); } catch {}
 
     const voices = window.speechSynthesis.getVoices() || [];
     const { voice: selectedVoice, isNative } = resolveBestVoice(selectedLang, voices);
 
-    // If native voice exists for the language, speak native script.
-    // If no native voice exists on this OS, speak phonetic Indian transliteration!
-    const textToSpeak = (selectedLang === 'en' || isNative) ? translation.native : translation.phonetic;
-
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-
-    if (isNative && selectedLang !== 'en') {
-      utterance.lang = selectedLang === 'te' ? 'te-IN' : selectedLang === 'hi' ? 'hi-IN' : selectedLang === 'ta' ? 'ta-IN' : 'kn-IN';
-      utterance.rate = 0.88;
-    } else {
-      utterance.lang = 'en-IN';
-      utterance.rate = 0.90;
-    }
-
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    // Prevent Chrome garbage collection bug
     window._resqone_utterances = window._resqone_utterances || [];
-    window._resqone_utterances.push(utterance);
 
-    utterance.onstart = () => {
-      window.dispatchEvent(new CustomEvent('resqone_speech_status', { 
-        detail: { isSpeaking: true, text: translation.native } 
-      }));
-    };
+    // Chunk text by periods or numbers to prevent Chrome 15-second GC cutoff
+    // We split by sentence endings but keep the delimiters
+    const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
 
-    utterance.onend = () => {
-      window._resqone_utterances = (window._resqone_utterances || []).filter(u => u !== utterance);
-      window.dispatchEvent(new CustomEvent('resqone_speech_status', { detail: { isSpeaking: false } }));
-    };
-
-    utterance.onerror = (e) => {
-      console.warn('[AudioService] Utterance error:', e?.error);
-      window._resqone_utterances = (window._resqone_utterances || []).filter(u => u !== utterance);
-      window.dispatchEvent(new CustomEvent('resqone_speech_status', { detail: { isSpeaking: false } }));
-    };
-
-    setTimeout(() => {
-      try {
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-        window.speechSynthesis.speak(utterance);
-      } catch (err) {
-        console.warn('[AudioService] speak failed:', err);
+    let startIndex = 0;
+    
+    const speakChunk = (chunkIndex) => {
+      if (chunkIndex >= chunks.length) return;
+      
+      const chunkText = chunks[chunkIndex].trim();
+      if (!chunkText) {
+        speakChunk(chunkIndex + 1);
+        return;
       }
-    }, 60);
+
+      const translation = getDynamicTranslation(chunkText, selectedLang);
+      const textToSpeak = (selectedLang === 'en' || isNative) ? translation.native : translation.phonetic;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+      if (selectedVoice) utterance.voice = selectedVoice;
+      if (isNative && selectedLang !== 'en') {
+        utterance.lang = selectedLang === 'te' ? 'te-IN' : selectedLang === 'hi' ? 'hi-IN' : selectedLang === 'ta' ? 'ta-IN' : 'kn-IN';
+        utterance.rate = 0.88;
+      } else {
+        utterance.lang = 'en-IN';
+        utterance.rate = 0.90;
+      }
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      window._resqone_utterances.push(utterance);
+
+      utterance.onstart = () => {
+        if (chunkIndex === 0) {
+          window.dispatchEvent(new CustomEvent('resqone_speech_status', { 
+            detail: { isSpeaking: true, text: text } 
+          }));
+        }
+      };
+
+      utterance.onend = () => {
+        window._resqone_utterances = window._resqone_utterances.filter(u => u !== utterance);
+        if (chunkIndex === chunks.length - 1) {
+          window.dispatchEvent(new CustomEvent('resqone_speech_status', { detail: { isSpeaking: false } }));
+        } else {
+          speakChunk(chunkIndex + 1);
+        }
+      };
+
+      utterance.onerror = (e) => {
+        console.warn('[AudioService] Utterance error on chunk:', e?.error);
+        window._resqone_utterances = window._resqone_utterances.filter(u => u !== utterance);
+        window.dispatchEvent(new CustomEvent('resqone_speech_status', { detail: { isSpeaking: false } }));
+      };
+
+      setTimeout(() => {
+        try {
+          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.warn('[AudioService] speak chunk failed:', err);
+        }
+      }, 60);
+    };
+
+    speakChunk(0);
 
   } catch (err) {
     console.warn('[AudioService] Global speech failure:', err);
+  }
+};
+
+/**
+ * Speaks all 10 clinical first-aid precautions sequentially in any supported language
+ * (English, Telugu, Hindi, Tamil, Kannada).
+ * Automatically detects native voice capability and uses native script or authentic phonetic transliteration.
+ */
+export const speakAllFirstAidPrecautions = (isVenomous, speciesName = '', forcedLang = null) => {
+  if (typeof window === 'undefined') return;
+  if (isAudioMuted) return;
+
+  try {
+    unlockAudio();
+    stopAllAudio();
+
+    const selectedLang = forcedLang || localStorage.getItem('resqone_language') || 'en';
+    playAttentionChime(isVenomous ? 'emergency' : 'info');
+
+    if (!('speechSynthesis' in window)) {
+      console.warn('[AudioService] SpeechSynthesis not supported.');
+      return;
+    }
+
+    try { window.speechSynthesis.resume(); } catch {}
+
+    const voices = window.speechSynthesis.getVoices() || [];
+    const { voice: selectedVoice, isNative } = resolveBestVoice(selectedLang, voices);
+
+    const langData = firstAidTranslations[selectedLang] || firstAidTranslations['en'];
+    const typeKey = isVenomous ? 'venomous' : 'non_venomous';
+
+    const introText = (selectedLang === 'en' || isNative)
+      ? (langData[`intro_${typeKey}_native`] || langData.intro_venomous_native)
+      : (langData[`intro_${typeKey}_phonetic`] || langData.intro_venomous_phonetic);
+
+    const stepsArray = (selectedLang === 'en' || isNative)
+      ? (langData[`spoken_${typeKey}_native`] || langData.venomous)
+      : (langData[`spoken_${typeKey}_phonetic`] || langData.venomous);
+
+    const speechQueue = [introText, ...stepsArray];
+    window._resqone_utterances = window._resqone_utterances || [];
+
+    let currentIdx = 0;
+
+    const speakNext = () => {
+      if (currentIdx >= speechQueue.length) {
+        window.dispatchEvent(new CustomEvent('resqone_speech_status', { 
+          detail: { isSpeaking: false, isFirstAid: false } 
+        }));
+        return;
+      }
+
+      const textItem = speechQueue[currentIdx];
+      const isIntro = currentIdx === 0;
+      const stepNumber = isIntro ? 0 : currentIdx;
+
+      const utterance = new SpeechSynthesisUtterance(textItem);
+      if (selectedVoice) utterance.voice = selectedVoice;
+
+      if (isNative && selectedLang !== 'en') {
+        utterance.lang = selectedLang === 'te' ? 'te-IN' : selectedLang === 'hi' ? 'hi-IN' : selectedLang === 'ta' ? 'ta-IN' : 'kn-IN';
+        utterance.rate = 0.88;
+      } else {
+        utterance.lang = 'en-IN';
+        utterance.rate = 0.90;
+      }
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      window._resqone_utterances.push(utterance);
+
+      utterance.onstart = () => {
+        window.dispatchEvent(new CustomEvent('resqone_speech_status', {
+          detail: {
+            isSpeaking: true,
+            isFirstAid: true,
+            currentStep: stepNumber,
+            totalSteps: 10,
+            text: textItem
+          }
+        }));
+      };
+
+      utterance.onend = () => {
+        window._resqone_utterances = window._resqone_utterances.filter(u => u !== utterance);
+        currentIdx++;
+        setTimeout(speakNext, 220);
+      };
+
+      utterance.onerror = (e) => {
+        console.warn('[AudioService] First aid step speech error:', e?.error);
+        window._resqone_utterances = window._resqone_utterances.filter(u => u !== utterance);
+        currentIdx++;
+        setTimeout(speakNext, 120);
+      };
+
+      setTimeout(() => {
+        try {
+          if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.warn('[AudioService] speak next first aid step failed:', err);
+        }
+      }, 50);
+    };
+
+    speakNext();
+  } catch (err) {
+    console.error('[AudioService] Failed to speak first aid precautions:', err);
   }
 };
 
