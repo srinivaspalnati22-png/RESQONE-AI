@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabaseClient';
 import { registerDeviceForBackgroundPush } from '../services/push_subscription_service.js';
 
-const SUPABASE_URL = "https://uguzspnutzjntqxixyiu.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_9AX3c8QaOfM7h-akKbw2MQ_FF0f5h7v";
+export { supabase };
 
 const DEFAULT_FAMILY_CONTACTS = [
   { id: 'fc-1', name: 'Father (Primary SOS)', relation: 'Father', phone: '+91-9440123456', notifyOnCrash: true },
@@ -13,7 +12,8 @@ const DEFAULT_FAMILY_CONTACTS = [
   { id: 'fc-5', name: 'Family Physician / Doctor', relation: 'Doctor', phone: '+91-9440123460', notifyOnCrash: true },
 ];
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
 
 export const checkIsDemoLogin = (user) => {
   try {
@@ -92,28 +92,62 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const syncProfile = (authUser) => {
+  const syncProfile = async (authUser) => {
     let existingUser = null;
     try {
       const saved = localStorage.getItem('resqone_user');
       if (saved) existingUser = JSON.parse(saved);
     } catch {}
 
-    const hasContactsConfigured = existingUser?.hasSetupEmergencyContacts || authUser.user_metadata?.has_setup_contacts || false;
+    // Fetch live profile record from Supabase 'profiles' table
+    let dbProfile = null;
+    try {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authUser.id)
+          .maybeSingle();
+        if (!error && data) {
+          dbProfile = data;
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase profile query notice:', e);
+    }
 
-    const resolvedName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || existingUser?.name || authUser.email?.split('@')[0] || 'User';
-    const resolvedPhone = authUser.user_metadata?.phone || authUser.phone || existingUser?.phone || '+91-9876543210';
-    const resolvedBlood = authUser.user_metadata?.blood_group || existingUser?.blood_group || 'O-';
+    const hasContactsConfigured = Boolean(
+      existingUser?.hasSetupEmergencyContacts || 
+      authUser.user_metadata?.has_setup_contacts ||
+      (dbProfile?.family_contacts && (Array.isArray(dbProfile.family_contacts) ? dbProfile.family_contacts.length > 0 : true))
+    );
+
+    const resolvedName = dbProfile?.name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || existingUser?.name || authUser.email?.split('@')[0] || 'User';
+    const resolvedPhone = dbProfile?.phone || authUser.user_metadata?.phone || authUser.phone || existingUser?.phone || '+91-9876543210';
+    const resolvedBlood = dbProfile?.blood_group || authUser.user_metadata?.blood_group || existingUser?.blood_group || 'O-';
+    const resolvedRole = dbProfile?.role || authUser.user_metadata?.role || existingUser?.role || 'user';
+    const resolvedNotes = dbProfile?.medical_notes || authUser.user_metadata?.medical_notes || existingUser?.medical_notes || '';
+    const resolvedAvatar = dbProfile?.avatar_url || authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || existingUser?.avatar_url || null;
+
+    if (dbProfile?.family_contacts) {
+      try {
+        const parsed = typeof dbProfile.family_contacts === 'string' ? JSON.parse(dbProfile.family_contacts) : dbProfile.family_contacts;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setFamilyContacts(parsed);
+          localStorage.setItem('resqone_family_contacts', JSON.stringify(parsed));
+        }
+      } catch {}
+    }
 
     const userObj = {
       id: authUser.id,
       email: authUser.email,
       name: resolvedName,
-      role: authUser.user_metadata?.role || existingUser?.role || 'user',
+      role: resolvedRole,
       blood_group: resolvedBlood,
       phone: resolvedPhone,
-      medical_notes: authUser.user_metadata?.medical_notes || existingUser?.medical_notes || '',
-      avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || existingUser?.avatar_url || null,
+      medical_notes: resolvedNotes,
+      avatar_url: resolvedAvatar,
       auth_provider: authUser.app_metadata?.provider || 'google',
       is_demo_mode: false,
       hasSetupEmergencyContacts: hasContactsConfigured
@@ -132,11 +166,16 @@ export const AuthProvider = ({ children }) => {
 
     // Register push subscription with real user name & ID
     registerDeviceForBackgroundPush(userObj);
+
+    // Save/Sync back to Supabase 'profiles' table to ensure record exists
+    saveUserToSupabase(userObj);
   };
 
-  // Save user profile + family contacts to Supabase 'users' table
+  // Save user profile + family contacts to Supabase 'profiles' table
   const saveUserToSupabase = async (profileData, contacts) => {
     try {
+      if (!supabase) return;
+      const contactsToSave = contacts || familyContacts;
       const payload = {
         id: profileData.id || session?.user?.id || `local-${Date.now()}`,
         email: profileData.email,
@@ -145,21 +184,45 @@ export const AuthProvider = ({ children }) => {
         blood_group: profileData.blood_group,
         role: profileData.role || 'user',
         medical_notes: profileData.medical_notes || '',
-        family_contacts: JSON.stringify(contacts || familyContacts),
-        created_at: new Date().toISOString()
+        avatar_url: profileData.avatar_url || null,
+        family_contacts: contactsToSave,
+        last_login_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from('users')
-        .upsert(payload, { onConflict: 'email' });
+      // 1. Primary: Save to Supabase 'profiles' table
+      const { error: profError } = await supabase
+        .from('profiles')
+        .upsert(payload, { onConflict: 'id' });
 
-      if (error) {
-        console.warn('Supabase users table upsert notice:', error.message);
+      if (profError) {
+        console.warn('Supabase profiles table upsert notice:', profError.message);
+        // Fallback: try legacy 'users' table
+        await supabase
+          .from('users')
+          .upsert({
+            ...payload,
+            family_contacts: JSON.stringify(contactsToSave)
+          }, { onConflict: 'email' })
+          .catch(() => {});
       }
+
+      // 2. Automatically log profile details to 'activity_log' table
+      await supabase
+        .from('activity_log')
+        .insert([{
+          id: `act-login-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          event_type: 'USER_LOGIN',
+          description: `Profile login: ${profileData.name || 'Citizen'} (${profileData.email || 'N/A'}) - Role: ${(profileData.role || 'user').toUpperCase()} | Blood: ${profileData.blood_group || 'O-'}`,
+          severity: 'INFO',
+          created_at: new Date().toISOString()
+        }])
+        .catch(() => {});
     } catch (err) {
       console.warn('Supabase save notice:', err);
     }
   };
+
 
   const completeOnboarding = (customUser = null, contacts = null) => {
     if (customUser) {
@@ -194,29 +257,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        // Fallback: allow local-only login for offline/standard user mode
-        const emailUser = {
-          id: `email-${Date.now()}`,
-          email,
-          name: email.split('@')[0],
-          role: 'user',
-          blood_group: 'O-',
-          phone: '+91-9876543210',
-          auth_provider: 'email',
-          is_demo_mode: false
-        };
-        setUser(emailUser);
-        localStorage.setItem('resqone_user', JSON.stringify(emailUser));
-        localStorage.setItem('resqone_is_demo_login', 'false');
-        sessionStorage.setItem('resqone_is_demo_login', 'false');
-        completeOnboarding(emailUser);
-        return { success: true, user: emailUser, isDemo: false };
+        setAuthError(error.message);
+        return { success: false, error: error.message };
       }
-      syncProfile(data.user);
-      localStorage.setItem('resqone_is_demo_login', 'false');
-      sessionStorage.setItem('resqone_is_demo_login', 'false');
-      completeOnboarding();
-      return { success: true, user: data.user };
+      if (data?.user) {
+        await syncProfile(data.user);
+        completeOnboarding();
+        return { success: true, user: data.user };
+      }
+      return { success: false, error: 'No user session returned' };
     } catch (err) {
       setAuthError(err.message || 'Login failed');
       return { success: false, error: err.message };
@@ -239,27 +288,10 @@ export const AuthProvider = ({ children }) => {
         }
       });
       if (error) {
-        // If Supabase auth fails, allow local registration for offline resilience
-        const localUser = {
-          id: `email-${Date.now()}`,
-          email,
-          name,
-          role: role || 'user',
-          blood_group: blood_group || 'O-',
-          phone: phone || '',
-          medical_notes: medical_notes || '',
-          auth_provider: 'email',
-          is_demo_mode: false
-        };
-        setUser(localUser);
-        localStorage.setItem('resqone_user', JSON.stringify(localUser));
-        localStorage.setItem('resqone_is_demo_login', 'false');
-        sessionStorage.setItem('resqone_is_demo_login', 'false');
-        completeOnboarding(localUser);
-        saveUserToSupabase(localUser, familyContacts);
-        return { success: true, user: localUser, isLocal: true };
+        setAuthError(error.message);
+        return { success: false, error: error.message };
       }
-      if (data.user) {
+      if (data?.user) {
         const userObj = {
           id: data.user.id,
           email: data.user.email,
@@ -273,11 +305,11 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(userObj);
         localStorage.setItem('resqone_user', JSON.stringify(userObj));
-        localStorage.setItem('resqone_is_demo_login', 'false');
-        sessionStorage.setItem('resqone_is_demo_login', 'false');
         completeOnboarding(userObj);
+        await saveUserToSupabase(userObj, familyContacts);
+        return { success: true, user: data.user };
       }
-      return { success: true, user: data.user };
+      return { success: false, error: 'Registration incomplete' };
     } catch (err) {
       setAuthError(err.message || 'Registration failed');
       return { success: false, error: err.message };
@@ -285,6 +317,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
 
   const logout = async () => {
     try {
@@ -343,52 +376,20 @@ export const AuthProvider = ({ children }) => {
       });
       
       if (error) {
-        console.warn("Supabase Google OAuth Notice:", error.message);
-        // Instant Google Verified Session Fallback
-        const googleFallbackUser = {
-          id: `google-user-${Date.now().toString().slice(-4)}`,
-          email: 'srinivaspalnati.official@gmail.com',
-          name: 'Srinivas Palnati (Google Verified)',
-          role: 'user',
-          blood_group: 'O-',
-          phone: '+91-9440123401',
-          avatar_url: 'https://lh3.googleusercontent.com/a/default-user',
-          auth_provider: 'google',
-          is_demo_mode: false,
-          hasSetupEmergencyContacts: true
-        };
-        setUser(googleFallbackUser);
-        localStorage.setItem('resqone_user', JSON.stringify(googleFallbackUser));
-        localStorage.setItem('resqone_is_demo_login', 'false');
-        sessionStorage.setItem('resqone_is_demo_login', 'false');
-        completeOnboarding(googleFallbackUser);
-        return { success: true, user: googleFallbackUser };
+        console.error("Supabase Google OAuth Notice:", error.message);
+        setAuthError(`Google Sign-In Notice: ${error.message}`);
+        return { success: false, error: error.message };
       }
 
       if (data?.url) {
         window.location.href = data.url;
+        return { success: true, redirecting: true };
       }
       return { success: true, data };
     } catch (err) {
-      console.warn("Google Auth catch notice:", err);
-      const googleFallbackUser = {
-        id: `google-user-${Date.now().toString().slice(-4)}`,
-        email: 'srinivaspalnati.official@gmail.com',
-        name: 'Srinivas Palnati (Google Verified)',
-        role: 'user',
-        blood_group: 'O-',
-        phone: '+91-9440123401',
-        avatar_url: 'https://lh3.googleusercontent.com/a/default-user',
-        auth_provider: 'google',
-        is_demo_mode: false,
-        hasSetupEmergencyContacts: true
-      };
-      setUser(googleFallbackUser);
-      localStorage.setItem('resqone_user', JSON.stringify(googleFallbackUser));
-      localStorage.setItem('resqone_is_demo_login', 'false');
-      sessionStorage.setItem('resqone_is_demo_login', 'false');
-      completeOnboarding(googleFallbackUser);
-      return { success: true, user: googleFallbackUser };
+      console.error("Google Auth catch notice:", err);
+      setAuthError(err.message || 'Failed to initiate Google Sign-In');
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -416,6 +417,7 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

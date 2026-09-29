@@ -202,6 +202,9 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
     }, 300);
   };
 
+
+
+
   // Custom Avatar Image Upload Handler (Works for email, google, demo users)
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -914,6 +917,19 @@ export const AuthPage = ({ onOnboardingComplete, onBack }) => {
                   Role: <span className="text-cyan-400 font-bold">{STAKEHOLDER_ROLES.find(r => r.id === selectedRole)?.label}</span>
                 </p>
               </div>
+
+              {/* 0. Live Supabase Sync Status Indicator */}
+              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px]">
+                <span className="flex items-center gap-1.5 text-slate-400 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Supabase Live Cloud:
+                </span>
+                <span className="font-mono text-cyan-300 font-bold truncate max-w-[200px]">
+                  rtvcuvmpfhrapgpmrtgj.supabase.co
+                </span>
+              </div>
+
+
 
               {/* 1. Continue with Google Button */}
               <button

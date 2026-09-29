@@ -8,10 +8,10 @@ load_dotenv(os.path.join(root_dir, '.env.local'))
 load_dotenv(os.path.join(root_dir, '.ENV'))
 
 class Settings:
-    SUPABASE_PROJECT_ID: str = os.getenv("SUPABASE_PROJECT_ID", "wxucgspsyekiwbxjjrnw")
-    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "https://wxucgspsyekiwbxjjrnw.supabase.co")
-    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "sb_publishable_fQZhN68OEha0pVzuJ7dHWw_QRB2WzYI")
-    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "sb_publishable_fQZhN68OEha0pVzuJ7dHWw_QRB2WzYI")
+    SUPABASE_PROJECT_ID: str = os.getenv("SUPABASE_PROJECT_ID", "rtvcuvmpfhrapgpmrtgj")
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "https://rtvcuvmpfhrapgpmrtgj.supabase.co")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "sb_publishable_9AX3c8QaOfM7h-akKbw2MQ_FF0f5h7v")
+    SUPABASE_ANON_KEY: str = os.getenv("SUPABASE_ANON_KEY", "sb_publishable_9AX3c8QaOfM7h-akKbw2MQ_FF0f5h7v")
     DEMO_MODE: bool = True
     APP_NAME: str = "RESQONE AI+ Intelligence Platform"
     VERSION: str = "1.0.0"
